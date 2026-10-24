@@ -52,6 +52,21 @@ def main():
             room_ids[r["World"].strip()].setdefault(r["Location"].strip(), set()).add(int(m.group(2)) - 1)
     room_ids = {w: {n: sorted(ids) for n, ids in rooms.items()} for w, rooms in room_ids.items()}
 
+    # Room names by world byte, indexed by room byte, from MultiPresence (list index = room byte).
+    worlds_cs = (SRC / "multipresence-kh1-Worlds.cs").read_text(encoding="utf-8-sig")
+    world_ids = {}
+    for wid, name in re.findall(r'case (\d+):\s*getworld\.Add\("([^"]+)"\)', worlds_cs):
+        world_ids.setdefault(name, []).append(int(wid))
+    rooms_cs = (SRC / "multipresence-kh1-Rooms.cs").read_text(encoding="utf-8-sig")
+    typo_fixes = {"Rabitt": "Rabbit", "Cinderalla": "Cinderella", "Cemetary": "Cemetery"}
+    room_names = {}
+    for world, body in re.findall(r'case "([^"]+)":(.*?)break;', rooms_cs, re.S):
+        rooms = re.findall(r'getroom\.Add\("([^"]*)"\)', body)
+        for bad, good in typo_fixes.items():
+            rooms = [r.replace(bad, good) for r in rooms]
+        for wid in world_ids.get(world, []):
+            room_names[wid] = rooms
+
     chests.sort(key=lambda c: (c["w"], c["n"]))
     reports.sort(key=lambda r: r["n"])
     out = ROOT / "companion" / "data.js"
@@ -61,7 +76,9 @@ def main():
         f"window.KH1_CHESTS = {json.dumps(chests, ensure_ascii=False)};\n"
         f"window.KH1_REPORTS = {json.dumps(reports, ensure_ascii=False)};\n"
         "// Room bytes seen in map file names, by world and room name (room byte = .ard number - 1).\n"
-        f"window.KH1_ROOM_IDS = {json.dumps(room_ids, ensure_ascii=False, sort_keys=True)};\n",
+        f"window.KH1_ROOM_IDS = {json.dumps(room_ids, ensure_ascii=False, sort_keys=True)};\n"
+        "// Room names by world byte, indexed by room byte (Dekirai/MultiPresence, MIT).\n"
+        f"window.KH1_ROOM_NAMES = {json.dumps(room_names, ensure_ascii=False, sort_keys=True)};\n",
         encoding="utf-8",
     )
     print(f"{len(chests)} chests ({sum('r' in c for c in chests)} with rooms), {len(reports)} reports -> {out}")

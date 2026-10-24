@@ -12,9 +12,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sandbox = { window: {} };
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/data.js"), "utf8"), sandbox);
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/maps.js"), "utf8"), sandbox);
+vm.runInNewContext(readFileSync(path.join(ROOT, "companion/guide.js"), "utf8"), sandbox);
 // JSON round-trip so arrays come from this realm (deepStrictEqual checks prototypes).
-const { KH1_CHESTS: CHESTS, KH1_REPORTS: REPORTS, KH1_MAPS: MAPS } = JSON.parse(JSON.stringify(sandbox.window));
-const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS);
+const { KH1_CHESTS: CHESTS, KH1_REPORTS: REPORTS, KH1_MAPS: MAPS, KH1_GUIDE: GUIDE, KH1_ROOM_NAMES: ROOM_NAMES } =
+  JSON.parse(JSON.stringify(sandbox.window));
+const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES);
 
 const FIXTURES = path.join(ROOT, "recordings/fixtures");
 const blank = (over = {}) => ({
@@ -55,7 +57,7 @@ test("maps are well formed", () => {
     }
     if (m.nodes.length > 1) {
       const linked = new Set(m.edges.flat());
-      for (const id of ids) assert.ok(linked.has(id), `${w}: ${id} has no exits`);
+      for (const n of m.nodes) if (!n.alone) assert.ok(linked.has(n.id), `${w}: ${n.id} has no exits`);
     }
   }
 });
@@ -64,7 +66,7 @@ test("chests with no room in the data still land in the right room", () => {
   const find = (w, prefix) => L.nodeForChest(CHESTS.find((c) => c.w === w && c.n.startsWith(prefix))).id;
   assert.equal(find("Atlantica", "Ariel's Grotto"), "Ariel's Grotto");
   assert.equal(find("Hollow Bastion", "Library 1st Floor"), "Library");
-  assert.equal(find("Awakening", "Chest"), "Dive to the Heart");
+  assert.equal(find("Awakening", "Chest"), "Alice Platform");
 });
 
 test("room bytes confirmed by community scripts resolve to the right room", () => {
@@ -72,13 +74,15 @@ test("room bytes confirmed by community scripts resolve to the right room", () =
   assert.equal(at(3, 0x0B), "Item Workshop");
   assert.equal(at(3, 0x16), "Secret Waterway");
   assert.equal(at(15, 0x04), "Entrance Hall");
-  assert.equal(at(0, 0x02), "Dive to the Heart");
-  assert.equal(at(0, 0x00), undefined, "title screen is nowhere");
+  assert.equal(at(0, 0x02), "Alice Platform");
+  assert.equal(L.nodeForRoom(blank({ world: 0, room: 0, in_field: false }), {}), null, "title screen is nowhere");
 });
 
-test("a room picked on the device overrides the map data", () => {
-  const s = blank({ world: 3, room: 0x0B });
-  assert.equal(L.nodeForRoom(s, { "3:11": "Accessory Shop" }).id, "Accessory Shop");
+test("a room picked on the device only fills rooms the map data lacks", () => {
+  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x0B }), { "3:11": "Accessory Shop" }).id, "Item Workshop",
+    "map data wins for named rooms");
+  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x15 }), { "3:21": "Magician's Lab" }).id, "Magician's Lab",
+    "a pick names an unnamed room");
   assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x30 }), {}), null, "unknown room byte");
 });
 
@@ -91,7 +95,6 @@ test("all 33 puppy chests are known and placed", () => {
 test("a blank save counts nothing", () => {
   const s = L.summarize(blank());
   assert.equal(s.world, "Traverse Town");
-  assert.equal(s.worldVerified, true);
   assert.equal(s.chestsGot, 0);
   assert.equal(s.puppies, 0);
   assert.ok(s.reports.every((r) => !r.got));
@@ -128,6 +131,57 @@ test("world 0 is the title screen in room 0 and Dive to the Heart otherwise", ()
   const dive = L.summarize(blank({ world: 0, room: 2 }));
   assert.equal(dive.title, false);
   assert.equal(dive.world, "Awakening");
+  const disembark = L.summarize(blank({ world: 0, room: 0, in_field: true }));
+  assert.equal(disembark.title, false, "Dive's first platform is room 0 too, with the HUD up");
+});
+
+test("every named room in every mapped world belongs to exactly one map node", () => {
+  const ids = Object.fromEntries(Object.entries(L.WORLDS).map(([b, w]) => [b, w.name]));
+  const problems = [];
+  for (const [byte, names] of Object.entries(ROOM_NAMES)) {
+    const world = ids[byte];
+    assert.ok(world, `room table has world byte ${byte} that WORLDS lacks`);
+    if (!MAPS[world]) { problems.push(`${world}: no map`); continue; }
+    names.forEach((name, room) => {
+      if (name === "???") return;
+      const owners = MAPS[world].nodes.filter((n) => (n.rooms || []).includes(room));
+      if (owners.length !== 1) problems.push(`${world} 0x${room.toString(16)} ${name}: ${owners.length} nodes`);
+    });
+    for (const n of MAPS[world].nodes) for (const r of n.rooms || []) {
+      if (r >= names.length) problems.push(`${world} node ${n.id} claims 0x${r.toString(16)}, beyond the room table`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test("the header names the exact room", () => {
+  assert.equal(L.summarize(blank({ world: 1, room: 0x04 })).room, "Seaside Shack");
+  assert.equal(L.nodeForRoom(blank({ world: 1, room: 0x04 }), {}).id, "Seaside Shack");
+  assert.equal(L.summarize(blank({ world: 3, room: 0x10 })).room, "Piano Room");
+  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x10 }), {}).id, "Dalmatians' House");
+  assert.equal(L.summarize(blank({ world: 3, room: 0x15 })).room, null, "unnamed rooms show no name");
+});
+
+test("world bytes match the MultiPresence table", () => {
+  const expect = { 4: "Wonderland", 5: "Deep Jungle", 6: "100 Acre Wood", 12: "Monstro", 14: "Hollow Bastion", 15: "Hollow Bastion" };
+  for (const [b, w] of Object.entries(expect)) assert.equal(L.worldName(+b), w);
+});
+
+test("guide steps point at real rooms and read story progress", () => {
+  for (const [w, steps] of Object.entries(GUIDE)) {
+    assert.ok(MAPS[w], `guide world ${w} has no map`);
+    for (const s of steps) {
+      if (s.where) assert.ok(L.node(w, s.where), `${w}: step "${s.title}" points at missing room ${s.where}`);
+      assert.ok(s.hint && s.title && Number.isInteger(s.p) && Number.isInteger(s.at), `${w}: incomplete step`);
+    }
+  }
+  const prog = (vals) => Buffer.from(vals).toString("hex");
+  const p = new Array(16).fill(0); p[0] = 0x2B; // Traverse Town: Guard Armor beaten, not regrouped yet
+  const g = L.guideFor("Traverse Town", blank({ progress: prog(p) }));
+  assert.equal(g.steps[0].done, true);
+  assert.equal(g.next.title, "Regroup with Donald and Goofy");
+  const old = L.guideFor("Traverse Town", blank({ progress: "00".repeat(12) }));
+  assert.equal(old.steps.find((s) => s.p === 14).done, null, "12-byte bridges can't see the extra TT byte");
 });
 
 test("real Steam recording: the Dive to the Heart chest flips Awakening: Chest", () => {
@@ -143,11 +197,9 @@ test("real Steam recording: the Dive to the Heart chest flips Awakening: Chest",
   assert.equal(frames[i].room, 2);
 });
 
-test("unknown and unverified worlds are reported as such", () => {
-  assert.equal(L.summarize(blank({ world: 0x0E })).world, null);
-  const w = L.summarize(blank({ world: 0x05 }));
-  assert.equal(w.world, "Wonderland");
-  assert.equal(w.worldVerified, false);
+test("unknown worlds are reported as such", () => {
+  assert.equal(L.summarize(blank({ world: 0x07 })).world, null);
+  assert.equal(L.summarize(blank({ world: 0x04 })).world, "Wonderland");
 });
 
 for (const name of readdirSync(FIXTURES).filter((f) => f.endsWith(".jsonl"))) {

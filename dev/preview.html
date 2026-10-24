@@ -94,6 +94,7 @@
 
 <script src="/data.js"></script>
 <script src="/maps.js"></script>
+<script src="/guide.js"></script>
 <script src="/logic.js"></script>
 <script>
 (() => {
@@ -148,7 +149,7 @@
   function showSnapshot(s) {
     const sum = L.summarize(s);
     const rows = [
-      ["edition", s.edition], ["world", `${hex2(s.world)} ${sum.world || "?"}${sum.world && !sum.worldVerified ? " (unverified)" : ""}`],
+      ["edition", s.edition], ["world", `${hex2(s.world)} ${sum.world || "?"}`], ["room name", sum.room || "?"],
       ["room", hex2(s.room)], ["in field", s.in_field], ["level", s.level],
       ["HP / MP / AP", `${s.max_hp} / ${s.max_mp} / ${s.ap}`], ["chests", `${sum.chestsGot} / ${sum.chestsTotal}`],
       ["puppies", sum.puppies], ["reports", sum.reports.filter((r) => r.got).length], ["seq", s.seq],

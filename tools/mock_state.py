@@ -21,7 +21,7 @@ args = ap.parse_args()
 OUT = args.out
 OUT.parent.mkdir(parents=True, exist_ok=True)
 TICK = 0.05 if args.fast else 0.5
-WORLD_IDS = {"Traverse Town": 3, "Wonderland": 5, "Deep Jungle": 6, "Agrabah": 8, "Hollow Bastion": 15}
+WORLD_IDS = {"Traverse Town": 3, "Wonderland": 4, "Deep Jungle": 5, "Agrabah": 8, "Hollow Bastion": 15}
 
 src = (ROOT / "companion" / "data.js").read_text(encoding="utf-8")
 chests = json.loads(re.search(r"KH1_CHESTS = (\[.*?\]);", src).group(1))

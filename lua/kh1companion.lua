@@ -35,7 +35,7 @@ local ADDR = {
     puppies        = {0x2DEB463, 0x2DEAA63},  -- 99 bits, MSB first
     postcards      = {0x2DEBA1F, 0x2DEB01F},  -- count mailed
     olympus_cups   = {0x2DEBB60, 0x2DEB160},  -- 4 bytes
-    world_progress = {0x2DEB264, 0x2DEA864},  -- 12 bytes, one per world
+    world_progress = {0x2DEB264, 0x2DEA864},  -- one story byte per world (+0xE: Traverse Town's second byte)
     hud            = {0x2812E9C, 0x281249C},  -- float > 0 while Sora's HUD is up
 }
 local CHEST_BYTES  = 509
@@ -92,7 +92,7 @@ local function snapshot()
         ',"reports":"', hex(ReadArray(addr("reports"), 2)), '"',
         ',"puppies":"', hex(ReadArray(addr("puppies"), PUPPY_BYTES)), '"',
         ',"cups":"', hex(ReadArray(addr("olympus_cups"), 4)), '"',
-        ',"progress":"', hex(ReadArray(addr("world_progress"), 12)), '"',
+        ',"progress":"', hex(ReadArray(addr("world_progress"), 16)), '"',
     })
 end
 

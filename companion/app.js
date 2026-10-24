@@ -9,7 +9,7 @@
   const STATE_URL = params.get("state") || "state.json";
   const POLL_MS = 250;
   const STALE_MS = 8000;  // bridge heartbeat is every 2 s; allow for emulation hiccups
-  const VIEWS = ["here", "map", "worlds", "collect"];
+  const VIEWS = ["here", "guide", "map", "worlds", "collect"];
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -26,6 +26,8 @@
   let showContents = store.get("showContents", true);
   let worldDetail = null;   // Worlds tab: world whose chest list is open
   let mapWorld = null;      // Map tab: world shown instead of the current one
+  let guideWorld = null;    // Guide tab: world shown instead of the current one
+  const hintsShown = new Set();  // hints the player chose to reveal
   let roomLabels = store.get("rooms", {});
 
   const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
@@ -84,8 +86,7 @@
     if (!state) return;
     $("hWorld").textContent = sum.title ? "Title / menu" : sum.world ? displayWorld(sum.world) : `World ${hex2(state.world)}`;
     const n = hereNode();
-    $("hRoom").textContent = sum.title ? "" : (n ? L.labelOf(n) : `Room ${hex2(state.room)}`) +
-      (sum.world && !sum.worldVerified ? " · world id unverified" : "");
+    $("hRoom").textContent = sum.title ? "" : sum.room || (n ? L.labelOf(n) : `Room ${hex2(state.room)}`);
     $("hLevel").innerHTML = sum.title ? "" : `<b>LV</b>${state.level}`;
   }
 
@@ -116,7 +117,7 @@
 
   const CELL_W = 118, CELL_H = 70, BOX_W = 104, BOX_H = 50;
 
-  function mapSvg(world, hereId) {
+  function mapSvg(world, hereId, goalId) {
     const map = L.MAPS[world];
     const chests = L.chestsFor(world, sum.opened);
     const byNode = {};
@@ -135,11 +136,12 @@
       const cs = byNode[n.id] || [];
       const left = cs.filter((c) => !c.got).length;
       const pup = cs.some((c) => !c.got && L.isPuppies(c));
-      const cls = ["node", n.id === hereId ? "here" : "", cs.length && !left ? "done" : "", cs.length ? "" : "bare"].join(" ");
+      const cls = ["node", n.id === hereId ? "here" : "", n.id === goalId ? "goal" : "", cs.length && !left ? "done" : "", cs.length ? "" : "bare"].join(" ");
       const x = cx(n) - BOX_W / 2, y = cy(n) - BOX_H / 2;
       const label = L.labelOf(n);
       const lines = label.length > 13 && label.includes(" ") ? splitLabel(label) : [label];
       return `<g class="${cls}" data-node="${esc(n.id)}">` +
+        (n.id === goalId ? `<rect x="${x - 5}" y="${y - 5}" width="${BOX_W + 10}" height="${BOX_H + 10}" rx="12" class="goalring"/>` : "") +
         `<rect x="${x}" y="${y}" width="${BOX_W}" height="${BOX_H}" rx="9"/>` +
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
         (cs.length ? `<text x="${cx(n)}" y="${y + BOX_H - 7}" class="nc">${left ? left + " left" : "✓ all"}</text>` : "") +
@@ -173,13 +175,14 @@
       return;
     }
     const n = world === sum.world ? hereNode() : null;
+    const goal = L.guideFor(world, state).next;
     const approx = L.MAPS[world].edges.some((e) => e[2] === "approx");
     el.innerHTML =
       `<div class="row" style="margin-bottom:8px"><button class="chip" id="pickMapWorld">${esc(displayWorld(world))} ▾</button>` +
       (mapWorld && mapWorld !== sum.world && L.MAPS[sum.world] ? `<button class="chip" id="mapHere">Current world</button>` : "") +
       `<span class="grow"></span><span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
-      `<div class="card mapcard">${mapSvg(world, n && n.id)}</div>` +
-      `<div class="legend"><span><i class="lg here"></i>you</span><span>${icon("ico-save", "")}save</span>` +
+      `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
+      `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${approx ? '<span><i class="lg dash"></i>exit not confirmed</span>' : ""}</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     if ($("mapHere")) $("mapHere").onclick = () => { mapWorld = null; render(true); };
@@ -198,6 +201,92 @@
         : '<div class="empty">No chests in this room.</div>'}</div>` +
       `<div class="row"><span class="grow"></span><button class="chip" data-close>Close</button></div>`,
     );
+  }
+
+  // ---------- Guide ----------
+
+  function stepCard(world, step, current) {
+    const key = world + "|" + step.p + "|" + step.at;
+    const where = step.where ? L.node(world, step.where) : null;
+    const shown = hintsShown.has(key);
+    return `<div class="card guide-next"><div class="label">${current ? "Next step" : "Next"} · ${esc(displayWorld(world))}</div>` +
+      `<div class="step-title">${esc(step.title)}</div>` +
+      (step.rewards && step.rewards.length ? `<div class="sub">Rewards: ${esc(step.rewards.join(", "))}</div>` : "") +
+      `<div class="row" style="margin-top:10px">` +
+      (where ? `<button class="chip" data-goto="${esc(world)}">${icon("ico-pin", "chip-ico")}${esc(L.labelOf(where))}</button>` : "") +
+      `<span class="grow"></span><button class="chip ${shown ? "on" : ""}" data-hint="${esc(key)}">${shown ? "Hide hint" : "Show hint"}</button></div>` +
+      (shown ? `<div class="hint">${esc(step.hint)}</div>` : "") + `</div>`;
+  }
+
+  function renderGuide() {
+    const el = $("v-guide");
+    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
+    const world = guideWorld || (L.GUIDE[sum.world] ? sum.world : null);
+
+    if (!world) {
+      // Title screen or a world without story steps: every world's next step at a glance.
+      el.innerHTML = `<div class="card"><div class="label">Story progress</div><ul class="list">` +
+        Object.keys(L.GUIDE).map((w) => {
+          const g = L.guideFor(w, state);
+          const done = g.steps.filter((s) => s.done).length;
+          return `<li data-gw="${esc(w)}"><span class="grow"><span class="name">${esc(displayWorld(w))}</span>` +
+            `<div class="sub">${g.next ? "Next: " + esc(g.next.title) : "Story complete"}</div></span>` +
+            `<span class="tag ${g.next ? "" : "here"}">${done}/${g.steps.length}</span></li>`;
+        }).join("") + `</ul></div>`;
+      el.querySelectorAll("[data-gw]").forEach((li) => { li.onclick = () => { guideWorld = li.dataset.gw; render(true); }; });
+      return;
+    }
+
+    const g = L.guideFor(world, state);
+    const current = world === sum.world;
+    const here = current ? hereNode() : null;
+    const chests = L.chestsFor(world, sum.opened).filter((c) => !c.got);
+    const hereLeft = here ? chests.filter((c) => c.node === here.id) : [];
+    const byRoom = {};
+    for (const c of chests) (byRoom[c.node] = byRoom[c.node] || []).push(c);
+    const rooms = Object.entries(byRoom).sort((a, b) => b[1].length - a[1].length);
+    const reportsLeft = sum.reports.filter((r) => r.w === world && !r.got);
+
+    el.innerHTML =
+      `<div class="row" style="margin-bottom:10px"><button class="chip" id="guidePick">${esc(displayWorld(world))} ▾</button>` +
+      (guideWorld && guideWorld !== sum.world && L.GUIDE[sum.world] ? `<button class="chip" id="guideHere">Current world</button>` : "") +
+      `<span class="grow"></span></div>` +
+      (g.next ? stepCard(world, g.next, current)
+        : g.steps.length ? `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><div class="empty">Story complete here.</div></div>` : "") +
+      (here ? `<div class="card"><div class="label">Left in ${esc(sum.room || L.labelOf(here))}</div>` +
+        (hereLeft.length ? chestList(hereLeft, here.id, { showRoom: false }) : `<div class="empty">Nothing left in this room.</div>`) + `</div>` : "") +
+      `<div class="card"><div class="label">Left in ${esc(displayWorld(world))} · ${chests.length} chest${chests.length === 1 ? "" : "s"}</div>` +
+      (rooms.length ? `<ul class="list">${rooms.map(([id, cs]) => {
+        const nd = id !== "null" && L.node(world, id);
+        return `<li data-room="${esc(id)}">${icon("ico-chest")}<span class="grow"><span class="name">${esc(nd ? L.labelOf(nd) : "Elsewhere")}</span>` +
+          `<div class="sub">${cs.length} chest${cs.length > 1 ? "s" : ""}${cs.some(L.isPuppies) ? " · puppies" : ""}</div></span>` +
+          (here && id === here.id ? '<span class="tag here">Here</span>' : "") + `</li>`;
+      }).join("")}</ul>` : `<div class="empty">Every chest here is open.</div>`) +
+      (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
+        `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(r.n.replace(/ Ansem's Report \d+$/, ""))}</div></span></li>`).join("")}</ul>` : "") +
+      `</div>` +
+      (g.steps.length ? `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><ul class="list">${g.steps.map((s) =>
+        `<li class="${s.done ? "got" : ""} ${s === g.next ? "here" : ""}"><span class="step-dot ${s.done ? "done" : s.done === null ? "unknown" : ""}"></span>` +
+        `<span class="grow"><span class="name">${esc(s.title)}</span>${s.done === null ? '<div class="sub">Needs the updated bridge script</div>' : ""}</span></li>`).join("")}</ul></div>` : "");
+
+    el.querySelectorAll("[data-hint]").forEach((b) => {
+      b.onclick = () => { const k = b.dataset.hint; if (hintsShown.has(k)) hintsShown.delete(k); else hintsShown.add(k); render(true); };
+    });
+    el.querySelectorAll("[data-goto]").forEach((b) => {
+      b.onclick = () => { mapWorld = b.dataset.goto === sum.world ? null : b.dataset.goto; setView("map"); };
+    });
+    el.querySelectorAll("[data-room]").forEach((li) => {
+      li.onclick = () => { if (li.dataset.room !== "null") openNodeSheet(world, li.dataset.room); };
+    });
+    $("guidePick").onclick = () => {
+      openSheet(`<h2>Guide for</h2><div class="opts">${Object.keys(L.GUIDE).map((w) =>
+        `<button class="chip" data-w="${esc(w)}">${esc(displayWorld(w))}</button>`).join("")}</div>` +
+        `<div class="row"><span class="grow"></span><button class="chip" data-close>Cancel</button></div>`);
+      $("sheetBody").querySelectorAll("[data-w]").forEach((b) => {
+        b.onclick = () => { guideWorld = b.dataset.w === sum.world ? null : b.dataset.w; closeSheet(); };
+      });
+    };
+    if ($("guideHere")) $("guideHere").onclick = () => { guideWorld = null; render(true); };
   }
 
   // ---------- Worlds ----------
@@ -292,10 +381,10 @@
     if ($("sheet").classList.contains("on")) return;  // don't yank the sheet mid-tap
     // Heartbeat writes bump seq/t only; re-rendering on those would swap buttons out from under a tap.
     const data = state ? JSON.stringify({ ...state, seq: 0, t: 0 }) : "";
-    const sig = [data, view, showOpened, showContents, worldDetail, mapWorld, JSON.stringify(roomLabels)].join("|");
+    const sig = [data, view, showOpened, showContents, worldDetail, mapWorld, guideWorld, [...hintsShown].join(","), JSON.stringify(roomLabels)].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;
-    ({ here: renderHere, map: renderMap, worlds: renderWorlds, collect: renderCollect })[view]();
+    ({ here: renderHere, guide: renderGuide, map: renderMap, worlds: renderWorlds, collect: renderCollect })[view]();
   }
 
   function setView(v) {

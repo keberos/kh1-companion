@@ -231,3 +231,16 @@ svg.map .node { cursor: pointer; }
 .lg { display: inline-block; width: 14px; height: 10px; border-radius: 3px; }
 .lg.here { box-shadow: 0 0 0 2px var(--here), 0 0 6px var(--here); }
 .lg.dash { width: 18px; height: 0; border-top: 3px dotted #6f86c4; border-radius: 0; }
+
+/* ---------- guide ---------- */
+.step-title { font: 700 20px/1.2 var(--title); letter-spacing: .03em; color: var(--text); margin: 4px 0 2px; }
+.hint { margin-top: 10px; padding: 10px 12px; border-radius: 6px; font: italic 600 15px/1.35 var(--ui); color: var(--text);
+  background: linear-gradient(90deg, rgba(246,215,122,.12), rgba(246,215,122,.02)); box-shadow: inset 3px 0 0 var(--gold); }
+.chip-ico { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; }
+.step-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 2px var(--silver-dim); }
+.step-dot.done { background: radial-gradient(circle at 40% 35%, #fff, var(--hp-top) 55%, var(--hp-bot)); box-shadow: 0 0 6px rgba(140,245,140,.5); }
+.step-dot.unknown { opacity: .5; }
+nav button { font-size: 15px; letter-spacing: .03em; }
+svg.map .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; animation: goalpulse 2s ease-in-out infinite; }
+@keyframes goalpulse { 50% { opacity: .35; } }
+.lg.goal { box-shadow: 0 0 0 2px var(--gold); border-radius: 3px; }

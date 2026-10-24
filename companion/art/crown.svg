@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Original five-point crown used as a faint watermark. -->
+  <g fill="#e8ecff">
+    <path d="M30 140 L22 62 L62 100 L80 44 L100 92 L120 44 L138 100 L178 62 L170 140 Z"/>
+    <rect x="30" y="148" width="140" height="18" rx="4"/>
+    <circle cx="22" cy="56" r="9"/><circle cx="80" cy="38" r="9"/><circle cx="120" cy="38" r="9"/><circle cx="178" cy="56" r="9"/>
+    <circle cx="100" cy="24" r="7"/><path d="M100 30 L106 60 L100 86 L94 60 Z"/>
+  </g>
+</svg>

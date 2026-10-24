@@ -28,6 +28,7 @@
   let mapWorld = null;      // Map tab: world shown instead of the current one
   let roomLabels = store.get("rooms", {});
 
+  const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
   const hex2 = (n) => "0x" + n.toString(16).toUpperCase().padStart(2, "0");
   const hereNode = () => (state ? L.nodeForRoom(state, roomLabels) : null);
   const displayWorld = (w) => (w === "Awakening" ? "Dive to the Heart" : w);
@@ -37,11 +38,11 @@
   function chestRow(c, opts) {
     const n = c.node && L.node(c.w, c.node);
     const sub = [opts.showRoom && n ? L.labelOf(n) : null, showContents && c.i ? c.i : null].filter(Boolean).join(" · ");
-    return `<li class="${c.got ? "got" : ""} ${opts.here ? "here" : ""}"><span class="tick"></span>` +
+    return `<li class="${c.got ? "got" : ""} ${opts.here ? "here" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
       `<span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
-      (L.isPuppies(c) ? '<span class="tag pup">Puppies</span>' : "") +
-      (opts.here ? '<span class="tag">Here</span>' : "") + `</li>`;
+      (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") +
+      (opts.here ? '<span class="tag here">Here</span>' : "") + `</li>`;
   }
 
   function chestList(chests, hereId, opts = {}) {
@@ -85,7 +86,7 @@
     const n = hereNode();
     $("hRoom").textContent = sum.title ? "" : (n ? L.labelOf(n) : `Room ${hex2(state.room)}`) +
       (sum.world && !sum.worldVerified ? " · world id unverified" : "");
-    $("hLevel").textContent = sum.title ? "" : "Lv " + state.level;
+    $("hLevel").innerHTML = sum.title ? "" : `<b>LV</b>${state.level}`;
   }
 
   // ---------- Here ----------
@@ -142,8 +143,8 @@
         `<rect x="${x}" y="${y}" width="${BOX_W}" height="${BOX_H}" rx="9"/>` +
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
         (cs.length ? `<text x="${cx(n)}" y="${y + BOX_H - 7}" class="nc">${left ? left + " left" : "✓ all"}</text>` : "") +
-        (n.save ? `<circle cx="${x + 9}" cy="${y + 9}" r="4" class="save"/>` : "") +
-        (pup ? `<circle cx="${x + BOX_W - 6}" cy="${y + 6}" r="4" class="pup"/>` : "") +
+        (n.save ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
+        (pup ? `<use href="#ico-paw" x="${x + BOX_W - 12}" y="${y - 5}" width="16" height="16"/>` : "") +
         `</g>`;
     }).join("");
 
@@ -178,8 +179,8 @@
       (mapWorld && mapWorld !== sum.world && L.MAPS[sum.world] ? `<button class="chip" id="mapHere">Current world</button>` : "") +
       `<span class="grow"></span><span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id)}</div>` +
-      `<div class="legend sub"><span><i class="lg here"></i>you</span><span><i class="lg save"></i>save</span>` +
-      `<span><i class="lg pup"></i>puppies</span>${approx ? '<span><i class="lg dash"></i>exit not confirmed</span>' : ""}</div>`;
+      `<div class="legend"><span><i class="lg here"></i>you</span><span>${icon("ico-save", "")}save</span>` +
+      `<span>${icon("ico-paw", "")}puppies</span>${approx ? '<span><i class="lg dash"></i>exit not confirmed</span>' : ""}</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     if ($("mapHere")) $("mapHere").onclick = () => { mapWorld = null; render(true); };
     el.querySelectorAll("[data-node]").forEach((g) => { g.onclick = () => openNodeSheet(world, g.dataset.node); });
@@ -234,13 +235,13 @@
       `<div class="card"><div class="label">Puppy chests left · ${pupLeft.length} of ${sum.puppyChests.length}</div>` +
       (pupLeft.length
         ? `<ul class="list">${pupLeft.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) =>
-          `<li><span class="tick"></span><span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
+          `<li>${icon("ico-chest")}<span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
           `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(L.labelOf(L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}</ul>`
         : '<div class="empty">All puppy chests opened.</div>') + `</div>` +
       progressCard("Postcards mailed", sum.postcards, 10) +
       `<div class="card"><div class="label">Ansem's Reports · ${sum.reports.filter((r) => r.got).length} / ${sum.reports.length}</div>` +
       `<ul class="list">${sum.reports.map((r) =>
-        `<li class="${r.got ? "got" : ""}"><span class="tick"></span><span class="grow"><span class="name">Report ${r.num}</span>` +
+        `<li class="${r.got ? "got" : ""}">${icon(r.got ? "ico-report" : "ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span>` +
         `<div class="sub">${esc(r.w)}: ${esc(r.n.replace(/ Ansem's Report \d+$/, ""))}</div></span></li>`).join("")}</ul></div>`;
   }
 

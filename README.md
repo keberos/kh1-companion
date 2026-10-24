@@ -22,6 +22,7 @@ KH1 (top screen)  ──LuaBackend──▶  kh1companion.lua  ──▶  state.
 |---|---|
 | `lua/kh1companion.lua` | Game bridge. Read-only; detects Steam vs Epic; writes `state.json`. |
 | `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `data.js` is generated. Plain HTML, no build step. |
+| `companion/theme.css`, `art/`, `fonts/` | KH1-menu look: deep-blue panels with silver frames, light-blue selection, gold Cinzel titles, HP/MP-style gauges. Original SVG art only (no game assets); fonts are Cinzel and Barlow Semi Condensed under the SIL OFL, bundled so the Android app works offline. |
 | `android/` | Android wrapper: shows the page as a non-focusable overlay on the second display. |
 | `dev/preview.html` | Two-screen Thor preview with a live change log (served at `/dev/` by the dev server). |
 | `tools/devserver.py` | Serves the page plus live, recorded or replayed state. |

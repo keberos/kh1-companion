@@ -547,6 +547,11 @@
       [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;
+    if (state && sum.title) {
+      $("v-" + view).innerHTML = `<div class="empty">${icon("ico-save", "big-ico")}<br>Load a save to see your progress.<br>` +
+        `<span class="sub">Nothing is shown from the title screen: until a save loads, the game's memory is empty or left over from the last one.</span></div>`;
+      return;
+    }
     ({ here: renderHere, guide: renderGuide, map: renderMap, worlds: renderWorlds, collect: renderCollect, level: renderLevel })[view]();
   }
 

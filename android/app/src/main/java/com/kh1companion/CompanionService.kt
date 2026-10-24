@@ -159,7 +159,7 @@ class CompanionService : Service() {
         )
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle("KH1 Companion is on the bottom screen")
+            .setContentTitle("KH1 companion is on the bottom screen")
             .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else "Tap Close to hide it")
             .setContentIntent(settings)
             .addAction(Notification.Action.Builder(null, "Close", close).build())

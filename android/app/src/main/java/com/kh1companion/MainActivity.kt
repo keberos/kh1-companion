@@ -94,12 +94,12 @@ class MainActivity : Activity() {
         when {
             intent.action == ACTION_CLOSE || (tap && CompanionService.running) -> {
                 CompanionService.stop(this)
-                Toast.makeText(this, "KH1 Companion closed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Companion closed", Toast.LENGTH_SHORT).show()
             }
             tap && ready && !gameRunning() -> startActivity(Intent(this, PlayActivity::class.java))
             (start || tap) && ready -> {
                 startForegroundService(Intent(this, CompanionService::class.java))
-                Toast.makeText(this, "KH1 Companion on the bottom screen. Tap the icon again to close.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Companion on the bottom screen. Tap the icon again to close it.", Toast.LENGTH_SHORT).show()
             }
             else -> return false
         }

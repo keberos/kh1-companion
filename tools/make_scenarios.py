@@ -32,7 +32,15 @@ def snapshot(world, room, level, exp, progress=(), inventory=None, abilities=(),
     }
 
 
+def title():
+    # Title screen after boot: world 0 room 0, no HUD; memory holds leftovers, so the page shows nothing.
+    s = snapshot(0, 0x00, 38, 30000, chests=[(20, 0), (21, 2)])
+    s["in_field"] = False
+    return s
+
+
 SCENARIOS = {
+    "title": title(),
     # Day 1 on the islands, one log and the cloth found.
     "destiny-islands": snapshot(1, 0x00, 3, 30, inventory={192: 1, 193: 1}),
     # Hollow Bastion before Maleficent: Warrior path, Midday, High Jump 2, no Glide yet.

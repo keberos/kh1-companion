@@ -15,6 +15,8 @@ The current room is detected from the game's room byte, and every named room in 
 
 **No spoilers for worlds you haven't found.** The save's world-status array says which worlds are hidden, on the Gummi map, or visited. Unfound worlds show only as "???" (with a count), worlds on the map show their name and nothing else, and puppy chests and reports in unvisited worlds stay vague.
 
+**Nothing shows until a save is loaded.** On the title screen the game's memory is empty or left over from the last save, so every tab just says to load a save.
+
 **Progress comes from the save, not a ledger.** Everything is read live from game memory: whatever save is loaded, on whichever machine. Playing on several PCs, or syncing through Steam Cloud, just works.
 
 ```
@@ -104,7 +106,7 @@ GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bri
 5. Install the companion APK. The first launch opens its settings: allow "draw over other apps" and "all files access".
 6. Script updates are just another `adb push` to `KH1Companion/scripts/`, then a restart of the game. The mod doesn't need reinstalling.
 
-**Opening and closing:** tap the KH1 Companion icon and it opens the companion and starts KH in GameNative (its `app.gamenative.LAUNCH_GAME` intent, Steam app id 2552430, changeable in Settings). Quit the game and the companion closes too: when a game was started that way, GameNative finishes its screen on exit and hands back, so nothing has to watch for it. If the game is already running (the bridge's file is fresh), the tap just opens the companion. Tap the icon while the companion is open to close it; the × in its header and the notification's **Close** work too. Long-press the icon for **Companion only**, **Close companion** and **Settings**. Settings opens on the top screen. If Cocoon Shell, Odin or Argosy doesn't list it, add "KH1 Companion" as an app in that launcher.
+**Opening and closing:** the app is named **Kingdom Hearts Final Mix**, since its icon starts the game; launchers match that name for box art and metadata. Tap the icon and it opens the companion and starts KH in GameNative (its `app.gamenative.LAUNCH_GAME` intent, Steam app id 2552430, changeable in Settings). Quit the game and the companion closes too: when a game was started that way, GameNative finishes its screen on exit and hands back, so nothing has to watch for it. If the game is already running (the bridge's file is fresh), the tap just opens the companion. Tap the icon while the companion is open to close it; the × in its header and the notification's **Close** work too. Long-press the icon for **Companion only**, **Close companion** and **Settings**. Settings opens on the top screen. If Cocoon Shell, Odin or Argosy doesn't list it, add "Kingdom Hearts Final Mix" as an app in that launcher.
 
 From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
 

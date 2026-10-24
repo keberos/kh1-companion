@@ -30,6 +30,9 @@ SHOTS = {
     "add-variable":    ("env-bottom.png",     (0, 660, 1920, 1040),   [(905, 886, 1015, 996)]),
     "new-variable":    ("new-variable.png",   (590, 160, 1330, 920),  [(640, 412, 1280, 702), (1150, 765, 1265, 850)]),
     "save":            ("unsaved.png",        (0, 0, 1920, 150),      [(1815, 35, 1898, 115)]),
+    # optional: start straight into KH1 instead of the collection's launcher
+    "general-tab":     ("general.png",        (0, 0, 1920, 770),      [(4, 165, 208, 262), (34, 622, 1888, 762)]),
+    "exe-list":        ("exe-list.png",       (0, 130, 1920, 770),    [(40, 470, 1880, 566)]),
 }
 
 

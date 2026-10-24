@@ -175,10 +175,25 @@ class MainActivity : Activity() {
                 else "Start the game here. Once its title screen shows, the companion connects and this ticks itself off. " +
                     "If it doesn't, the companion's \"Not connecting?\" help lists what to check.",
                 if (!working && overlay && files) listOf("Start the game" to { startActivity(Intent(this, PlayActivity::class.java)) }) else emptyList())
+            step("6. Optional: start straight into Kingdom Hearts Final Mix", false,
+                "Out of the box, GameNative opens the collection's menu and you pick KH1 there. Quitting KH1 drops you back " +
+                    "in that menu, and the companion stays open until you leave the collection. Point GameNative straight at " +
+                    "KH1 and the icon goes right into the game, and quitting closes the game and the companion together.",
+                emptyList(), mark = false)
+            guide("direct", listOf(
+                "In GameNative, open KINGDOM HEARTS HD 1.5+2.5 ReMIX, tap the gear, then Edit container." to "edit-container",
+                "On the General tab, tap Executable Path." to "general-tab",
+                "Pick KINGDOM HEARTS FINAL MIX.exe. (To go back to the collection's menu later, pick " +
+                    "KINGDOM HEARTS HD 1.5+2.5 Launcher.exe the same way.)" to "exe-list",
+                "Tap the save icon at the top right." to "save",
+            ))
         }
         steps.addView(text(if (working) "All set. From now on the Kingdom Hearts Final Mix icon starts the game with the companion, and quitting the game closes it."
             else "", 15f, bold = true))
         if (working) steps.addView(button("Play now") { startActivity(Intent(this, PlayActivity::class.java)); finish() })
+        steps.addView(text("Why the app is called \"Kingdom Hearts Final Mix\": its icon starts the game, and launchers such as " +
+            "Cocoon Shell look up box art and game details by app name, so it shows up like the game itself. If your launcher " +
+            "doesn't list it, add it there as an app.", 13f))
         steps.addView(text("Black screen in the game? Set its display mode to fullscreen or borderless in the game's settings. " +
             "Windowed mode can sync from a PC through Steam Cloud and shows black under GameNative.", 13f))
         refreshRemoval()
@@ -208,9 +223,10 @@ class MainActivity : Activity() {
                     refresh()
                 })
             }, into = removal)
-        step("2. Optional: tidy GameNative's setting", false,
-            "In GameNative: ⚙ → Edit container → Environment variables → delete ${Installer.OVERRIDE_NAME}. " +
-                "Harmless to leave once the mod is out.", emptyList(), into = removal, mark = false)
+        step("2. Optional: tidy GameNative's settings", false,
+            "In GameNative: ⚙ → Edit container → Environment → delete ${Installer.OVERRIDE_NAME}. Harmless to leave once " +
+                "the mod is out. If you pointed the game straight at KH1 (setup step 6), you can set Executable Path back " +
+                "to KINGDOM HEARTS HD 1.5+2.5 Launcher.exe on the General tab.", emptyList(), into = removal, mark = false)
         step("3. Delete the companion's files", false, "Removes Download/KH1Companion.",
             listOf("Delete files" to {
                 if (Installer.removalPending()) {

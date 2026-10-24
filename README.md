@@ -53,7 +53,11 @@ Six tabs, all live from the save you have loaded. It never tells you anything yo
    - starting the game once, after which setup ticks itself off.
 3. **Play.** From then on, tap the **Kingdom Hearts Final Mix** icon: the game starts on the top screen with the companion on the bottom, and both close together when you quit.
 
-The app is named after the game, so launchers like Cocoon Shell can pick up box art and metadata for it.
+**Why the app is called "Kingdom Hearts Final Mix":** its icon starts the game, and launchers such as Cocoon Shell look up box art and game details by app name, so it shows up in your library like the game itself. If your launcher doesn't list it, add it there as an app.
+
+**Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion stays open until you leave the collection. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 6 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
+
+<p align="center"><img src="android/app/src/main/assets/guide/exe-list.png" width="640" alt="GameNative's Executable Path list with KINGDOM HEARTS FINAL MIX.exe highlighted"></p>
 
 ## Using it
 
@@ -67,7 +71,7 @@ The app is named after the game, so launchers like Cocoon Shell can pick up box 
 In the app: **Settings → Advanced → Remove everything**.
 
 1. **Remove from the game**, then start the game once. The mod takes itself out of the game folder and never loads again. No GameNative steps.
-2. Optional: delete the setting you added in GameNative (harmless to leave).
+2. Optional: delete the setting you added in GameNative (harmless to leave), and if you pointed the game straight at KH1, set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
 3. **Delete files**, then **Uninstall**.
 
 Your game and saves are untouched throughout.

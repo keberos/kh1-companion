@@ -5,6 +5,11 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 
 > **Beta.** Works end to end on the AYN Thor; still being tested across a full playthrough. Your game and saves are never changed.
 
+### What's new in beta.3
+
+- **Optional: start straight into the game.** Setup step 6 shows, with pictures, how to point GameNative straight at KH1 so the icon goes right into the game and quitting closes everything together, and how to switch back.
+- **Why the app has the game's name**, explained in setup: launchers look up box art and details by app name.
+
 ### What's new in beta.2
 
 - **Setup with pictures.** Each GameNative step has a *Show me how* panel with screenshots of exactly what to tap, and Copy buttons right where you need them.
@@ -33,7 +38,11 @@ You need GameNative with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed a
    5. **Check it**: start the game; setup says *All set* once the companion connects.
 3. From then on, tap the **Kingdom Hearts Final Mix** icon to play. The companion opens with the game and closes when you quit.
 
-**Updating from beta.1:** install over it. Your setup carries over; nothing to redo.
+**Why the app is called "Kingdom Hearts Final Mix":** its icon starts the game, and launchers such as Cocoon Shell look up box art and game details by app name, so it shows up like the game itself. If your launcher doesn't list it, add it there as an app.
+
+**Optional: start straight into the game.** By default GameNative opens the collection's menu first, and quitting KH1 returns you there with the companion still open. For a seamless KH1 experience: GameNative → the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save (setup step 6 has pictures). To undo, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
+
+**Updating from an earlier beta:** install over it. Your setup carries over; nothing to redo.
 
 ### Using it
 
@@ -47,7 +56,7 @@ You need GameNative with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed a
 Settings (long-press the icon → **Settings**, or tap **×** on the companion → **Settings**) → **Advanced → Remove everything**:
 
 1. **Remove from the game**, then start the game once. The mod takes itself out of the game folder and never loads again. No GameNative steps.
-2. Optional: delete the setting you added in GameNative (harmless to leave).
+2. Optional: delete the setting you added in GameNative (harmless to leave), and set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` if you changed it.
 3. **Delete files**, then **Uninstall**.
 
 ### What's inside

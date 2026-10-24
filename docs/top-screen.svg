@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <!-- Original art for the banner's top screen: a crown over a stained-glass platform
+       floating in the dark, in the spirit of the series without copying any of its art. -->
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".42" r=".75">
+      <stop offset="0" stop-color="#2a3a8c"/><stop offset=".45" stop-color="#0f1748"/><stop offset="1" stop-color="#03051a"/>
+    </radialGradient>
+    <radialGradient id="halo" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff2c0" stop-opacity=".85"/><stop offset=".35" stop-color="#f6d77a" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#f6d77a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6d6"/><stop offset=".45" stop-color="#f6d77a"/><stop offset="1" stop-color="#b8862a"/>
+    </linearGradient>
+    <radialGradient id="beam" cx=".5" cy="0" r="1">
+      <stop offset="0" stop-color="#bcd4ff" stop-opacity=".35"/><stop offset="1" stop-color="#bcd4ff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="disc"><ellipse cx="480" cy="420" rx="330" ry="78"/></clipPath>
+  </defs>
+
+  <rect width="960" height="540" fill="url(#bg)"/>
+
+  <!-- stars -->
+  <g fill="#fff">
+    <circle cx="70" cy="60" r="1.6" opacity=".8"/><circle cx="160" cy="140" r="1.1" opacity=".6"/><circle cx="250" cy="44" r="1.3" opacity=".7"/>
+    <circle cx="330" cy="190" r="1" opacity=".5"/><circle cx="620" cy="56" r="1.5" opacity=".8"/><circle cx="700" cy="160" r="1.1" opacity=".6"/>
+    <circle cx="820" cy="80" r="1.4" opacity=".7"/><circle cx="900" cy="200" r="1" opacity=".5"/><circle cx="560" cy="120" r="1" opacity=".5"/>
+    <circle cx="110" cy="260" r="1.2" opacity=".5"/><circle cx="860" cy="290" r="1.2" opacity=".5"/><circle cx="420" cy="70" r="1" opacity=".6"/>
+  </g>
+
+  <!-- light falling on the platform -->
+  <path d="M400 0 L560 0 L780 430 L180 430 Z" fill="url(#beam)"/>
+
+  <!-- stained-glass platform, seen at an angle -->
+  <ellipse cx="480" cy="432" rx="340" ry="84" fill="#020313" opacity=".6"/>
+  <g clip-path="url(#disc)">
+    <ellipse cx="480" cy="420" rx="330" ry="78" fill="#1c2f7a"/>
+    <g stroke="#0a0f2e" stroke-width="5">
+      <path d="M480 420 L150 420 A330 78 0 0 1 247 365 Z" fill="#2f5bd1"/>
+      <path d="M480 420 L247 365 A330 78 0 0 1 480 342 Z" fill="#6aa6ff"/>
+      <path d="M480 420 L480 342 A330 78 0 0 1 713 365 Z" fill="#f2c14e"/>
+      <path d="M480 420 L713 365 A330 78 0 0 1 810 420 Z" fill="#d9786a"/>
+      <path d="M480 420 L810 420 A330 78 0 0 1 713 475 Z" fill="#7cc7a0"/>
+      <path d="M480 420 L713 475 A330 78 0 0 1 480 498 Z" fill="#8f7ad9"/>
+      <path d="M480 420 L480 498 A330 78 0 0 1 247 475 Z" fill="#f2c14e"/>
+      <path d="M480 420 L247 475 A330 78 0 0 1 150 420 Z" fill="#4c8ee6"/>
+    </g>
+    <ellipse cx="480" cy="420" rx="250" ry="59" fill="none" stroke="#0a0f2e" stroke-width="6"/>
+    <ellipse cx="480" cy="420" rx="120" ry="28" fill="#fff2c0" stroke="#0a0f2e" stroke-width="6"/>
+    <ellipse cx="480" cy="420" rx="120" ry="28" fill="url(#halo)"/>
+  </g>
+  <ellipse cx="480" cy="420" rx="330" ry="78" fill="none" stroke="#c9d3f0" stroke-width="3" opacity=".7"/>
+
+  <!-- crown with a soft halo -->
+  <circle cx="480" cy="215" r="170" fill="url(#halo)"/>
+  <g transform="translate(380 110) scale(1)" fill="url(#gold)" stroke="#7a5418" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M30 140 L22 62 L62 100 L80 44 L100 92 L120 44 L138 100 L178 62 L170 140 Z"/>
+    <rect x="30" y="148" width="140" height="18" rx="4"/>
+    <circle cx="22" cy="56" r="9"/><circle cx="80" cy="38" r="9"/><circle cx="120" cy="38" r="9"/><circle cx="178" cy="56" r="9"/>
+    <circle cx="100" cy="24" r="7"/>
+    <path d="M100 30 L106 60 L100 86 L94 60 Z"/>
+  </g>
+
+  <!-- a few drifting sparkles -->
+  <g fill="#fff6d6">
+    <path d="M300 250 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z" opacity=".85"/>
+    <path d="M675 200 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3 Z" opacity=".8"/>
+    <path d="M640 320 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 Z" opacity=".7"/>
+    <path d="M330 340 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2 Z" opacity=".6"/>
+  </g>
+</svg>

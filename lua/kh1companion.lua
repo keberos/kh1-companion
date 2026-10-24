@@ -12,9 +12,11 @@ LUAGUI_NAME = "kh1companion"
 LUAGUI_AUTH = "kh1-companion"
 LUAGUI_DESC = "Writes KH1 state to a JSON file for a second-screen companion app"
 
--- Where the snapshot goes. Leave nil to use %LOCALAPPDATA%\KH1Companion\.
--- Under GameNative/Winlator, point this at a Wine drive that maps to Android
--- shared storage so the companion app can read it, e.g. "D:\\KH1Companion\\".
+-- Where the snapshot goes. Leave nil for automatic:
+--   * env var KH1C_OUTPUT_DIR, if set
+--   * under Wine (GameNative/Winlator): D:\KH1Companion\ -- GameNative maps D: to
+--     Android's Download folder, where the companion app looks by default
+--   * otherwise %LOCALAPPDATA%\KH1Companion\
 OUTPUT_DIR = nil
 
 local POLL_FRAMES      = 15   -- ~4 Hz at 60 fps
@@ -59,6 +61,18 @@ local function ensure_dir(dir)
     f = io.open(probe, "w")
     if f then f:close() os.remove(probe) return true end
     return false
+end
+
+-- Wine maps the Linux root to Z:, so Linux's /proc is visible there; Windows has no such file.
+local function under_wine()
+    local f = io.open("Z:\\proc\\version", "r")
+    if f then f:close() return true end
+    return false
+end
+
+local function default_output_dir()
+    if under_wine() then return "D:\\KH1Companion\\" end
+    return (os.getenv("LOCALAPPDATA") or ".") .. "\\KH1Companion\\"
 end
 
 local function snapshot()
@@ -107,7 +121,7 @@ function _OnInit()
         return
     end
 
-    out_dir = OUTPUT_DIR or ((os.getenv("LOCALAPPDATA") or ".") .. "\\KH1Companion\\")
+    out_dir = OUTPUT_DIR or os.getenv("KH1C_OUTPUT_DIR") or default_output_dir()
     if not ensure_dir(out_dir) then
         ConsolePrint("kh1companion: can't write to " .. out_dir .. ", not running")
         game_version = nil

@@ -74,12 +74,20 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 
 ## On the Thor (GameNative)
 
-1. Install LuaBackend into the game folder inside GameNative the same way (`DBGHELP.dll` + `LuaBackend.toml`). You may need the Wine DLL override `dbghelp=n,b` in GameNative's environment settings.
-2. Set `OUTPUT_DIR` at the top of the bridge script to a Wine drive that maps to Android shared storage, e.g. `D:\\KH1Companion\\` if D: is `Download/`.
-3. Install the APK, allow "draw over other apps" and "all files access", point it at the state file, and start it.
-   To start it without opening the settings screen (adb or a launcher shortcut): `am start -n com.kh1companion/.MainActivity --ez start true`.
+GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bridge detects that (Linux's `/proc` shows up as `Z:\proc`) and writes `D:\KH1Companion\state.json`, which is the file the companion app reads by default.
 
-Emulator notes (`tools/emulator_test.py`): the AVD's `hw.display1.*` settings are ignored by this system image, so the test adds the second display through the emulator console. Screenshots of it also go through the console, because `screencap` can't see virtual displays. Don't use Settings as the stand-in "game": it hides all third-party overlays while focused.
+1. `python tools/build_gamenative_mod.py` builds `dist/kh1-companion-gamenative.zip`: LuaBackend's `DBGHELP.dll` and a `LuaBackend.toml` that loads KH1 scripts from `D:/KH1Companion/scripts/`.
+2. Copy the zip and the script to the Thor:
+   ```bash
+   adb push dist/kh1-companion-gamenative.zip /sdcard/Download/
+   adb push lua/kh1companion.lua /sdcard/Download/KH1Companion/scripts/
+   ```
+3. In GameNative: open KH 1.5+2.5 → Mods → import the zip, placing both files in the game's root folder.
+4. In the game's container settings → Environment variables, add `dbghelp=n,b` to `WINEDLLOVERRIDES` (separate it from existing entries with `;`).
+5. Install the companion APK, allow "draw over other apps" and "all files access", and start it.
+6. Script updates are just another `adb push` to `KH1Companion/scripts/`, then a restart of the game. The mod doesn't need reinstalling.
+
+To start the companion without its settings screen (adb or a launcher shortcut): `am start -n com.kh1companion/.MainActivity --ez start true`.
 
 ## Status
 
@@ -96,3 +104,9 @@ Emulator notes (`tools/emulator_test.py`): the AVD's `hw.display1.*` settings ar
 - The Dalmatian count assumes one save-flag bit per puppy.
 - The Thor's real screen density; the preview lets you compare 2.0 / 2.5 / 3.0.
 - Agrabah's map has six columns, so its labels are small at the likely density.
+
+## Roadmap
+
+- **Guide tab:** a game guide driven by what you haven't done yet. Pull it up when you're stuck to see what to do next, or use it as a completionist checklist for the area you're in: unopened chests, Trinity marks, Dalmatians, story steps, and synthesis items.
+- Trinity marks (flag offsets are in the randomizer's `globals.lua`).
+- Synthesis helper.

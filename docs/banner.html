@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>KH1 Companion banner</title>
-<!-- Rendered to docs/banner.png by tools/make_screenshots.py (--banner). Original art only. -->
+<!-- Rendered to docs/banner.png by tools/make_screenshots.py. The top screen shows the game's title screen; everything else is original. -->
 <style>
   @font-face { font-family: "Cinzel"; src: url("../companion/fonts/cinzel.woff2") format("woff2"); font-weight: 400 900; }
   @font-face { font-family: "Barlow SC"; src: url("../companion/fonts/barlow-sc-600.woff2") format("woff2"); font-weight: 600; }
@@ -49,7 +49,7 @@
   .screen { position: absolute; background: #000; border-radius: 6px; overflow: hidden;
     box-shadow: 0 0 0 7px #08090c, 0 0 0 8px #30333d; }
   .screen.top { left: 51px; top: 28px; width: 478px; height: 269px; }
-  .screen.top svg { display: block; width: 100%; height: 100%; }
+  .screen.top img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .screen.bottom { left: 155px; top: 24px; width: 270px; height: 235px; }
   .screen.bottom img { display: block; width: 100%; height: 100%; }
   .cam { position: absolute; left: 286px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: #05060a; box-shadow: 0 0 0 2px #26282f; }
@@ -97,39 +97,8 @@
     <div class="shell lid">
       <span class="cam"></span>
       <div class="screen top">
-        <!-- Placeholder for the game: an original sunset-over-the-sea scene, no game art. -->
-        <svg viewBox="0 0 478 269" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#101a4a"/><stop offset=".45" stop-color="#3b3f8f"/>
-              <stop offset=".75" stop-color="#d9786a"/><stop offset="1" stop-color="#ffc977"/>
-            </linearGradient>
-            <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#e6956b"/><stop offset=".25" stop-color="#5a5a9a"/><stop offset="1" stop-color="#0d1840"/>
-            </linearGradient>
-            <radialGradient id="sun" cx=".5" cy=".5" r=".5">
-              <stop offset="0" stop-color="#fff6d6"/><stop offset=".6" stop-color="#ffd27a"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="478" height="170" fill="url(#sky)"/>
-          <g fill="#fff" opacity=".7"><circle cx="40" cy="22" r="1.2"/><circle cx="120" cy="40" r="1"/><circle cx="210" cy="16" r="1.3"/>
-            <circle cx="300" cy="34" r="1"/><circle cx="380" cy="18" r="1.2"/><circle cx="440" cy="48" r="1"/></g>
-          <circle cx="300" cy="170" r="70" fill="url(#sun)"/>
-          <circle cx="300" cy="170" r="32" fill="#fff0c4"/>
-          <rect y="170" width="478" height="99" fill="url(#sea)"/>
-          <g stroke="#ffe3a8" stroke-linecap="round" opacity=".75">
-            <line x1="270" y1="180" x2="330" y2="180" stroke-width="3"/><line x1="280" y1="192" x2="322" y2="192" stroke-width="2.5"/>
-            <line x1="288" y1="206" x2="314" y2="206" stroke-width="2"/><line x1="294" y1="222" x2="308" y2="222" stroke-width="1.5"/>
-          </g>
-          <!-- a small island with a palm tree, in silhouette -->
-          <path d="M60 172 Q110 150 170 172 Z" fill="#0c1230"/>
-          <path d="M118 160 Q114 120 124 92" stroke="#0c1230" stroke-width="5" fill="none" stroke-linecap="round"/>
-          <g fill="#0c1230">
-            <path d="M124 92 Q100 82 84 96 Q104 90 124 96 Z"/><path d="M124 92 Q146 78 166 90 Q144 88 124 96 Z"/>
-            <path d="M124 92 Q112 70 92 70 Q112 78 122 96 Z"/><path d="M124 92 Q140 68 158 72 Q138 80 126 96 Z"/>
-          </g>
-          <path d="M0 172 Q40 166 60 172 Z" fill="#0c1230" opacity=".7"/>
-        </svg>
+        <!-- The game's own title screen (KINGDOM HEARTS FINAL MIX, captured on the Thor). -->
+        <img src="kh1fm-title.jpg" alt="">
       </div>
     </div>
     <span class="hinge l"></span><span class="hinge r"></span>

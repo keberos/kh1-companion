@@ -22,7 +22,7 @@
       radial-gradient(1.5px 1.5px at 93% 18%, #fff8, transparent), radial-gradient(1px 1px at 86% 82%, #fff6, transparent),
       radial-gradient(1px 1px at 33% 45%, #fff4, transparent), radial-gradient(1.5px 1.5px at 66% 30%, #fff5, transparent); }
   .crown { position: absolute; right: -60px; bottom: -80px; width: 560px; opacity: .06; }
-  .left { position: absolute; left: 90px; top: 175px; width: 760px; }
+  .left { position: absolute; left: 80px; top: 190px; width: 760px; }
   h1 { margin: 0; font: 900 76px/1 "Cinzel", serif; letter-spacing: .03em; white-space: nowrap;
     background: linear-gradient(180deg, #fff6d6 0%, var(--gold) 45%, var(--gold-deep) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 #0008); }
@@ -35,14 +35,46 @@
   .chip { font: 600 24px "Barlow SC", sans-serif; padding: 10px 20px; border-radius: 10px; color: #fff;
     background: linear-gradient(180deg, rgba(36,58,128,.95), rgba(12,20,58,.95));
     box-shadow: 0 0 0 2px #5d6c98, 0 6px 18px #0008; }
-  .device { position: absolute; right: 110px; top: 26px; width: 500px; padding: 22px 22px 26px; border-radius: 42px;
-    background: linear-gradient(180deg, #2b2f3a, #16181f); box-shadow: 0 30px 80px #000c, inset 0 0 0 2px #3c4150; }
-  .top { height: 190px; border-radius: 14px; overflow: hidden; position: relative;
-    background: radial-gradient(400px 220px at 50% 60%, #26305e, #090c1c); display: grid; place-items: center; }
-  .top span { font: 700 26px "Cinzel", serif; letter-spacing: .12em; color: #c9d3f0aa; }
-  .hinge { width: 60%; height: 10px; margin: 16px auto; border-radius: 5px; background: #0c0d12; }
-  .bottom { border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 2px #000; }
-  .bottom img { display: block; width: 100%; }
+  /* An AYN Thor-style clamshell, opened flat, drawn to scale: 6" 16:9 top screen (133x75 mm),
+     3.92" 1240x1080 bottom screen (75x66 mm), at about 3.6 px per mm. */
+  .device { position: absolute; right: 96px; top: 46px; width: 580px; height: 664px; filter: drop-shadow(0 34px 50px #000b); }
+  .shell { position: absolute; left: 0; width: 580px; height: 326px;
+    background: linear-gradient(180deg, #2a2d35 0%, #1b1d23 55%, #141519 100%);
+    box-shadow: inset 0 0 0 2px #3a3e4a, inset 0 2px 0 #4a4f5e; }
+  .lid { top: 0; border-radius: 34px 34px 14px 14px; }
+  .base { top: 338px; border-radius: 14px 14px 40px 40px; }
+  .hinge { position: absolute; top: 316px; width: 108px; height: 30px; border-radius: 15px;
+    background: linear-gradient(180deg, #0d0e12, #2a2d35 50%, #0d0e12); box-shadow: inset 0 0 0 1px #000; }
+  .hinge.l { left: 36px; } .hinge.r { right: 36px; }
+  .screen { position: absolute; background: #000; border-radius: 6px; overflow: hidden;
+    box-shadow: 0 0 0 7px #08090c, 0 0 0 8px #30333d; }
+  .screen.top { left: 51px; top: 28px; width: 478px; height: 269px; }
+  .screen.top svg { display: block; width: 100%; height: 100%; }
+  .screen.bottom { left: 155px; top: 24px; width: 270px; height: 235px; }
+  .screen.bottom img { display: block; width: 100%; height: 100%; }
+  .cam { position: absolute; left: 286px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: #05060a; box-shadow: 0 0 0 2px #26282f; }
+  /* controls */
+  .dpad { position: absolute; left: 44px; top: 34px; width: 74px; height: 74px; }
+  .dpad i { position: absolute; background: linear-gradient(180deg, #34373f, #1c1e24); box-shadow: inset 0 0 0 1px #4a4e5a, 0 3px 4px #0008; border-radius: 5px; }
+  .dpad i:nth-child(1) { left: 25px; top: 0; width: 24px; height: 74px; }
+  .dpad i:nth-child(2) { left: 0; top: 25px; width: 74px; height: 24px; }
+  .stick { position: absolute; width: 74px; height: 74px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #2b2e36 0 46%, #0b0c10 47% 56%, #22252c 57%);
+    box-shadow: 0 0 0 3px #0a0b0e, inset 0 2px 3px #4a4e5a; }
+  .stick::after { content: ""; position: absolute; inset: 22px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #4a4e5a, #1a1c22); box-shadow: 0 3px 6px #000a; }
+  .stick.l { left: 44px; top: 150px; } .stick.r { right: 44px; top: 150px; }
+  .abxy { position: absolute; right: 40px; top: 30px; width: 84px; height: 84px; }
+  .abxy b { position: absolute; width: 28px; height: 28px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #3d414c, #16181d); box-shadow: inset 0 0 0 1px #50555f, 0 3px 4px #0009;
+    font: 700 13px/28px "Barlow SC", sans-serif; text-align: center; color: #9aa3b8; }
+  .abxy b:nth-child(1) { left: 28px; top: 0; } .abxy b:nth-child(2) { left: 56px; top: 28px; }
+  .abxy b:nth-child(3) { left: 28px; top: 56px; } .abxy b:nth-child(4) { left: 0; top: 28px; }
+  .pill { position: absolute; top: 280px; width: 30px; height: 10px; border-radius: 5px; background: #0d0e12; box-shadow: inset 0 0 0 1px #3a3e4a; }
+  .home { position: absolute; left: 279px; top: 274px; width: 22px; height: 22px; border-radius: 50%; background: #0d0e12; box-shadow: inset 0 0 0 1px #3a3e4a; }
+  .grille { position: absolute; top: 262px; width: 70px; height: 34px;
+    background-image: radial-gradient(circle, #07080b 1.6px, transparent 2px); background-size: 10px 10px; }
+  .grille.l { left: 46px; } .grille.r { right: 46px; }
 </style>
 </head>
 <body>
@@ -62,9 +94,54 @@
     </div>
   </div>
   <div class="device">
-    <div class="top"><span>THE GAME</span></div>
-    <div class="hinge"></div>
-    <div class="bottom"><img src="screenshots/map.png" alt=""></div>
+    <div class="shell lid">
+      <span class="cam"></span>
+      <div class="screen top">
+        <!-- Placeholder for the game: an original sunset-over-the-sea scene, no game art. -->
+        <svg viewBox="0 0 478 269" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#101a4a"/><stop offset=".45" stop-color="#3b3f8f"/>
+              <stop offset=".75" stop-color="#d9786a"/><stop offset="1" stop-color="#ffc977"/>
+            </linearGradient>
+            <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#e6956b"/><stop offset=".25" stop-color="#5a5a9a"/><stop offset="1" stop-color="#0d1840"/>
+            </linearGradient>
+            <radialGradient id="sun" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#fff6d6"/><stop offset=".6" stop-color="#ffd27a"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="478" height="170" fill="url(#sky)"/>
+          <g fill="#fff" opacity=".7"><circle cx="40" cy="22" r="1.2"/><circle cx="120" cy="40" r="1"/><circle cx="210" cy="16" r="1.3"/>
+            <circle cx="300" cy="34" r="1"/><circle cx="380" cy="18" r="1.2"/><circle cx="440" cy="48" r="1"/></g>
+          <circle cx="300" cy="170" r="70" fill="url(#sun)"/>
+          <circle cx="300" cy="170" r="32" fill="#fff0c4"/>
+          <rect y="170" width="478" height="99" fill="url(#sea)"/>
+          <g stroke="#ffe3a8" stroke-linecap="round" opacity=".75">
+            <line x1="270" y1="180" x2="330" y2="180" stroke-width="3"/><line x1="280" y1="192" x2="322" y2="192" stroke-width="2.5"/>
+            <line x1="288" y1="206" x2="314" y2="206" stroke-width="2"/><line x1="294" y1="222" x2="308" y2="222" stroke-width="1.5"/>
+          </g>
+          <!-- a small island with a palm tree, in silhouette -->
+          <path d="M60 172 Q110 150 170 172 Z" fill="#0c1230"/>
+          <path d="M118 160 Q114 120 124 92" stroke="#0c1230" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <g fill="#0c1230">
+            <path d="M124 92 Q100 82 84 96 Q104 90 124 96 Z"/><path d="M124 92 Q146 78 166 90 Q144 88 124 96 Z"/>
+            <path d="M124 92 Q112 70 92 70 Q112 78 122 96 Z"/><path d="M124 92 Q140 68 158 72 Q138 80 126 96 Z"/>
+          </g>
+          <path d="M0 172 Q40 166 60 172 Z" fill="#0c1230" opacity=".7"/>
+        </svg>
+      </div>
+    </div>
+    <span class="hinge l"></span><span class="hinge r"></span>
+    <div class="shell base">
+      <div class="dpad"><i></i><i></i></div>
+      <span class="stick l"></span>
+      <div class="screen bottom"><img src="screenshots/map.png" alt=""></div>
+      <div class="abxy"><b>X</b><b>A</b><b>B</b><b>Y</b></div>
+      <span class="stick r"></span>
+      <span class="pill" style="left: 232px"></span><span class="home"></span><span class="pill" style="left: 318px"></span>
+      <span class="grille l"></span><span class="grille r"></span>
+    </div>
   </div>
 </body>
 </html>

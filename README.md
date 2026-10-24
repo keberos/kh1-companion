@@ -100,7 +100,7 @@ To start the companion without its settings screen (adb or a launcher shortcut):
 | Lua bridge | Runs on the Steam build: edition, world/room, level/stats and chest flags confirmed in Dive to the Heart. |
 | Companion page | Done: Here / Map / Worlds / Collect, tested at bottom-screen size against mock and real recordings. |
 | World maps | All 14 worlds authored from the wiki. Dashed exits are the wiki's implications, not confirmed. |
-| Android wrapper | Passes `tools/emulator_test.py` on a two-display emulator (2026-10-23): overlay fills the 1240×1080 second display, reads the pushed state file, taps and swipes work, and focus stays on the app on the main screen throughout. Not yet run on the Thor. |
+| Android wrapper | Passes `tools/emulator_test.py` on a two-display emulator (2026-10-23): overlay fills the 1240×1080 second display, reads the pushed state file, taps and swipes work, and focus stays on the app on the main screen throughout. Runs on the Thor (2026-10-24) with live data from KH1 in GameNative: LuaBackend as `DINPUT8.dll` → bridge → `D:\KH1Companion\state.json` → bottom-screen overlay, top screen keeps focus. |
 
 **Unverified:**
 - World IDs beyond those confirmed (0, 1, 3, 9, 0x0B, 0x0D, 0x0F, 0x10). The others follow the game's world order; the header says "world id unverified" there.

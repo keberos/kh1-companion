@@ -287,6 +287,8 @@ ul.levels li.here .lvnum { color: var(--here); }
 .detail { margin-top: 10px; display: grid; gap: 4px; }
 .detail .reward { justify-self: start; font-size: 16px; }
 nav button { font-size: 15px; letter-spacing: .03em; }
-svg.map .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; animation: goalpulse 2s ease-in-out infinite; }
+/* the next-step ring stays gold even on the room you're in (the "here" style colours every rect) */
+svg.map .node .goalring, svg.map .node.here .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; filter: none; animation: goalpulse 2s ease-in-out infinite; }
 @keyframes goalpulse { 50% { opacity: .35; } }
-.lg.goal { box-shadow: 0 0 0 2px var(--gold); border-radius: 3px; }
+.lg.goal { border: 2px dashed var(--gold); border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; }
+.lg.shut { border: 2px dashed #5d6c98; border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; opacity: .8; }

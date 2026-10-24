@@ -255,7 +255,6 @@ svg.map .node.done .nc { fill: var(--hp-top); }
 svg.map .node { cursor: pointer; }
 svg.map .node.shut { opacity: .45; }
 svg.map .node.unknown .nl { fill: var(--muted); font-style: italic; letter-spacing: .2em; }
-svg.map .node.shut rect { stroke-dasharray: 5 4; }
 svg.map .node.later .nc { fill: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; align-items: center; color: var(--sub); font: italic 600 13px var(--ui); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -291,4 +290,3 @@ nav button { font-size: 15px; letter-spacing: .03em; }
 svg.map .node .goalring, svg.map .node.here .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; filter: none; animation: goalpulse 2s ease-in-out infinite; }
 @keyframes goalpulse { 50% { opacity: .35; } }
 .lg.goal { border: 2px dashed var(--gold); border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; }
-.lg.shut { border: 2px dashed #5d6c98; border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; opacity: .8; }

@@ -226,7 +226,7 @@
       `<span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
-      `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span><i class="lg shut"></i>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
+      `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
       `${approx ? '<span><i class="lg dash"></i>approximate path</span>' : ""}</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     $("allNames").onclick = () => { allNames = !allNames; store.set("allNames", allNames); render(true); };

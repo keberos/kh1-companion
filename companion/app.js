@@ -222,8 +222,8 @@
     el.innerHTML =
       `<div class="row" style="margin-bottom:8px"><button class="chip" id="pickMapWorld">${esc(displayWorld(world))} ▾</button>` +
       (mapWorld && mapWorld !== sum.world && L.MAPS[sum.world] ? `<button class="chip" id="mapHere">Current world</button>` : "") +
-      `<span class="grow"></span><button class="chip ${allNames ? "on" : ""}" id="allNames">All names</button>` +
-      `<span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
+      `<span class="grow"></span><span class="map-count">${icon("ico-chest", "")}<b>${sum.worlds[world].got} of ${sum.worlds[world].total}</b> chests opened</span>` +
+      `<span class="grow"></span><button class="chip ${allNames ? "on" : ""}" id="allNames">${allNames ? "Hide names" : "Unhide names"}</button></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +

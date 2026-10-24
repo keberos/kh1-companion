@@ -256,6 +256,9 @@ svg.map .node { cursor: pointer; }
 svg.map .node.shut { opacity: .45; }
 svg.map .node.unknown .nl { fill: var(--muted); font-style: italic; letter-spacing: .2em; }
 svg.map .node.later .nc { fill: var(--muted); }
+.map-count { display: inline-flex; align-items: center; gap: 6px; font: italic 600 14px var(--ui); color: var(--sub); white-space: nowrap; }
+.map-count svg { width: 18px; height: 18px; }
+.map-count b { color: var(--text); font-style: normal; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; align-items: center; color: var(--sub); font: italic 600 13px var(--ui); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
 .legend svg { width: 16px; height: 16px; }

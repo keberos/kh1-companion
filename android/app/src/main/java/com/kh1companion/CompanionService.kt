@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
@@ -17,6 +19,7 @@ import android.util.Log
 import android.view.Display
 import android.view.Gravity
 import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import org.json.JSONObject
@@ -39,6 +42,10 @@ class CompanionService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_STOP) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
         if (webView == null) {
             startForeground(NOTIFICATION_ID, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             if (!Settings.canDrawOverlays(this)) {
@@ -48,7 +55,8 @@ class CompanionService : Service() {
             }
             showOverlay()
         }
-        return START_STICKY
+        // Not sticky: once closed (or killed), it stays closed until opened again.
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -73,6 +81,14 @@ class CompanionService : Service() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true // room labels live in localStorage
             setBackgroundColor(0xFF0B1024.toInt())
+            // Lets the page's close button shut the companion down (the page asks first).
+            addJavascriptInterface(object {
+                @JavascriptInterface
+                fun close() { handler.post { stopSelf() } }
+
+                @JavascriptInterface
+                fun openSettings() { handler.post { this@CompanionService.openSettings() } }
+            }, "KH1Native")
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
                     lastPushed = null // re-send current state to the fresh page
@@ -135,11 +151,30 @@ class CompanionService : Service() {
             NotificationChannel(CHANNEL, "Companion overlay", NotificationManager.IMPORTANCE_LOW),
         )
         val prefs = Prefs(this)
+        val close = PendingIntent.getService(
+            this, 0, Intent(this, CompanionService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE,
+        )
+        val settings = PendingIntent.getActivity(
+            this, 1, settingsIntent(), PendingIntent.FLAG_IMMUTABLE,
+        )
         return Notification.Builder(this, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
-            .setContentTitle("KH1 Companion running")
-            .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else prefs.statePath)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("KH1 Companion is on the bottom screen")
+            .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else "Tap Close to hide it")
+            .setContentIntent(settings)
+            .addAction(Notification.Action.Builder(null, "Close", close).build())
+            .addAction(Notification.Action.Builder(null, "Settings", settings).build())
             .build()
+    }
+
+    private fun settingsIntent() = Intent(this, MainActivity::class.java)
+        .setAction(MainActivity.ACTION_SETTINGS)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    private fun openSettings() {
+        // Open on the main screen; the bottom one is under the overlay.
+        val opts = android.app.ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+        startActivity(settingsIntent(), opts.toBundle())
     }
 
     companion object {
@@ -147,6 +182,11 @@ class CompanionService : Service() {
         private const val CHANNEL = "overlay"
         private const val NOTIFICATION_ID = 1
         private const val POLL_MS = 250L
+        const val ACTION_STOP = "com.kh1companion.STOP"
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, CompanionService::class.java))
+        }
 
         @Volatile
         var running = false

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: quick close / settings without opening anything else. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="close" android:enabled="true"
+        android:icon="@drawable/ic_launcher_fg"
+        android:shortcutShortLabel="@string/shortcut_close">
+        <intent android:action="com.kh1companion.CLOSE"
+            android:targetPackage="com.kh1companion" android:targetClass="com.kh1companion.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="settings" android:enabled="true"
+        android:icon="@drawable/ic_launcher_fg"
+        android:shortcutShortLabel="@string/shortcut_settings">
+        <intent android:action="com.kh1companion.SETTINGS"
+            android:targetPackage="com.kh1companion" android:targetClass="com.kh1companion.MainActivity" />
+    </shortcut>
+</shortcuts>

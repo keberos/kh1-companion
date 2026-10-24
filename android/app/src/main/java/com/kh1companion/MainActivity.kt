@@ -13,6 +13,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import java.io.File
 
 /** Settings and permissions. The companion itself runs in [CompanionService]. */
@@ -25,13 +26,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
-        // `--ez start true`: start the companion with saved settings and get out of the way
-        // (adb, or a launcher shortcut), so the game keeps the main screen.
-        if (intent.getBooleanExtra("start", false)) {
-            startForegroundService(Intent(this, CompanionService::class.java))
-            finish()
-            return
-        }
+        if (handleLaunch(intent)) return
         val pad = (16 * resources.displayMetrics.density).toInt()
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -62,15 +57,46 @@ class MainActivity : Activity() {
         col.addView(devUrl)
         col.addView(button("Save and start companion") {
             save()
-            stopService(Intent(this, CompanionService::class.java))
+            CompanionService.stop(this)
             startForegroundService(Intent(this, CompanionService::class.java))
             status.postDelayed({ refresh() }, 500)
         })
-        col.addView(button("Stop companion") {
-            stopService(Intent(this, CompanionService::class.java))
+        col.addView(button("Close companion") {
+            CompanionService.stop(this)
             status.postDelayed({ refresh() }, 300)
         })
         setContentView(ScrollView(this).apply { addView(col) })
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleLaunch(intent)
+    }
+
+    /**
+     * The app icon is an on/off switch, like any other app: tap to show the companion on the
+     * bottom screen, tap again to close it. No settings screen gets in the way unless a
+     * permission is missing or Settings was asked for (long-press shortcut, notification).
+     * Returns true when the activity finished instead of showing settings.
+     */
+    private fun handleLaunch(intent: Intent): Boolean {
+        val ready = Settings.canDrawOverlays(this) && Environment.isExternalStorageManager()
+        val start = intent.getBooleanExtra("start", false) // adb: `--ez start true`
+        val toggle = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        when {
+            intent.action == ACTION_CLOSE || (toggle && CompanionService.running) -> {
+                CompanionService.stop(this)
+                Toast.makeText(this, "KH1 Companion closed", Toast.LENGTH_SHORT).show()
+            }
+            (start || toggle) && ready -> {
+                startForegroundService(Intent(this, CompanionService::class.java))
+                Toast.makeText(this, "KH1 Companion on the bottom screen. Tap the icon again to close.", Toast.LENGTH_SHORT).show()
+            }
+            else -> return false
+        }
+        finish()
+        return true
     }
 
     override fun onResume() {
@@ -95,5 +121,10 @@ class MainActivity : Activity() {
             appendLine("State file: $age")
             append("Companion: ${if (CompanionService.running) "running" else "stopped"}")
         }
+    }
+
+    companion object {
+        const val ACTION_CLOSE = "com.kh1companion.CLOSE"
+        const val ACTION_SETTINGS = "com.kh1companion.SETTINGS"
     }
 }

@@ -80,7 +80,19 @@
     <div class="room" id="hRoom">Start KH1 with the companion script installed</div>
   </div>
   <span class="lvl" id="hLevel"></span>
+  <button class="xbtn" id="closeBtn" hidden aria-label="Close companion">&times;</button>
 </header>
+<div class="sheet" id="closeSheet" hidden>
+  <div class="card">
+    <div class="sheet-title">Close the companion?</div>
+    <p>Open it again from the KH1 Companion app icon.</p>
+    <div class="sheet-row">
+      <button class="btn" id="closeNo">Keep it</button>
+      <button class="btn" id="closeSettings">Settings</button>
+      <button class="btn primary" id="closeYes">Close</button>
+    </div>
+  </div>
+</div>
 
 <main>
   <section class="view on" id="v-here"></section>

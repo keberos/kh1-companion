@@ -417,6 +417,16 @@
     renderHeader();
     setTimeout(poll, POLL_MS);
   }
+  // Close button: only in the Android app, which exposes KH1Native.
+  if (window.KH1Native) {
+    const sheet = $("closeSheet");
+    $("closeBtn").hidden = false;
+    $("closeBtn").onclick = () => { sheet.hidden = false; };
+    $("closeNo").onclick = () => { sheet.hidden = true; };
+    sheet.onclick = (e) => { if (e.target === sheet) sheet.hidden = true; };
+    $("closeYes").onclick = () => window.KH1Native.close();
+    $("closeSettings").onclick = () => { sheet.hidden = true; window.KH1Native.openSettings(); };
+  }
   if (params.has("native")) setInterval(renderHeader, 1000);
   else poll();
 })();

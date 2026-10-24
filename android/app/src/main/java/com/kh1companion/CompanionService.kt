@@ -133,6 +133,9 @@ class CompanionService : Service() {
     }
 
     private fun pushState(file: File) {
+        // The file outlives the game: what's there before the bridge starts is the last
+        // session's. The bridge rewrites it every 2 s while running, so only take a fresh one.
+        if (System.currentTimeMillis() - file.lastModified() > FRESH_MS) return
         val text = try {
             file.readText()
         } catch (e: Exception) {
@@ -182,6 +185,7 @@ class CompanionService : Service() {
         private const val CHANNEL = "overlay"
         private const val NOTIFICATION_ID = 1
         private const val POLL_MS = 250L
+        private const val FRESH_MS = 6_000L
         const val ACTION_STOP = "com.kh1companion.STOP"
 
         fun stop(context: Context) {

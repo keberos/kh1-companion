@@ -131,6 +131,42 @@ local function write_snapshot(body)
     os.rename(tmp_path, out_path)
 end
 
+-- Uninstalling from the device: the app leaves mod/uninstall.flag next to the state file, and
+-- the next time the game starts, the bridge takes LuaBackend out of the game folder itself
+-- (the game folder is in GameNative's private storage, which no other app can reach). A loaded
+-- DLL can't be deleted but can be renamed, and once it's no longer called DINPUT8.dll nothing
+-- loads it again. Runs in the game's working directory, the game folder. The flag's first
+-- word "test" renames and immediately renames back, to check this works without removing.
+local function self_uninstall(dir)
+    local flag = dir .. "mod\\uninstall.flag"
+    local f = io.open(flag, "r")
+    if not f then return false end
+    local mode = (f:read("*l") or ""):match("^%s*(%a*)")
+    f:close()
+    local function log(text)
+        local l = io.open(dir .. "mod\\uninstall.log", "w")
+        if l then l:write(text, "\n") l:close() end
+    end
+    os.remove("DINPUT8.dll.removed")
+    local ok, err = os.rename("DINPUT8.dll", "DINPUT8.dll.removed")
+    if not ok then
+        log("FAIL could not rename DINPUT8.dll: " .. tostring(err))
+        return true
+    end
+    if mode == "test" then
+        local back, err2 = os.rename("DINPUT8.dll.removed", "DINPUT8.dll")
+        log(back and "OK test: renamed and restored" or ("FAIL test: renamed but could not restore: " .. tostring(err2)))
+        os.remove(flag)
+        return false
+    end
+    os.remove("LuaBackend.toml")
+    os.remove(dir .. "state.json")
+    log("OK removed from the game folder")
+    os.remove(flag)
+    ConsolePrint("kh1companion: uninstalled from the game folder; it won't load next time")
+    return true
+end
+
 function _OnInit()
     if GAME_ID ~= 0xAF71841E or ENGINE_TYPE ~= "BACKEND" then
         ConsolePrint("kh1companion: KH1 not detected, not running")
@@ -148,6 +184,10 @@ function _OnInit()
     out_dir = OUTPUT_DIR or os.getenv("KH1C_OUTPUT_DIR") or default_output_dir()
     if not ensure_dir(out_dir) then
         ConsolePrint("kh1companion: can't write to " .. out_dir .. ", not running")
+        game_version = nil
+        return
+    end
+    if self_uninstall(out_dir) then
         game_version = nil
         return
     end

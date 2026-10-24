@@ -89,21 +89,29 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 
 ## Install (users)
 
-Download the APK from the latest GitHub release and follow the in-app setup: two permissions, then **Install**, which has GameNative run a one-time installer inside KH's container. No manual GameNative steps. The user instructions are in `RELEASE_NOTES.md`, which is also the release page text.
+Download the APK from the latest GitHub release; the in-app setup does the rest with the user:
 
-How the one-tap install works: the APK ships the bridge script and the LuaBackend files (`android/app/src/main/assets/mod/`, built by `tools/build_gamenative_mod.py`). The app copies them to `Download/KH1Companion/`, then sends GameNative's `app.gamenative.LAUNCH_GAME` intent with a `container_config` that overrides the executable for that one launch with `D:\KH1Companion\mod\install.bat`. The bat finds the game folder, copies `DINPUT8.dll` and `LuaBackend.toml` in, sets `HKCU\Software\Wine\AppDefaults\KINGDOM HEARTS FINAL MIX.exe\DllOverrides` (dinput8 native,builtin; dbghelp builtin), and writes `install.log`, which the setup screen reads. GameNative then asks whether to keep the temporary settings: Discard is right (Settings → Advanced → Repair game launch fixes a Save).
+1. Two Android permissions (draw over other apps, all files access).
+2. GameNative → KINGDOM HEARTS HD 1.5+2.5 ReMIX → ⚙ → **Import Files** → `Download/KH1Companion/mod/DINPUT8.dll` and `LuaBackend.toml` → Game Directory → Copy. The app puts those files there itself.
+3. GameNative → ⚙ → Edit container → Environment variables → `WINEDLLOVERRIDES` = `dinput8=n,b;dbghelp=b` (the app has Copy buttons).
+4. Start the game from setup; the step ticks itself off once the bridge writes its file.
+
+The app also copies the bridge script to `Download/KH1Companion/scripts/` and refreshes it after every app update, so script fixes ship with the APK. The user instructions are in `RELEASE_NOTES.md`, which is also the release page text.
+
+Why two GameNative steps: the game folder is in GameNative's private storage, so no other app can write there, and GameNative 1.3 ignores the `executablePath` in a launch intent's `container_config` (tested on the Thor 2026-10-24: it still runs the Steam loader), so an installer can't be run for the user.
 
 ## Uninstall
 
-**From the app (any install done through setup):** Settings → Advanced → Remove everything, three buttons in order:
-1. **Remove the mod from the game**: GameNative runs `uninstall.bat` in the container, which deletes `DINPUT8.dll` and `LuaBackend.toml` from the game folder and removes the registry override (choose Discard if GameNative asks to save settings).
-2. **Delete the companion's files**: removes `Download/KH1Companion/`.
-3. **Uninstall this app**.
+**From the app:** Settings → Advanced → Remove everything:
+1. **Remove from the game**, then start the game once. The bridge, running inside the game, renames its own `DINPUT8.dll` (a loaded DLL can't be deleted, but it can be renamed; tested on the Thor), deletes `LuaBackend.toml`, and writes `mod/uninstall.log`. From then on nothing loads. No GameNative steps.
+2. Optional: delete `WINEDLLOVERRIDES` in the container's Environment variables (harmless once the DLL is gone).
+3. **Delete files**: removes `Download/KH1Companion/`.
+4. **Uninstall** the app.
 
-The game is then exactly as before. Step 1 can also be skipped by reinstalling or verifying the game in GameNative, which replaces the folder.
+Reinstalling the game in GameNative also clears the game folder.
 
-**Prototype extras (installed by hand before the in-app setup existed):**
-- **Thor:** the steps above remove the files and registry entry, but the container also has `WINEDLLOVERRIDES=dinput8=n,b;dbghelp=b` in GameNative → KH 1.5+2.5 → ⚙ → Edit container → Environment. Delete that variable. If you changed the container's executable to `KINGDOM HEARTS FINAL MIX.exe`, you can set it back too (optional; it only skips the collection menu).
+**Prototype extras:**
+- **Thor:** the steps above cover it (the hand-installed files are the same ones). If you changed the container's executable to `KINGDOM HEARTS FINAL MIX.exe`, you can set it back (optional; it only skips the collection menu).
 - **PC (Steam):** delete `DBGHELP.dll` and `LuaBackend.toml` from the KINGDOM HEARTS -HD 1.5+2.5 ReMIX- folder, and `%LOCALAPPDATA%\KH1Companion\`.
 
 ## Releasing

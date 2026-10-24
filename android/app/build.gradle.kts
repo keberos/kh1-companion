@@ -12,7 +12,7 @@ android {
         minSdk = 30 // createWindowContext for overlays on a secondary display
         targetSdk = 34
         versionCode = 2
-        versionName = "1.0.0"
+        versionName = "0.9.0-beta.1"
     }
 
     // Release signing comes from the environment (CI secrets, or a local key), so every release

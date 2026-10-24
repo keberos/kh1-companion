@@ -43,6 +43,8 @@ Six tabs, all live from the save you have loaded. It never tells you anything yo
 - **[GameNative](https://github.com/utkarshdalal/GameNative)** with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed and launching normally
 - About **five minutes** for setup
 
+Setup's pictures and the steps below were made with **GameNative 1.3.0** on an **AYN Thor** (Android 13), with KINGDOM HEARTS HD 1.5+2.5 ReMIX from Steam (KH1 Final Mix 1.0.0.10). If you're on a different GameNative version, menu names and positions may differ.
+
 ## Install
 
 1. **Download** `KH1-Companion-….apk` from the [latest release](../../releases) and open it to install.
@@ -160,7 +162,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `data.js` is generated. Plain HTML, no build step. |
 | `companion/theme.css`, `art/`, `fonts/` | KH1-menu look. Original SVG art only; Cinzel and Barlow Semi Condensed under the SIL OFL, bundled so the app works offline. |
 | `android/` | Android app: setup, the overlay service, Play (launch through GameNative). `assets/mod/` holds LuaBackend; `assets/guide/` the setup pictures. |
-| `docs/` | README banner (`banner.html` → `banner.png`) and screenshots. |
+| `docs/` | README banner (`banner.html` → `banner.png`) and screenshots (companion 0.9.0 betas, rendered from sample saves). |
 | `dev/preview.html`, `dev/scenarios/` | Two-screen preview with a live change log, and fixed sample saves (`/?state=/dev/scenarios/<name>.json&view=<tab>`). |
 | `tools/devserver.py` | Serves the page plus live, recorded or replayed state. |
 | `tools/gen_data.py`, `tools/ap_rules.py` | Regenerate `companion/data.js` from `tools/sources/`, including each chest's requirements. |

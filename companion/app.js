@@ -208,7 +208,7 @@
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}not yet</span>` : ""}` +
-      `${approx ? '<span><i class="lg dash"></i>exit not confirmed</span>' : ""}</div>`;
+      `${approx ? '<span><i class="lg dash"></i>approximate path</span>' : ""}</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     if ($("mapHere")) $("mapHere").onclick = () => { mapWorld = null; render(true); };
     el.querySelectorAll("[data-node]").forEach((g) => { g.onclick = () => openNodeSheet(world, g.dataset.node); });

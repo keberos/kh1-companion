@@ -1,4 +1,6 @@
-"""Make the setup guide's pictures from screenshots of GameNative 1.3 on the Thor (1920x1080).
+"""Make the setup guide's pictures from screenshots of GameNative 1.3.0 on the AYN Thor (Android 13,
+1920x1080 top screen), taken 2026-10-24. If GameNative's screens change, retake them and update
+GUIDE_SOURCE in android/app/src/main/java/com/kh1companion/MainActivity.kt, which tells users.
 
 Each picture is a crop of GameNative's own UI with what to tap outlined in gold. Crops stay on
 GameNative's menus and dialogs, away from the game's key art. Output goes to

@@ -29,6 +29,8 @@ Plus **Worlds** (progress everywhere you've been) and **Collect** (232 chests, 9
 
 You need GameNative with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed and launching normally. Setup takes about five minutes.
 
+*Tested with GameNative 1.3.0 on an AYN Thor (Android 13); setup's pictures come from that version. Newer GameNative versions may move or rename menus.*
+
 1. Download **KH1-Companion-vX.Y.Z.apk** below and open it to install.
 2. Open **Kingdom Hearts Final Mix** (the companion's app). The checklist walks you through, with pictures:
    1. **Show on the second screen**: tap Allow, pick Kingdom Hearts Final Mix in the list, turn it on.

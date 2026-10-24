@@ -245,6 +245,9 @@ class MainActivity : Activity() {
 
     private val guidesOpen = mutableSetOf<String>()
 
+    /** What the guide pictures show; screens may differ in other GameNative versions (tools/make_guide_images.py). */
+    private val GUIDE_SOURCE = "Pictures from GameNative 1.3.0 on an AYN Thor (Android 13). Newer GameNative versions may look different."
+
     /** "Show me how": numbered pictures of the GameNative screens, plus any buttons the steps need. */
     private fun guide(key: String, shots: List<Pair<String, String>>, actions: List<Pair<String, () -> Unit>> = emptyList(),
                       actionsAfter: Int = shots.lastIndex) {
@@ -255,6 +258,7 @@ class MainActivity : Activity() {
         })
         if (!open) return
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, 0, 0, pad) }
+        box.addView(text(GUIDE_SOURCE, 12f))
         shots.forEachIndexed { i, (text, image) ->
             box.addView(text("${i + 1}. $text", 15f, bold = true))
             try {

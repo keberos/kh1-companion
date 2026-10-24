@@ -1,13 +1,17 @@
 """Build the GameNative mod zip that installs LuaBackend for the companion bridge.
 
 The zip holds two files for the game's root folder:
-  DBGHELP.dll       LuaBackend hook, from the official release (Sirius902/LuaBackend)
+  DINPUT8.dll       LuaBackend hook (the release's DBGHELP.dll, renamed), from Sirius902/LuaBackend.
+                    It proxies both dbghelp and dinput8; under Wine it must go in as dinput8,
+                    because Wine's imagehlp forwards to dbghelp, and a global dbghelp=n,b
+                    hands those forwards to the proxy, which lacks them, and the game aborts
+                    ("unimplemented function dbghelp.dll.ImageNtHeader").
   LuaBackend.toml   loads KH1 scripts from D:/KH1Companion/scripts/, which GameNative
                     maps to Android's Download/KH1Companion/scripts/, so the bridge script
                     can be updated over adb without reinstalling the mod
 
-Import it in GameNative (game -> Mods -> import local archive), and add
-dbghelp=n,b to WINEDLLOVERRIDES in the game's container environment variables.
+Copy both files into the game folder (GameNative 1.3: game -> Import Files -> Game Directory)
+and set WINEDLLOVERRIDES=dinput8=n,b;dbghelp=b in the container's environment variables.
 
 Usage:  python tools/build_gamenative_mod.py      (needs the gh CLI)
 """
@@ -55,9 +59,9 @@ def main():
             dll = z.read("DBGHELP.dll")
     OUT.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("DBGHELP.dll", dll)
+        z.writestr("DINPUT8.dll", dll)
         z.writestr("LuaBackend.toml", TOML)
-    print(f"{OUT} ({OUT.stat().st_size} bytes): DBGHELP.dll from {LUABACKEND_REPO} {LUABACKEND_TAG}, LuaBackend.toml")
+    print(f"{OUT} ({OUT.stat().st_size} bytes): DINPUT8.dll from {LUABACKEND_REPO} {LUABACKEND_TAG}, LuaBackend.toml")
 
 
 if __name__ == "__main__":

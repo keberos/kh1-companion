@@ -76,14 +76,18 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 
 GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bridge detects that (Linux's `/proc` shows up as `Z:\proc`) and writes `D:\KH1Companion\state.json`, which is the file the companion app reads by default.
 
-1. `python tools/build_gamenative_mod.py` builds `dist/kh1-companion-gamenative.zip`: LuaBackend's `DBGHELP.dll` and a `LuaBackend.toml` that loads KH1 scripts from `D:/KH1Companion/scripts/`.
+1. `python tools/build_gamenative_mod.py` builds `dist/kh1-companion-gamenative.zip`: LuaBackend's DLL renamed to `DINPUT8.dll`, and a `LuaBackend.toml` that loads KH1 scripts from `D:/KH1Companion/scripts/`.
 2. Copy the zip and the script to the Thor:
    ```bash
    adb push dist/kh1-companion-gamenative.zip /sdcard/Download/
    adb push lua/kh1companion.lua /sdcard/Download/KH1Companion/scripts/
    ```
-3. In GameNative: open KH 1.5+2.5 → Mods → import the zip, placing both files in the game's root folder.
-4. In the game's container settings → Environment variables, add `dbghelp=n,b` to `WINEDLLOVERRIDES` (separate it from existing entries with `;`).
+3. In GameNative 1.3: KH 1.5+2.5 → ⚙ → **Import Files** → pick both files → destination **Game Directory** → Copy.
+4. ⚙ → Edit container → Environment: add `WINEDLLOVERRIDES` = `dinput8=n,b;dbghelp=b`.
+   - **Don't load it as `dbghelp`.** Wine's imagehlp forwards its functions to dbghelp, so a global `dbghelp=n,b` sends those calls to LuaBackend's stand-in, which lacks them, and the game aborts (`unimplemented function dbghelp.dll.ImageNtHeader`).
+   - As `dinput8` it works, because KH1 imports `DirectInput8Create`, and LuaBackend exits quietly in every other program.
+   - Optional: set the container's executable to `KINGDOM HEARTS FINAL MIX.exe` to skip the collection menu.
+   - **If the screen is black:** the collection's display settings (`config1525.dat`, in My Games) sync through Steam Cloud. Windowed mode chosen on a PC carries over, and it renders black on the Thor; set fullscreen or borderless.
 5. Install the companion APK, allow "draw over other apps" and "all files access", and start it.
 6. Script updates are just another `adb push` to `KH1Companion/scripts/`, then a restart of the game. The mod doesn't need reinstalling.
 

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thor Preview</title>
+<style>
+  :root {
+    --bg: #0e0f13; --panel: #181a21; --line: #2a2d38; --text: #e6e8ee; --muted: #8a8f9e;
+    --accent: #f2c14e; --good: #5fd39a; --bad: #ff8a65; --shell: #22252e;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, "Segoe UI", sans-serif; }
+  .wrap { display: flex; gap: 20px; padding: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .device { background: var(--shell); border-radius: 28px; padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .screen { background: #000; border-radius: 6px; overflow: hidden; position: relative; }
+  .top { display: flex; flex-direction: column; }
+  .top header { display: flex; justify-content: space-between; padding: 8px 12px; background: #111; color: var(--muted); font-size: 12px; }
+  #log { flex: 1; overflow-y: auto; padding: 8px 12px; font: 12px/1.5 ui-monospace, Consolas, monospace; }
+  #log div { border-bottom: 1px solid #1c1c1c; padding: 2px 0; }
+  #log .t { color: var(--muted); margin-right: 8px; }
+  #log .chest { color: var(--good); }
+  #log .move { color: var(--accent); }
+  .hinge { width: 60%; height: 6px; background: #15171d; border-radius: 3px; }
+  .bottom iframe { border: 0; transform-origin: 0 0; background: #0b1024; }
+  .side { flex: 1; min-width: 300px; max-width: 460px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-variant-numeric: tabular-nums; }
+  .kv span:nth-child(odd) { color: var(--muted); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  button, select { background: #252833; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font: inherit; }
+  button:hover { border-color: var(--accent); }
+  input[type=range] { flex: 1; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .badge.live { background: color-mix(in srgb, var(--good) 25%, transparent); color: var(--good); }
+  .badge.replay { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
+  .badge.off { background: color-mix(in srgb, var(--bad) 25%, transparent); color: var(--bad); }
+  .muted { color: var(--muted); }
+  code { font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="device">
+    <div class="screen top" id="top">
+      <header><span>Top screen · change log</span><span id="topInfo"></span></header>
+      <div id="log"></div>
+    </div>
+    <div class="hinge"></div>
+    <div class="screen bottom" id="bottom"><iframe id="frame" src="/"></iframe></div>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h3>Source</h3>
+      <div><span class="badge off" id="mode">connecting</span> <span class="muted" id="modeInfo"></span></div>
+      <div class="row">
+        <select id="recs"><option value="">Recordings…</option></select>
+        <button id="load">Load</button>
+        <button id="live">Back to live</button>
+      </div>
+      <div class="row" id="replayRow" hidden>
+        <button id="back">⏮</button><button id="play">⏯</button><button id="step">⏭</button>
+        <input type="range" id="seek" min="0" value="0">
+        <select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option><option>8</option></select>
+      </div>
+      <div class="muted" id="replayPos"></div>
+    </div>
+
+    <div class="card">
+      <h3>Snapshot</h3>
+      <div class="kv" id="kv"></div>
+    </div>
+
+    <div class="card">
+      <h3>Bottom screen</h3>
+      <div class="row">
+        <label>Density
+          <select id="dpr">
+            <option value="2">2.0 (620×540)</option>
+            <option value="2.5" selected>2.5 (496×432)</option>
+            <option value="3">3.0 (413×360)</option>
+          </select>
+        </label>
+        <label>Zoom <select id="zoom"><option>1</option><option selected>1.25</option><option>1.5</option></select></label>
+        <button id="reload">Reload page</button>
+      </div>
+      <div class="muted" style="margin-top:8px">The panel is 1240×1080; the page sees 1240÷density by 1080÷density CSS pixels. The Thor's real density isn't confirmed yet, so check all three.</div>
+    </div>
+  </div>
+</div>
+
+<script src="/data.js"></script>
+<script src="/maps.js"></script>
+<script src="/logic.js"></script>
+<script>
+(() => {
+  const L = window.KH1Logic;
+  const $ = (id) => document.getElementById(id);
+  const PANEL = { w: 1240, h: 1080 };
+  const hex2 = (n) => "0x" + Number(n).toString(16).toUpperCase().padStart(2, "0");
+
+  // Sizing: the iframe gets the logical CSS size, scaled by zoom for comfortable viewing.
+  function layout() {
+    const dpr = +$("dpr").value, zoom = +$("zoom").value;
+    const w = Math.round(PANEL.w / dpr), h = Math.round(PANEL.h / dpr);
+    const f = $("frame");
+    f.style.width = w + "px"; f.style.height = h + "px"; f.style.transform = `scale(${zoom})`;
+    $("bottom").style.width = w * zoom + "px"; $("bottom").style.height = h * zoom + "px";
+    // Top screen: 6" 1080p at 16:9, drawn the same width as the bottom one.
+    $("top").style.width = w * zoom + "px"; $("top").style.height = Math.round(w * zoom * 9 / 16) + "px";
+  }
+  ["dpr", "zoom"].forEach((id) => $(id).onchange = layout);
+  $("reload").onclick = () => $("frame").contentWindow.location.reload();
+  layout();
+
+  // Change log: what moved between consecutive snapshots, with chest bits named.
+  let prev = null, prevKey = null;
+  function log(cls, text) {
+    const d = document.createElement("div");
+    d.innerHTML = `<span class="t">${new Date().toLocaleTimeString()}</span><span class="${cls}"></span>`;
+    d.lastChild.textContent = text;
+    $("log").prepend(d);
+    while ($("log").children.length > 200) $("log").lastChild.remove();
+  }
+  function diff(a, b) {
+    if (!a) { log("move", `first snapshot: world ${hex2(b.world)} room ${hex2(b.room)} (${L.worldName(b.world) || "unknown world"})`); return; }
+    if (a.world !== b.world || a.room !== b.room)
+      log("move", `moved to world ${hex2(b.world)} room ${hex2(b.room)} (${L.worldName(b.world) || "unknown world"})`);
+    const ca = L.hexToBytes(a.chests), cb = L.hexToBytes(b.chests);
+    for (let B = 0; B < cb.length; B++) {
+      const flipped = cb[B] ^ (ca[B] || 0);
+      for (let bit = 0; flipped && bit < 8; bit++) {
+        if (!(flipped >> bit & 1)) continue;
+        const c = window.KH1_CHESTS.find((x) => x.B === B && x.b === bit);
+        const on = (cb[B] >> bit & 1) === 1;
+        log("chest", `chest flag byte ${B} bit ${bit} ${on ? "set" : "cleared"} → ${c ? c.w + ": " + c.n : "(no named chest)"}`);
+      }
+    }
+    for (const k of ["level", "max_hp", "max_mp", "ap", "postcards", "in_field"])
+      if (a[k] !== b[k]) log("", `${k}: ${a[k]} → ${b[k]}`);
+    for (const k of ["reports", "puppies", "cups", "progress"])
+      if (a[k] !== b[k]) log("", `${k}: ${a[k]} → ${b[k]}`);
+  }
+
+  function showSnapshot(s) {
+    const sum = L.summarize(s);
+    const rows = [
+      ["edition", s.edition], ["world", `${hex2(s.world)} ${sum.world || "?"}${sum.world && !sum.worldVerified ? " (unverified)" : ""}`],
+      ["room", hex2(s.room)], ["in field", s.in_field], ["level", s.level],
+      ["HP / MP / AP", `${s.max_hp} / ${s.max_mp} / ${s.ap}`], ["chests", `${sum.chestsGot} / ${sum.chestsTotal}`],
+      ["puppies", sum.puppies], ["reports", sum.reports.filter((r) => r.got).length], ["seq", s.seq],
+    ];
+    $("kv").innerHTML = rows.map(([k, v]) => `<span>${k}</span><span>${String(v).replace(/</g, "&lt;")}</span>`).join("");
+    $("topInfo").textContent = `${sum.world || hex2(s.world)} · ${hex2(s.room)}`;
+  }
+
+  let lastStatusAt = 0;
+  async function tick() {
+    try {
+      const st = await (await fetch("/api/status", { cache: "no-store" })).json();
+      lastStatusAt = Date.now();
+      $("mode").textContent = st.mode; $("mode").className = "badge " + st.mode;
+      $("modeInfo").textContent = st.mode === "live"
+        ? (st.state ? "" : "no state.json yet at ") + (st.state ? "" : st.state_path) + (st.recording ? ` recording ${st.recording} (${st.recorded} changes)` : "")
+        : `${st.replay}`;
+      $("replayRow").hidden = st.mode !== "replay";
+      if (st.mode === "replay") {
+        $("seek").max = st.count - 1;
+        if (document.activeElement !== $("seek")) $("seek").value = st.index;
+        if (document.activeElement !== $("speed")) $("speed").value = String(st.speed);
+        $("replayPos").textContent = `frame ${st.index + 1} / ${st.count} · t=${st.frame_ts}s · ${st.playing ? "playing" : "paused"} ×${st.speed}`;
+      } else $("replayPos").textContent = "";
+      if (st.state) {
+        const key = JSON.stringify({ ...st.state, seq: 0, t: 0 });
+        if (key !== prevKey) { diff(prev, st.state); prev = st.state; prevKey = key; }
+        showSnapshot(st.state);
+      }
+    } catch {
+      if (Date.now() - lastStatusAt > 2000) { $("mode").textContent = "server down"; $("mode").className = "badge off"; }
+    }
+    setTimeout(tick, 250);
+  }
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: "POST", body: JSON.stringify(body) });
+    const j = await r.json();
+    if (j.error) alert(j.error);
+  }
+  async function loadRecs() {
+    const recs = await (await fetch("/api/recordings")).json();
+    $("recs").innerHTML = `<option value="">Recordings…</option>` +
+      recs.map((r) => `<option value="${r.name}">${r.name} (${r.frames})</option>`).join("");
+  }
+  $("recs").onfocus = loadRecs;
+  $("load").onclick = () => $("recs").value && post("/api/load", { name: $("recs").value, speed: +$("speed").value });
+  $("live").onclick = () => post("/api/replay", { action: "live" });
+  $("play").onclick = async () => {
+    const st = await (await fetch("/api/status")).json();
+    post("/api/replay", { action: st.playing ? "pause" : "play" });
+  };
+  $("step").onclick = () => post("/api/replay", { action: "step" });
+  $("back").onclick = () => post("/api/replay", { action: "back" });
+  $("seek").onchange = () => post("/api/replay", { action: "seek", value: +$("seek").value });
+  $("speed").onchange = () => post("/api/replay", { action: "speed", value: +$("speed").value });
+
+  loadRecs();
+  tick();
+})();
+</script>
+</body>
+</html>

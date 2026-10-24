@@ -1,0 +1,12 @@
+companion/state.json
+companion/state.json.tmp
+__pycache__/
+mock/
+recordings/*.jsonl
+!recordings/fixtures/
+emulator-out/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk

@@ -199,6 +199,13 @@ li.here {
 .tag.pup { color: var(--gold); display: inline-flex; align-items: center; gap: 3px; }
 .tag.later { color: var(--muted); }
 .big-ico { width: 44px; height: 44px; margin-bottom: 6px; }
+.waiting { text-align: center; padding: 26px 12px 16px; display: grid; justify-items: center; gap: 8px; }
+.wait-title { font: 700 18px var(--title); letter-spacing: .06em; color: var(--gold); }
+ol.help { margin: 6px 0 0; padding-left: 22px; display: grid; gap: 8px; }
+ol.help b { font: 600 15px var(--ui); color: var(--text); }
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font: 600 13px var(--ui); color: var(--sub); }
+.kv span:nth-child(odd) { color: var(--muted); }
+.kv span:nth-child(even) { word-break: break-all; }
 .grid button.unvisited { opacity: .55; cursor: default; }
 ul.list li.locked .name { color: var(--sub); }
 ul.list li.locked > svg { opacity: .45; }

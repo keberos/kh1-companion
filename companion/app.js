@@ -33,6 +33,7 @@
   const guideSeen = new Set(store.get("guideSeen", []));  // steps seen done whose evidence can leave the save
   let levelPick = store.get("levelPick", {});  // the player's own path / curve choice
   let levelAll = false;  // Level tab: full table instead of the next few levels
+  let waitHelp = false;  // waiting screen: troubleshooting shown
   let roomLabels = store.get("rooms", {});
 
   const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
@@ -496,6 +497,61 @@
     });
   }
 
+  // ---------- waiting for the game ----------
+  // A calm screen by default; "Not connecting?" opens a checklist plus what the app can see.
+
+  function bridgeStatus() {
+    try { return window.KH1Native && window.KH1Native.status ? JSON.parse(window.KH1Native.status()) : null; } catch { return null; }
+  }
+
+  function ago(sec) {
+    if (sec < 90) return `${sec} s`;
+    if (sec < 5400) return `${Math.round(sec / 60)} min`;
+    if (sec < 172800) return `${Math.round(sec / 3600)} h`;
+    return `${Math.round(sec / 86400)} days`;
+  }
+
+  function renderWaiting() {
+    const el = $("v-" + view);
+    let html = `<div class="waiting">${icon("ico-save", "big-ico")}<div class="wait-title">Waiting for Kingdom Hearts…</div>` +
+      `<div class="sub">This connects on its own a few seconds after the game starts.</div>` +
+      `<button class="chip ${waitHelp ? "on" : ""}" id="waitHelp">${waitHelp ? "Hide help" : "Not connecting?"}</button></div>`;
+    if (waitHelp) {
+      const st = bridgeStatus();
+      let verdict = "";
+      if (st) {
+        if (!st.filesAccess) verdict = "The app can't read the game's file: turn on all files access in Settings.";
+        else if (!st.exists) verdict = "The game hasn't written anything yet, so the companion script isn't loading. Check the mod steps below.";
+        else if (st.ageSec > 6) verdict = `The game last wrote ${ago(st.ageSec)} ago, so that's from an earlier session and the script isn't running now.`;
+        else verdict = "The game is writing. It should connect in a moment.";
+      }
+      const steps = [
+        ["Start the game", "Use the Kingdom Hearts Final Mix icon, or start it in GameNative. It connects once the game reaches its first screen."],
+        ["Mod files in the game folder", "In GameNative: KH 1.5+2.5 → ⚙ → Import Files → DINPUT8.dll and LuaBackend.toml → Game Directory."],
+        ["Container setting", "⚙ → Edit container → Environment: WINEDLLOVERRIDES = dinput8=n,b;dbghelp=b"],
+        ["Companion script", "Download/KH1Companion/scripts/kh1companion.lua must be on the device."],
+        ["File access", "This app needs \"All files access\" to read what the game writes."],
+        ["Black screen in the game?", "Set the game's display mode to fullscreen or borderless. Windowed mode can sync from a PC through Steam Cloud and shows black here."],
+      ];
+      html += `<div class="card">` + (verdict ? `<div class="hint">${esc(verdict)}</div>` : "") +
+        `<div class="label" style="margin-top:10px">Check these</div><ol class="help">${steps.map(([t, d]) =>
+          `<li><b>${esc(t)}</b><div class="sub">${esc(d)}</div></li>`).join("")}</ol>` +
+        `<div class="label" style="margin-top:10px">Details</div><div class="kv">` +
+        (st ? `<span>State file</span><span>${esc(st.path)}</span>` +
+          `<span>Last written</span><span>${st.exists ? ago(st.ageSec) + " ago" : "never (not found)"}</span>` +
+          `<span>All files access</span><span>${st.filesAccess ? "on" : "off"}</span>` +
+          `<span>GameNative</span><span>${st.gameNative ? "installed" : "not found"}</span>`
+          : `<span>Reading</span><span>${esc(STATE_URL)}</span>`) + `</div>` +
+        `<div class="row" style="margin-top:10px"><span class="grow"></span>` +
+        (window.KH1Native ? `<button class="chip" id="waitSettings">Settings</button>` : "") + `</div></div>`;
+    }
+    el.innerHTML = html;
+    $("waitHelp").onclick = () => { waitHelp = !waitHelp; render(true); };
+    if ($("waitSettings")) $("waitSettings").onclick = () => window.KH1Native.openSettings();
+  }
+  // Keep the details current while they're open.
+  setInterval(() => { if (!state && waitHelp && !$("sheet").classList.contains("on")) render(true); }, 2000);
+
   // ---------- sheets ----------
 
   function openSheet(html) {
@@ -544,9 +600,10 @@
     // Heartbeat writes bump seq/t only; re-rendering on those would swap buttons out from under a tap.
     const data = state ? JSON.stringify({ ...state, seq: 0, t: 0 }) : "";
     const sig = [data, view, showOpened, showContents, showNeeds, worldDetail, mapWorld, guideWorld, [...hintsShown].join(","),
-      [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll].join("|");
+      [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll, waitHelp].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;
+    if (!state) { renderWaiting(); return; }
     if (state && sum.title) {
       $("v-" + view).innerHTML = `<div class="empty">${icon("ico-save", "big-ico")}<br>Load a save to see your progress.<br>` +
         `<span class="sub">Nothing is shown from the title screen: until a save loads, the game's memory is empty or left over from the last one.</span></div>`;

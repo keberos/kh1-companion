@@ -13,6 +13,7 @@ import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.IBinder
+import android.os.Environment
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
@@ -88,6 +89,22 @@ class CompanionService : Service() {
 
                 @JavascriptInterface
                 fun openSettings() { handler.post { this@CompanionService.openSettings() } }
+
+                /** For the page's "Not connecting?" help: what the app can see of the bridge's file. */
+                @JavascriptInterface
+                fun status(): String {
+                    val f = File(Prefs(this@CompanionService).statePath)
+                    val exists = f.exists()
+                    return JSONObject()
+                        .put("path", f.path)
+                        .put("exists", exists)
+                        .put("ageSec", if (exists) (System.currentTimeMillis() - f.lastModified()) / 1000 else JSONObject.NULL)
+                        .put("filesAccess", Environment.isExternalStorageManager())
+                        .put("gameNative", try {
+                            packageManager.getPackageInfo(PlayActivity.GAMENATIVE, 0); true
+                        } catch (e: Exception) { false })
+                        .toString()
+                }
             }, "KH1Native")
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {

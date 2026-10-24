@@ -207,6 +207,19 @@
     return { open: true };
   }
 
+  // ---------- which rooms the player has been to ----------
+  // KH1 keeps no record of visited rooms, so a room counts as visited when this device has
+  // seen the player there (`seen`: node ids), a chest in it is open, or a finished story step
+  // happened there. Unvisited rooms keep their names hidden.
+  function knownRooms(world, state, opened, seen, guideSeen) {
+    const known = new Set(seen || []);
+    const here = nodeForRoom(state, {});
+    if (here && worldName(state.world) === world) known.add(here.id);
+    for (const c of chestsFor(world, opened)) if (c.got && c.node) known.add(c.node);
+    for (const s of guideFor(world, state, guideSeen).steps) if (s.done && s.where) known.add(s.where);
+    return known;
+  }
+
   // ---------- story guide ----------
   // Steps are done by world progress ({p, at}), by items in the bag ({items}), by how far
   // through the Dive you are ({dive}), or only once the player has moved on ({end}).
@@ -352,6 +365,6 @@
   return {
     WORLDS, MAPS, ROOM_NAMES, hexToBytes, bit, popcount, worldName, roomName, onTitle, trackedWorlds, isPuppies,
     GUIDE, LEVELS, PATHS, CURVES, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
-    has, needName, lockOf, nodeAccess, levelInfo, itemCount,
+    has, needName, lockOf, nodeAccess, levelInfo, itemCount, knownRooms,
   };
 });

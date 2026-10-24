@@ -54,11 +54,12 @@ test("maps are well formed", () => {
     assert.equal(new Set(rooms).size, rooms.length, `${w}: a room byte is claimed twice`);
     for (const [a, b, kind] of m.edges) {
       assert.ok(ids.includes(a) && ids.includes(b), `${w}: edge ${a} - ${b} names a missing room`);
-      assert.ok(kind === undefined || kind === "approx", `${w}: unknown edge kind ${kind}`);
+      assert.equal(kind, undefined, `${w}: ${a} - ${b} is marked approximate; every path should be researched and confirmed`);
     }
     if (m.nodes.length > 1) {
       const linked = new Set(m.edges.flat());
-      for (const n of m.nodes) if (!n.alone) assert.ok(linked.has(n.id), `${w}: ${n.id} has no exits`);
+      // Rooms you only see in story scenes have no walkable exits.
+      for (const n of m.nodes) if (!n.alone && !(n.gate && n.gate.scene)) assert.ok(linked.has(n.id), `${w}: ${n.id} has no exits`);
     }
   }
 });
@@ -305,6 +306,20 @@ test("worlds stay hidden until the save has found them", () => {
   const p = new Array(16).fill(0); p[1] = 0x10;
   assert.equal(L.summarize(blank({ world: 3, progress: hexOf(p) })).found["Deep Jungle"], "visited", "story progress counts");
   assert.equal(L.summarize(blank({ world: 3, progress: "00".repeat(16) })).found["Monstro"], "hidden", "old bridge: hidden without evidence");
+});
+
+test("rooms count as visited from this device, opened chests and finished steps", () => {
+  const tt = (b) => hexOf([b, ...new Array(15).fill(0)]);
+  const opened = new Uint8Array(509);
+  const red = CHESTS.find((c) => c.w === "Traverse Town" && c.n === "Red Room Chest");
+  opened[red.B] |= 1 << red.b;
+  const st = blank({ world: 3, room: 0x01, progress: tt(0x2B), chests: Buffer.from(opened).toString("hex") });
+  const known = L.knownRooms("Traverse Town", st, opened, ["Item Shop"], new Set());
+  assert.ok(known.has("2nd District"), "where you are");
+  assert.ok(known.has("Red Room"), "a room with an opened chest");
+  assert.ok(known.has("3rd District"), "where a finished story step happened");
+  assert.ok(known.has("Item Shop"), "seen on this device");
+  assert.ok(!known.has("Secret Waterway"), "never been there");
 });
 
 test("real Steam recording: the Dive to the Heart chest flips Awakening: Chest", () => {

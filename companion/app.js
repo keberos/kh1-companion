@@ -35,6 +35,8 @@
   let levelPick = store.get("levelPick", {});  // the player's own path / curve choice
   let levelAll = false;  // Level tab: full table instead of the next few levels
   let waitHelp = false;  // waiting screen: troubleshooting shown
+  let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
+  let allNames = store.get("allNames", false);  // show every room name, visited or not
   let roomLabels = store.get("rooms", {});
 
   const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
@@ -44,6 +46,20 @@
   // Worlds the save hasn't reached stay unnamed; ones only on the Gummi map show their name, nothing more.
   const visited = (w) => !sum || sum.found[w] === "visited";
   const visitedWorlds = (list) => list.filter(visited);
+  // Room names stay hidden until the player has been there (or asks for all names).
+  const knownCache = {};
+  function roomKnown(world, id) {
+    if (allNames || !id) return true;
+    const key = world + "|" + lastRendered;
+    if (!knownCache[key]) {
+      const set = L.knownRooms(world, state, sum.opened, visitedRooms[world], guideSeen);
+      for (const k of Object.keys(knownCache)) delete knownCache[k];
+      knownCache[key] = set;
+    }
+    const step = L.guideFor(world, state, guideSeen).next;
+    return knownCache[key].has(id) || !!(step && step.where === id && (whereShown.has(step.key) || hintsShown.has(step.key)));
+  }
+  const roomLabel = (world, nd) => (nd && roomKnown(world, nd.id) ? L.labelOf(nd) : "???");
 
   // ---------- shared pieces ----------
 
@@ -53,10 +69,11 @@
 
   function chestRow(c, opts) {
     const n = c.node && L.node(c.w, c.node);
-    const sub = [opts.showRoom && n ? L.labelOf(n) : null, showContents && c.i ? c.i : null,
+    const known = !n || roomKnown(c.w, n.id);
+    const sub = [opts.showRoom && n ? (known ? L.labelOf(n) : "A room you haven't been to") : null, known && showContents && c.i ? c.i : null,
       c.lock ? needText(c.lock) : null].filter(Boolean).join(" · ");
     return `<li class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
-      `<span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
+      `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "???"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
       (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") +
       (c.lock ? '<span class="tag later">Later</span>' : opts.here ? '<span class="tag here">Here</span>' : "") + `</li>`;
@@ -155,10 +172,11 @@
       const reachable = cs.filter((c) => !c.got && !c.lock).length;
       const pup = cs.some((c) => !c.got && L.isPuppies(c));
       const shut = !L.nodeAccess(world, n, state).open && n.id !== hereId;
-      const cls = ["node", n.id === hereId ? "here" : "", n.id === goalId ? "goal" : "", cs.length && !left ? "done" : "",
+      let cls = ["node", n.id === hereId ? "here" : "", n.id === goalId ? "goal" : "", cs.length && !left ? "done" : "",
         cs.length ? "" : "bare", shut ? "shut" : "", !shut && left && !reachable ? "later" : ""].join(" ");
       const x = cx(n) - BOX_W / 2, y = cy(n) - BOX_H / 2;
-      const label = L.labelOf(n);
+      const label = roomLabel(world, n);
+      if (label === "???") cls += " unknown";
       const lines = label.length > 13 && label.includes(" ") ? splitLabel(label) : [label];
       return `<g class="${cls}" data-node="${esc(n.id)}">` +
         (n.id === goalId ? `<rect x="${x - 5}" y="${y - 5}" width="${BOX_W + 10}" height="${BOX_H + 10}" rx="12" class="goalring"/>` : "") +
@@ -204,12 +222,14 @@
     el.innerHTML =
       `<div class="row" style="margin-bottom:8px"><button class="chip" id="pickMapWorld">${esc(displayWorld(world))} ▾</button>` +
       (mapWorld && mapWorld !== sum.world && L.MAPS[sum.world] ? `<button class="chip" id="mapHere">Current world</button>` : "") +
-      `<span class="grow"></span><span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
+      `<span class="grow"></span><button class="chip ${allNames ? "on" : ""}" id="allNames">All names</button>` +
+      `<span class="sub">${sum.worlds[world].got}/${sum.worlds[world].total}</span></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}not yet</span>` : ""}` +
       `${approx ? '<span><i class="lg dash"></i>approximate path</span>' : ""}</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
+    $("allNames").onclick = () => { allNames = !allNames; store.set("allNames", allNames); render(true); };
     if ($("mapHere")) $("mapHere").onclick = () => { mapWorld = null; render(true); };
     el.querySelectorAll("[data-node]").forEach((g) => { g.onclick = () => openNodeSheet(world, g.dataset.node); });
   }
@@ -220,8 +240,8 @@
     const ids = (nd.rooms || []).map(hex2).join(", ");
     const access = L.nodeAccess(world, nd, state);
     openSheet(
-      `<h2>${esc(L.labelOf(nd))}</h2><div class="sub">${esc(displayWorld(world))}` +
-      `${nd.save ? " · save point" : ""}${ids ? " · room " + ids : ""}</div>` +
+      `<h2>${esc(roomLabel(world, nd))}</h2><div class="sub">${esc(displayWorld(world))}` +
+      (roomKnown(world, nd.id) ? `${nd.save ? " · save point" : ""}${ids ? " · room " + ids : ""}` : " · you haven't been here yet") + `</div>` +
       (access.open ? "" : `<div class="hint">${icon("ico-lock", "chip-ico")}` +
         (access.scene ? "You can't walk in here. The story brings you here when it's time."
           : access.story ? "You can't get in here yet. It opens up later in the story." : `You can't get in here yet. Needs ${esc(access.need.join(" + "))}.`) +
@@ -311,7 +331,7 @@
       `<div class="card"><div class="label">Left in ${esc(displayWorld(world))} · ${chests.length} chest${chests.length === 1 ? "" : "s"}</div>` +
       (rooms.length ? `<ul class="list">${rooms.map(([id, cs]) => {
         const nd = id !== "null" && L.node(world, id);
-        return `<li data-room="${esc(id)}">${icon("ico-chest")}<span class="grow"><span class="name">${esc(nd ? L.labelOf(nd) : "Elsewhere")}</span>` +
+        return `<li data-room="${esc(id)}">${icon("ico-chest")}<span class="grow"><span class="name">${esc(nd ? roomLabel(world, nd) : "Elsewhere")}</span>` +
           `<div class="sub">${open(cs) === cs.length ? `${cs.length} chest${cs.length > 1 ? "s" : ""}`
             : open(cs) ? `${open(cs)} now, ${cs.length - open(cs)} later` : `${cs.length} later`}` +
           `${cs.some(L.isPuppies) ? " · puppies" : ""}${nd && !L.nodeAccess(world, nd, state).open ? " · can't get in yet" : ""}</div></span>` +
@@ -385,8 +405,8 @@
       `<div class="card"><div class="label">Puppy chests left · ${pupLeft.length} of ${sum.puppyChests.length}</div>` +
       (pupLeft.length
         ? `<ul class="list">${pupKnown.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) =>
-          `<li>${icon("ico-chest")}<span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
-          `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(L.labelOf(L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}` +
+          `<li>${icon("ico-chest")}<span class="grow"><span class="name">${!c.node || roomKnown(c.w, c.node) ? esc(c.n.replace(/ Chest$/, "")) : "???"}</span>` +
+          `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(roomLabel(c.w, L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}` +
           (pupElsewhere ? `<li class="hidden-step">${icon("ico-chest")}<span class="grow"><span class="name">???</span>` +
             `<div class="sub">${pupElsewhere} in worlds you haven't been to</div></span></li>` : "") + `</ul>`
         : '<div class="empty">All puppy chests opened.</div>') + `</div>` +
@@ -601,7 +621,8 @@
     // Heartbeat writes bump seq/t only; re-rendering on those would swap buttons out from under a tap.
     const data = state ? JSON.stringify({ ...state, seq: 0, t: 0 }) : "";
     const sig = [data, view, showOpened, showContents, showNeeds, worldDetail, mapWorld, guideWorld, [...hintsShown].join(","),
-      [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll, waitHelp].join("|");
+      [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll, waitHelp, allNames,
+      JSON.stringify(visitedRooms)].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;
     if (!state) { renderWaiting(); return; }
@@ -632,10 +653,23 @@
     state = next;
     sum = L.summarize(state);
     rememberSteps();
+    rememberRooms();
     render();
   }
   // Destiny Islands errands hand their items over, so remember steps once seen done.
   // A fresh Dive (no Traverse Town progress yet) means a new game: forget them.
+  function rememberRooms() {
+    const tt = L.hexToBytes(state.progress)[0] || 0;
+    if (state.world === 0 && !sum.title && tt === 0 && Object.keys(visitedRooms).length > 2) {
+      visitedRooms = {};  // a fresh Dive: a new game
+      store.set("visited", visitedRooms);
+    }
+    const n = hereNode();
+    if (!n || sum.title || !sum.world) return;
+    const list = visitedRooms[sum.world] || (visitedRooms[sum.world] = []);
+    if (!list.includes(n.id)) { list.push(n.id); store.set("visited", visitedRooms); }
+  }
+
   function rememberSteps() {
     // The growth curve has no save byte: keep the last one EXP pinned down, for when it's ambiguous again.
     const info = !sum.title && L.levelInfo(state, levelPick);

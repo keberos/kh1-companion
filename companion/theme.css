@@ -254,6 +254,7 @@ svg.map .nc { fill: var(--gold); font: italic 700 12px var(--ui); text-anchor: m
 svg.map .node.done .nc { fill: var(--hp-top); }
 svg.map .node { cursor: pointer; }
 svg.map .node.shut { opacity: .45; }
+svg.map .node.unknown .nl { fill: var(--muted); font-style: italic; letter-spacing: .2em; }
 svg.map .node.shut rect { stroke-dasharray: 5 4; }
 svg.map .node.later .nc { fill: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; align-items: center; color: var(--sub); font: italic 600 13px var(--ui); }

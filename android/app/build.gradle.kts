@@ -11,8 +11,8 @@ android {
         applicationId = "com.kh1companion"
         minSdk = 30 // createWindowContext for overlays on a secondary display
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.9.0-beta.3"
+        versionCode = 5
+        versionName = "0.9.0-beta.4"
     }
 
     // Release signing comes from the environment (CI secrets, or a local key), so every release

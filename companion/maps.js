@@ -13,7 +13,9 @@
 //   save    true if the wiki mentions a save point here
 //   match   chest-name prefixes for chests that have no room in the data
 //   alone   true for rooms you only reach by story or cutscene (no exits drawn)
-// Edges: [a, b] or [a, b, "approx"] when the wiki implies the exit but doesn't spell it out.
+// Edges: [a, b]. [a, b, "approx"] would mark an exit the sources only imply (the map draws it dashed); none are left.
+// Paths follow the KH Wiki's room descriptions and KH1 walkthroughs (Walkthrough:Kingdom_Hearts/<world>),
+// cross-checked against Archipelago chest names; every one is confirmed (checked 2026-10-24).
 // `gate`: a room you can't get into until a story point ({p, at}: the guide's progress bytes,
 // where the next step leads there) or an ability ({need}, Archipelago's Beginner logic), or
 // one the story only takes you to in a scene ({scene}: never open to walk into).
@@ -44,17 +46,16 @@ window.KH1_MAPS = {
 
   "Disney Castle": {
     nodes: [
-      { id: "Gummi Hangar", x: 0, y: 0, rooms: [0x05] },
-      { id: "Courtyard", x: 1, y: 0, rooms: [0x03, 0x08] },
-      { id: "Colonnade", x: 2, y: 0, rooms: [0x01] },
-      { id: "Audience Chamber", x: 3, y: 0, rooms: [0x00] },
-      { id: "Path to the Crossroads", label: "Crossroads Path", x: 0, y: 1, rooms: [0x07] },
-      { id: "Spiral Stairs", x: 1, y: 1, rooms: [0x04, 0x06] },
-      { id: "Library", x: 3, y: 1, rooms: [0x02] },
+      { id: "Gummi Hangar", x: 0, y: 0, gate: { scene: true }, rooms: [0x05] },
+      { id: "Courtyard", x: 1, y: 0, gate: { scene: true }, rooms: [0x03, 0x08] },
+      { id: "Colonnade", x: 2, y: 0, gate: { scene: true }, rooms: [0x01] },
+      { id: "Audience Chamber", x: 3, y: 0, gate: { scene: true }, rooms: [0x00] },
+      { id: "Path to the Crossroads", label: "Crossroads Path", x: 0, y: 1, gate: { scene: true }, rooms: [0x07] },
+      { id: "Spiral Stairs", x: 1, y: 1, gate: { scene: true }, rooms: [0x04, 0x06] },
+      { id: "Library", x: 3, y: 1, gate: { scene: true }, rooms: [0x02] },
     ],
-    edges: [["Gummi Hangar", "Courtyard", "approx"], ["Courtyard", "Colonnade", "approx"],
-      ["Colonnade", "Audience Chamber", "approx"], ["Audience Chamber", "Library", "approx"],
-      ["Courtyard", "Spiral Stairs", "approx"], ["Gummi Hangar", "Path to the Crossroads", "approx"]],
+    // KH1 only shows Disney Castle in story scenes; you never walk it, so no paths.
+    edges: [],
   },
 
   "Traverse Town": {
@@ -88,7 +89,6 @@ window.KH1_MAPS = {
       ["Alleyway", "Dalmatians' House"], ["Alleyway", "Secret Waterway"],
       ["3rd District", "Small House"], ["3rd District", "Mystical House"], ["Mystical House", "Merlin's House"],
       ["Merlin's House", "Magician's Study"], ["Magician's Study", "Magician's Lab"],
-      ["Secret Waterway", "Merlin's House", "approx"],
     ],
   },
 
@@ -173,12 +173,14 @@ window.KH1_MAPS = {
     edges: [
       ["Agrabah: Plaza", "Agrabah: Storage"], ["Agrabah: Plaza", "Main Street"], ["Main Street", "Palace Gates"],
       ["Main Street", "Agrabah: Alley"], ["Main Street", "Agrabah: Bazaar"], ["Main Street", "Aladdin's House"],
-      ["Agrabah: Alley", "Agrabah: Bazaar", "approx"],
+      ["Agrabah: Plaza", "Agrabah: Alley"], // over the awnings to the Alley's high exit
       ["Agrabah: Plaza", "Desert"], ["Desert", "Cave: Entrance"],
       ["Cave: Entrance", "Cave: Hall"], ["Cave: Hall", "Bottomless Hall"], ["Bottomless Hall", "Treasure Room"],
       ["Treasure Room", "Lamp Chamber"], ["Lamp Chamber", "Cave: Core"],
-      ["Cave: Hall", "Dark Chamber", "approx"], ["Dark Chamber", "Relic Chamber", "approx"],
-      ["Dark Chamber", "Silent Chamber", "approx"], ["Relic Chamber", "Hidden Room", "approx"],
+      ["Cave: Hall", "Dark Chamber"], // drop down on the right
+      ["Dark Chamber", "Relic Chamber"], // chest "Dark Chamber Across from Relic Chamber Entrance"
+      ["Cave: Entrance", "Relic Chamber"], // down the stairs to the right
+      ["Relic Chamber", "Silent Chamber"], ["Silent Chamber", "Hidden Room"], ["Silent Chamber", "Cave: Hall"], // stairs up
     ],
   },
 
@@ -199,7 +201,7 @@ window.KH1_MAPS = {
       ["Monstro: Mouth", "Throat"], ["Throat", "Stomach"], ["Monstro: Mouth", "Chamber 1"],
       ["Chamber 1", "Monstro: Chamber 3"], ["Chamber 1", "Monstro: Chamber 2"],
       ["Monstro: Chamber 2", "Monstro: Chamber 3"], ["Monstro: Chamber 2", "Monstro: Chamber 5"],
-      ["Monstro: Chamber 5", "Chamber 6", "approx"], ["Monstro: Chamber 5", "Chamber 4"], ["Chamber 4", "Bowels"],
+      ["Monstro: Chamber 5", "Chamber 6"], ["Monstro: Chamber 5", "Chamber 4"], ["Chamber 4", "Bowels"],
     ],
   },
 
@@ -224,11 +226,11 @@ window.KH1_MAPS = {
     ],
     edges: [
       ["Tranquil Grotto", "Undersea Valley"], ["Undersea Valley", "Calm Depths"], ["Calm Depths", "Undersea Cave"],
-      ["Undersea Valley", "Undersea Gorge", "approx"], ["Undersea Cave", "Undersea Gorge", "approx"],
+      ["Undersea Cave", "Undersea Gorge"],
       ["Undersea Gorge", "Ariel's Grotto"], ["Undersea Gorge", "Undersea Garden"], ["Undersea Gorge", "Triton's Palace"],
       ["Triton's Palace", "Triton's Throne"], ["Undersea Gorge", "Sunken Ship"], ["Sunken Ship", "Below Deck"],
       ["Sunken Ship", "Den of Tides"], ["Den of Tides", "Cavern Nook"], ["Den of Tides", "Tidal Abyss"],
-      ["Tidal Abyss", "Ursula's Lair"], ["Calm Depths", "Open Sea", "approx"],
+      ["Tidal Abyss", "Ursula's Lair"], ["Calm Depths", "Open Sea"],
     ],
   },
 
@@ -252,7 +254,7 @@ window.KH1_MAPS = {
       ["Guillotine Square", "Graveyard"], ["Graveyard", "Boneyard"], ["Boneyard", "Moonlight Hill"],
       ["Moonlight Hill", "Graveyard"], ["Moonlight Hill", "Cemetery"], ["Moonlight Hill", "Bridge"],
       ["Bridge", "Oogie Manor/Manor Ruins"], ["Oogie Manor/Manor Ruins", "Torture Chamber"],
-      ["Oogie Manor/Manor Ruins", "Evil Playroom"], ["Bridge", "Guillotine Square", "approx"], // sewers
+      ["Oogie Manor/Manor Ruins", "Evil Playroom"], ["Bridge", "Guillotine Square"], // sewers
     ],
   },
 
@@ -278,7 +280,7 @@ window.KH1_MAPS = {
     ],
     edges: [
       ["Ship: Hold", "Ship: Hold (Yellow Trinity)"], ["Ship: Hold", "Freezer"], ["Freezer", "Ship: Galley"],
-      ["Ship: Galley", "Ship: Cabin"], ["Ship: Cabin", "Captain's Cabin"], ["Ship: Cabin", "Pirate Ship", "approx"],
+      ["Ship: Galley", "Ship: Cabin"], ["Ship: Cabin", "Captain's Cabin"], ["Captain's Cabin", "Pirate Ship"],
       ["Pirate Ship", "Clock Tower"],
     ],
   },

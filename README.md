@@ -21,7 +21,7 @@ Six tabs, all live from the save you have loaded. It never tells you anything yo
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/guide.png" alt="Guide tab"><br><b>Guide</b>: stuck? A gentle nudge first, then <i>Where?</i> for the room, then <i>Show me</i> for the full hint. No boss or reward names until you've earned them.</td>
-    <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, how many chests are left in each, and which rooms or chests you can't reach yet.</td>
+    <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, how many chests are left in each, and which rooms or chests you can't reach yet. Rooms you haven't been to stay "???".</td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: the chests left in this world, the room you're in pinned to the top, with what's inside if you want to know.</td>
@@ -124,7 +124,7 @@ Details the tabs rely on:
 - **Rooms:** the current room comes from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room.
 - **Reachability:** chests come with what reaching them takes (from Archipelago's logic), checked against the magic, shared abilities, Trinities and key items in the save. Rooms are gated on story points.
 - **Level path and curve:** the path is the Dive choice byte; the curve is inferred from EXP at the current level and remembered per device once unambiguous.
-- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited.
+- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "All names" chip shows them all.
 - **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there.
 
 ### Install, by design
@@ -208,7 +208,7 @@ Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELE
 |---|---|
 | Bridge | Runs on the Steam build under GameNative on the Thor; edition, world/room, level/stats, chest flags and story progress confirmed live. |
 | Companion | All six tabs, tested at bottom-screen size against sample saves and real recordings. |
-| Maps | All 14 worlds from the wiki; dashed exits are the wiki's implications, not confirmed. |
+| Maps | All 14 worlds. Every path checked against the KH Wiki's KH1 walkthroughs and Archipelago's chest names (2026-10-24); Disney Castle is story scenes only, so it has no paths. |
 | Android app | Live on the Thor: overlay on the 1240×1080 bottom screen (density 369), top screen keeps focus, plays and closes with the game, guided setup, self-removing uninstall. |
 
 **Not yet checked against a live save:**

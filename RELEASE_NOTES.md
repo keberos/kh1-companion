@@ -5,6 +5,11 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 
 > **Beta.** Works end to end on the AYN Thor; still being tested across a full playthrough. Your game and saves are never changed.
 
+### What's new in beta.4
+
+- **No spoilers from room names.** Rooms you haven't been to show as "???" on the map, in chest lists and in Collect. Tap **All names** on the map to see them anyway (handy on a second device, which hasn't seen where you've been).
+- **Every map path verified.** The routes the maps only guessed at are now checked against KH1 walkthroughs: four were wrong and are fixed, the rest confirmed. Disney Castle is story scenes only, so it no longer shows paths.
+
 ### What's new in beta.3
 
 - **Optional: start straight into the game.** Setup step 6 shows, with pictures, how to point GameNative straight at KH1 so the icon goes right into the game and quitting closes everything together, and how to switch back.

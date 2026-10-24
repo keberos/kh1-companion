@@ -70,6 +70,12 @@
         <ellipse cx="19" cy="8.5" rx="3" ry="3.8"/><ellipse cx="24.5" cy="13" rx="3" ry="3.8"/>
       </g>
     </symbol>
+    <!-- padlock: somewhere you can't get to yet -->
+    <symbol id="ico-lock" viewBox="0 0 32 32">
+      <path d="M10 14v-4a6 6 0 0 1 12 0v4" fill="none" stroke="#c9d3f0" stroke-width="3"/>
+      <rect x="6" y="14" width="20" height="15" rx="3" fill="url(#goldFill)" stroke="#1b2a66" stroke-width="1.5"/>
+      <circle cx="16" cy="21" r="2.5" fill="#1b2a66"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -82,11 +88,11 @@
   <span class="lvl" id="hLevel"></span>
   <button class="xbtn" id="closeBtn" hidden aria-label="Close companion">&times;</button>
 </header>
-<div class="sheet" id="closeSheet" hidden>
+<div class="confirm" id="closeSheet" hidden>
   <div class="card">
-    <div class="sheet-title">Close the companion?</div>
+    <div class="confirm-title">Close the companion?</div>
     <p>Open it again from the KH1 Companion app icon.</p>
-    <div class="sheet-row">
+    <div class="confirm-row">
       <button class="btn" id="closeNo">Keep it</button>
       <button class="btn" id="closeSettings">Settings</button>
       <button class="btn primary" id="closeYes">Close</button>
@@ -100,6 +106,7 @@
   <section class="view" id="v-map"></section>
   <section class="view" id="v-worlds"></section>
   <section class="view" id="v-collect"></section>
+  <section class="view" id="v-level"></section>
 </main>
 
 <nav>
@@ -108,6 +115,7 @@
   <button data-view="map">Map</button>
   <button data-view="worlds">Worlds</button>
   <button data-view="collect">Collect</button>
+  <button data-view="level">Level</button>
 </nav>
 
 <div class="sheet-bg" id="sheet"><div class="sheet" id="sheetBody"></div></div>
@@ -115,6 +123,7 @@
 <script src="data.js"></script>
 <script src="maps.js"></script>
 <script src="guide.js"></script>
+<script src="abilities.js"></script>
 <script src="logic.js"></script>
 <script src="app.js"></script>
 </body>

@@ -93,11 +93,12 @@ header::after {  /* ornamental rule: silver line with a gold diamond */
   border: 1px solid var(--silver-dim);
 }
 .xbtn:active { color: var(--gold); border-color: var(--gold); }
-.sheet { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,4,14,.7); }
-.sheet .card { max-width: 380px; width: 100%; }
-.sheet-title { font: 700 16px var(--title); color: var(--gold); letter-spacing: .06em; margin-bottom: 6px; }
-.sheet p { margin: 0 0 12px; color: var(--sub); }
-.sheet-row { display: flex; gap: 8px; justify-content: flex-end; }
+[hidden] { display: none !important; }
+.confirm { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,4,14,.7); }
+.confirm .card { max-width: 380px; width: 100%; }
+.confirm-title { font: 700 16px var(--title); color: var(--gold); letter-spacing: .06em; margin-bottom: 6px; }
+.confirm p { margin: 0 0 12px; color: var(--sub); }
+.confirm-row { display: flex; gap: 8px; justify-content: flex-end; }
 .btn { font: 600 15px var(--ui); color: var(--text); background: rgba(20,32,80,.9); border: 1px solid var(--silver-dim); border-radius: 6px; padding: 8px 14px; }
 .btn.primary { border-color: var(--gold); color: var(--gold); }
 @keyframes pulse { 50% { box-shadow: 0 0 3px var(--save); } }
@@ -196,6 +197,10 @@ li.here {
 .tag { flex: none; font: italic 700 12px var(--ui); letter-spacing: .08em; text-transform: uppercase; }
 .tag.here { color: var(--here); text-shadow: 0 0 6px rgba(111,227,255,.6); }
 .tag.pup { color: var(--gold); display: inline-flex; align-items: center; gap: 3px; }
+.tag.later { color: var(--muted); }
+ul.list li.locked .name { color: var(--sub); }
+ul.list li.locked > svg { opacity: .45; }
+ul.list li.hidden-step .name { color: var(--muted); letter-spacing: .2em; }
 .tag.pup svg { width: 15px; height: 15px; }
 
 .empty { color: var(--muted); text-align: center; padding: 22px 8px; font: italic 600 16px var(--ui); }
@@ -239,6 +244,9 @@ svg.map .node.bare .nl { fill: var(--muted); font-weight: 500; }
 svg.map .nc { fill: var(--gold); font: italic 700 12px var(--ui); text-anchor: middle; }
 svg.map .node.done .nc { fill: var(--hp-top); }
 svg.map .node { cursor: pointer; }
+svg.map .node.shut { opacity: .45; }
+svg.map .node.shut rect { stroke-dasharray: 5 4; }
+svg.map .node.later .nc { fill: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; align-items: center; color: var(--sub); font: italic 600 13px var(--ui); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
 .legend svg { width: 16px; height: 16px; }
@@ -254,6 +262,20 @@ svg.map .node { cursor: pointer; }
 .step-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 2px var(--silver-dim); }
 .step-dot.done { background: radial-gradient(circle at 40% 35%, #fff, var(--hp-top) 55%, var(--hp-bot)); box-shadow: 0 0 6px rgba(140,245,140,.5); }
 .step-dot.unknown { opacity: .5; }
+.step-nudge { font: italic 600 17px/1.35 var(--ui); color: var(--text); margin-top: 4px; }
+.counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.count { font: 600 13px var(--ui); padding: 3px 8px; border-radius: 10px; color: var(--sub); box-shadow: inset 0 0 0 1px var(--silver-dim); }
+.count.ok { color: var(--hp-top); box-shadow: inset 0 0 0 1px var(--hp-top); }
+/* level tab */
+ul.levels li { min-height: 40px; }
+.lvnum { flex: none; width: 34px; text-align: center; font: italic 700 17px var(--ui); color: var(--sub); }
+ul.levels li.here .lvnum { color: var(--here); }
+.rewards { display: flex; flex-wrap: wrap; gap: 6px; }
+.reward { display: inline-block; font: 600 14px var(--ui); padding: 2px 8px; border-radius: 4px; background: rgba(20,32,80,.8); color: var(--sub); }
+.reward.ability { color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-deep); }
+.reward.bonus { color: var(--here); }
+.detail { margin-top: 10px; display: grid; gap: 4px; }
+.detail .reward { justify-self: start; font-size: 16px; }
 nav button { font-size: 15px; letter-spacing: .03em; }
 svg.map .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; animation: goalpulse 2s ease-in-out infinite; }
 @keyframes goalpulse { 50% { opacity: .35; } }

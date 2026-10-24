@@ -14,9 +14,10 @@ vm.runInNewContext(readFileSync(path.join(ROOT, "companion/data.js"), "utf8"), s
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/maps.js"), "utf8"), sandbox);
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/guide.js"), "utf8"), sandbox);
 // JSON round-trip so arrays come from this realm (deepStrictEqual checks prototypes).
-const { KH1_CHESTS: CHESTS, KH1_REPORTS: REPORTS, KH1_MAPS: MAPS, KH1_GUIDE: GUIDE, KH1_ROOM_NAMES: ROOM_NAMES } =
-  JSON.parse(JSON.stringify(sandbox.window));
-const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES);
+vm.runInNewContext(readFileSync(path.join(ROOT, "companion/abilities.js"), "utf8"), sandbox);
+const { KH1_CHESTS: CHESTS, KH1_REPORTS: REPORTS, KH1_MAPS: MAPS, KH1_GUIDE: GUIDE, KH1_ROOM_NAMES: ROOM_NAMES, KH1_LEVELS: LEVELS,
+  KH1_ABILITY_INFO: ABILITY_INFO, KH1_STAT_INFO: STAT_INFO } = JSON.parse(JSON.stringify(sandbox.window));
+const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS);
 
 const FIXTURES = path.join(ROOT, "recordings/fixtures");
 const blank = (over = {}) => ({
@@ -172,7 +173,14 @@ test("guide steps point at real rooms and read story progress", () => {
     assert.ok(MAPS[w], `guide world ${w} has no map`);
     for (const s of steps) {
       if (s.where) assert.ok(L.node(w, s.where), `${w}: step "${s.title}" points at missing room ${s.where}`);
-      assert.ok(s.hint && s.title && Number.isInteger(s.p) && Number.isInteger(s.at), `${w}: incomplete step`);
+      assert.ok(s.hint && s.title && s.nudge, `${w}: step "${s.title}" lacks a layer`);
+      const kinds = [s.p != null, s.items != null, s.dive != null, s.end != null].filter(Boolean).length;
+      assert.equal(kinds, 1, `${w}: step "${s.title}" needs exactly one way to count as done`);
+      if (s.p != null) assert.ok(Number.isInteger(s.p) && Number.isInteger(s.at), `${w}: bad progress step`);
+      // The nudge is the spoiler-free layer: it must not name the event's boss or reward.
+      for (const r of s.rewards || []) assert.ok(!s.nudge.includes(r), `${w}: nudge for "${s.title}" names ${r}`);
+      const boss = /^Defeat (?:the )?(.+?)(?: again)?$/.exec(s.title);
+      if (boss) assert.ok(!s.nudge.includes(boss[1]), `${w}: nudge for "${s.title}" names ${boss[1]}`);
     }
   }
   const prog = (vals) => Buffer.from(vals).toString("hex");
@@ -182,6 +190,91 @@ test("guide steps point at real rooms and read story progress", () => {
   assert.equal(g.next.title, "Regroup with Donald and Goofy");
   const old = L.guideFor("Traverse Town", blank({ progress: "00".repeat(12) }));
   assert.equal(old.steps.find((s) => s.p === 14).done, null, "12-byte bridges can't see the extra TT byte");
+});
+
+const hexOf = (vals) => Buffer.from(vals).toString("hex");
+const inv = (items) => { const a = new Array(256).fill(0); for (const [i, n] of Object.entries(items)) a[i] = n; return hexOf(a); };
+
+test("Dive to the Heart steps follow the room order, and leaving finishes them", () => {
+  const at = (room) => L.guideFor("Awakening", blank({ world: 0, room, progress: "00".repeat(16) }));
+  assert.equal(at(0x00).next.title, "Choose your path");
+  assert.equal(at(0x01).next.title, "Cross the stations");
+  assert.equal(at(0x05).next.title, "Answer the questions");
+  assert.equal(at(0x03).next.title, "Face what waits at the end");
+  assert.equal(L.guideFor("Awakening", blank({ world: 1, room: 0 })).next, null);
+});
+
+test("Destiny Islands errands count items, and remembered steps survive handing them over", () => {
+  const di = (over) => L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress: "00".repeat(16), ...over }), over.seen);
+  let g = di({ inventory: inv({ 192: 1, 193: 1 }) });
+  assert.equal(g.next.title, "Gather raft supplies");
+  assert.deepEqual(g.next.counts.map((c) => [c.name, c.have, c.n]), [["Log", 1, 2], ["Cloth", 1, 1], ["Rope", 0, 1]]);
+  g = di({ inventory: inv({ 192: 2, 193: 1, 194: 1 }) });
+  assert.equal(g.next.title, "Wrap up the first day");
+  // Items handed to Kairi: gone from the bag, so only the device's memory knows step 1 was done.
+  assert.equal(di({ inventory: inv({}) }).next.title, "Gather raft supplies");
+  assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#0"]) }).next.title, "Wrap up the first day");
+  g = di({ inventory: inv({ 197: 1 }) });
+  assert.equal(g.next.title, "Gather food and water", "any day-two item means the first day is over");
+  const p = new Array(16).fill(0); p[0] = 0x05;
+  assert.equal(L.guideFor("Destiny Islands", blank({ world: 3, progress: hexOf(p), inventory: inv({}) })).next, null);
+  assert.equal(di({}).next.title, "Wrap up the first day", "an old bridge can't see items: fall back to the first unknown");
+});
+
+test("chest locks come from what the save has", () => {
+  const hj = CHESTS.find((c) => c.q && c.q.length === 1 && c.q[0].length === 1 && c.q[0][0] === "High Jump");
+  assert.ok(hj, "some chest needs only High Jump");
+  const lock = (over) => L.chestsFor(hj.w, new Uint8Array(509), blank(over)).find((c) => c.n === hj.n).lock;
+  assert.deepEqual(lock({ shared: "00".repeat(8) }), ["High Jump"]);
+  assert.equal(lock({ shared: "81" + "00".repeat(7) }), null, "equipped High Jump (0x80 | 1) counts");
+  assert.equal(lock({}), null, "an old bridge can't tell, so nothing is shown as locked");
+  assert.deepEqual(L.lockOf([["Progressive Glide:2"], ["Progressive Fire:2", "Blue Trinity"]],
+    blank({ shared: "83" + "00".repeat(7), magic: "01000000000000", trinities: 0 })), ["Superglide"], "the shortest missing list wins");
+  assert.equal(L.needName("Progressive Glide:2"), "Superglide");
+  assert.equal(L.has("Entry Pass", blank({ inventory: inv({}), progress: hexOf([0, 0, 0x28, ...new Array(13).fill(0)]) })), true,
+    "story-given key items count even after they leave the bag");
+});
+
+test("rooms behind a story point or an ability are shut until then", () => {
+  const hall = L.node("Hollow Bastion", "Grand Hall");
+  const p = new Array(16).fill(0);
+  p[10] = 0x5A;
+  assert.equal(L.nodeAccess("Hollow Bastion", hall, blank({ progress: hexOf(p) })).open, false);
+  p[10] = 0x6E;
+  assert.equal(L.nodeAccess("Hollow Bastion", hall, blank({ progress: hexOf(p) })).open, true);
+  const throat = L.node("Monstro", "Throat");
+  assert.deepEqual(L.nodeAccess("Monstro", throat, blank({ shared: "00".repeat(8) })).need, ["High Jump"]);
+  for (const [w, map] of Object.entries(MAPS)) for (const n of map.nodes) if (n.gate) {
+    assert.ok(n.gate.p != null || n.gate.need, `${w} ${n.id}: empty gate`);
+    if (n.gate.p != null) assert.ok((GUIDE[w] || []).some((s) => s.p === n.gate.p && s.at === n.gate.at) || n.gate.p === 2,
+      `${w} ${n.id}: gate should match a guide step`);
+  }
+});
+
+test("level-ups: tables are complete and the save picks the path and curve", () => {
+  for (const c of L.CURVES) assert.equal(LEVELS.exp[c].length, 99);
+  for (const p of L.PATHS) assert.ok(LEVELS.paths[p].length > 30);
+  for (const code of Object.keys(LEVELS.names)) assert.ok(ABILITY_INFO[LEVELS.names[code]], `no description for ${LEVELS.names[code]}`);
+  for (const [, stat] of LEVELS.stats) assert.ok(STAT_INFO[stat], `no description for stat ${stat}`);
+  const fresh = L.levelInfo(blank({ level: 1, exp: 0, abilities: "00".repeat(48) }), {});
+  assert.deepEqual(fresh.curves, ["Dawn", "Midday", "Dusk"]);
+  assert.deepEqual(fresh.paths, ["Warrior", "Guardian", "Mystic"]);
+  assert.equal(fresh.path, null);
+  // Level 6 with Sliding Dash learned (Warrior's level 6 ability, 0xB6): only Warrior fits.
+  const cumMid = [0, 0]; LEVELS.exp.Midday.forEach((n, i) => { cumMid[i + 2] = cumMid[i + 1] + n; });
+  const w = L.levelInfo(blank({ level: 6, exp: cumMid[6], abilities: "b6" + "00".repeat(47) }), { path: "Mystic" });
+  assert.deepEqual(w.paths, ["Warrior"]);
+  assert.equal(w.path, "Warrior", "the save beats a stale pick");
+  assert.ok(w.curves.includes("Midday"));
+  for (const c of w.curves) assert.ok(cumMid[6] >= w.cum[c][6] && cumMid[6] < w.cum[c][7]);
+  assert.equal(w.rewards(6, "Warrior").bonus, 0xB6);
+  assert.equal(w.name(0xB6), "Sliding Dash");
+  const odd = L.levelInfo(blank({ level: 38, exp: 1, abilities: "00".repeat(48) }), { curve: "Dusk" });
+  assert.deepEqual(odd.curves, ["Dawn", "Midday", "Dusk"], "EXP that fits no curve rules nothing out");
+  assert.equal(odd.curve, "Dusk");
+  const picked = L.levelInfo(blank({ level: 2, exp: undefined }), { path: "Guardian", curve: "Dusk" });
+  assert.equal(picked.path, "Guardian");
+  assert.equal(picked.curve, "Dusk");
 });
 
 test("real Steam recording: the Dive to the Heart chest flips Awakening: Chest", () => {

@@ -36,6 +36,15 @@ local ADDR = {
     postcards      = {0x2DEBA1F, 0x2DEB01F},  -- count mailed
     olympus_cups   = {0x2DEBB60, 0x2DEB160},  -- 4 bytes
     world_progress = {0x2DEB264, 0x2DEA864},  -- one story byte per world (+0xE: Traverse Town's second byte)
+    progress_pre   = {0x2DEB260, 0x2DEA860},  -- the 4 story bytes before it; +1 is Dive/Destiny Islands
+                                              -- (KHPCSpeedrunTools rando reads it as cutsceneFlags - 3)
+    sora_exp       = {0x2DE9DA0, 0x2DE93A0},  -- 4-byte total EXP (Sora's stat block +0x3C)
+    sora_abilities = {0x2DE9DA4, 0x2DE93A4},  -- 48 ability slots, id | 0x80 when equipped
+    inventory      = {0x2DEA1F9, 0x2DE97F9},  -- item counts by item id (AP: inventory + id)
+    magic          = {0x2DEA1F2, 0x2DE97F2},  -- 7 spell levels: Fire Blizzard Thunder Cure Gravity Stop Aero
+                                              -- (KHPCSpeedrunTools magicLevels)
+    shared         = {0x2DEA2F9, 0x2DE98F9},  -- 8 shared-ability slots: 1 High Jump, 2 Mermaid Kick, 3 Glide, 4 Superglide
+    trinities      = {0x2DEB97B, 0x2DEAF7B},  -- bits: Blue Red Green Yellow White
     hud            = {0x2812E9C, 0x281249C},  -- float > 0 while Sora's HUD is up
 }
 local CHEST_BYTES  = 509
@@ -93,6 +102,13 @@ local function snapshot()
         ',"puppies":"', hex(ReadArray(addr("puppies"), PUPPY_BYTES)), '"',
         ',"cups":"', hex(ReadArray(addr("olympus_cups"), 4)), '"',
         ',"progress":"', hex(ReadArray(addr("world_progress"), 16)), '"',
+        ',"progress_pre":"', hex(ReadArray(addr("progress_pre"), 4)), '"',
+        ',"exp":', ReadInt(addr("sora_exp")),
+        ',"abilities":"', hex(ReadArray(addr("sora_abilities"), 48)), '"',
+        ',"inventory":"', hex(ReadArray(addr("inventory"), 256)), '"',
+        ',"magic":"', hex(ReadArray(addr("magic"), 7)), '"',
+        ',"shared":"', hex(ReadArray(addr("shared"), 8)), '"',
+        ',"trinities":', ReadByte(addr("trinities")),
     })
 end
 

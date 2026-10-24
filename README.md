@@ -2,13 +2,14 @@
 
 A bottom-screen companion for **KINGDOM HEARTS Final Mix** (HD 1.5+2.5 ReMIX, Steam or Epic, 1.0.0.10), aimed at the AYN Thor running the game through GameNative.
 
-The game stays on the top screen and is never patched. A LuaBackend script reads game memory and writes a small JSON snapshot about 4 times a second. The companion page reads that snapshot and shows five tabs:
+The game stays on the top screen and is never patched. A LuaBackend script reads game memory and writes a small JSON snapshot about 4 times a second. The companion page reads that snapshot and shows six tabs:
 
-- **Here:** chest progress for the current world and its unopened chests. The room you're in is pinned to the top, and each chest shows its vanilla contents (toggle with "Contents").
-- **Guide:** the next story step for this world (title, rewards, the room it happens in, and a hint you tap to reveal), what's left in your current room and world, this world's Ansem's Reports, and the world's story checklist. On the title screen it lists every world's next step.
-- **Map:** a room graph of the world: where you are, unopened chests per room, puppy chests (gold dot), save points (green dot). Tap a room for its chest list. Exits the sources only imply are drawn dashed.
+- **Here:** chest progress for the current world and its unopened chests. The room you're in is pinned to the top, and each chest shows its vanilla contents (toggle with "Contents"). Chests you can't reach yet sink to the bottom marked "Later"; "Needs" names what's missing (Glide, a Trinity, Fira…).
+- **Guide:** spoiler-free by default. The next step shows only a vague nudge (no boss or reward names); **Where?** adds the room and marks it on the map; **Show me** names the event and gives the full hint. Future steps stay "???" and rewards appear once you've earned them. Also what's left in your room and world, and this world's Ansem's Reports (boss names masked). Covers Dive to the Heart and Destiny Islands too: the raft and food errands count your items live.
+- **Map:** a room graph of the world: where you are, unopened chests per room, puppy chests, save points. Rooms you can't get into yet (story or ability) are dimmed with a padlock; counts read "4 + 1 later" when some chests need something you don't have. Tap a room for its chest list. Exits the sources only imply are drawn dashed.
 - **Worlds:** chest progress for every world; open one for its list or its map.
 - **Collect:** total chests (232), Dalmatians (out of 99) plus where the 33 puppy chests are, postcards, and the 13 Ansem's Reports with where each comes from.
+- **Level:** what Sora gets at each level for your build: abilities on your Dive path (Warrior / Guardian / Mystic) and the stat ups, plus EXP to the next level on your growth curve (Dawn / Midday / Dusk). The path is read from the abilities you've learned and the curve from your EXP; while the save can't tell yet (early game), pick them yourself. Tap any level for what each reward does and what the other paths get there.
 
 The current room is detected from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room (e.g. "Seaside Shack", "Piano Room").
 
@@ -34,6 +35,8 @@ KH1 (top screen)  ──LuaBackend──▶  kh1companion.lua  ──▶  state.
 | `tools/test_bridge.py` | Runs the Lua bridge against fake memory (needs `pip install lupa`). |
 | `tools/emulator_test.py` | Boots the two-display emulator and checks the wrapper end to end. |
 | `tools/mock_state.py` | Writes a fake, changing `mock/state.json` for UI work without the game. |
+| `tools/make_scenarios.py` | Writes fixed sample saves to `dev/scenarios/` (Destiny Islands day 1, mid-game Hollow Bastion). Open `/?state=/dev/scenarios/<name>.json`. |
+| `tools/ap_rules.py` | Reads Archipelago's KH1 logic and lists what each chest needs (used by `gen_data.py`). |
 
 ## Where the data comes from
 
@@ -43,7 +46,10 @@ All public, no game files needed:
 - **Chest and report names:** [Archipelago](https://github.com/ArchipelagoMW/Archipelago) `worlds/kh1/Locations.py` (MIT). Chest location ID = `2650000 + byte*10 + bit`, so a raw flag bit maps straight to a named chest.
 - **Chest rooms and contents:** the KH1FM randomizer's documentation (MIT): 217 of 232 chests have a room; the rest are matched by name prefix.
 - **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT), covering every room byte in every world.
-- **Story milestones:** the KH1FM Archipelago client's per-world story-progress thresholds (credited to RetroAchievements' code notes). The hints are written for this project.
+- **Story milestones:** the KH1FM Archipelago client's per-world story-progress thresholds (credited to RetroAchievements' code notes). The nudges and hints are written for this project. Destiny Islands errands use the inventory slots the Archipelago client writes raft items to.
+- **What a chest needs:** Archipelago `worlds/kh1/Rules.py` (MIT), read at its Beginner difficulty with randomizer options off. Anything it can't express (combat checks, world counts) counts as met, so a chest is never wrongly shown as locked.
+- **Level-ups:** the randomizer's battle-table docs (MIT): ability per level for each Dive path, the shared stat table, and the three EXP curves. Ability descriptions are written for this project.
+- **Magic, shared abilities, Trinities, EXP:** the Archipelago client (`write_trinities`, `write_shared_ability`, `write_sora_ability`) and Denhonator's KHPCSpeedrunTools (`magicLevels`).
 - **Room IDs (older, partial):** room byte = the room's `.ard` map file number − 1, read from the randomizer docs. The rule checks out against three IDs confirmed by community scripts and against Dive to the Heart in game.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world (KH1 part).
 
@@ -93,21 +99,25 @@ GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bri
    - As `dinput8` it works, because KH1 imports `DirectInput8Create`, and LuaBackend exits quietly in every other program.
    - Optional: set the container's executable to `KINGDOM HEARTS FINAL MIX.exe` to skip the collection menu.
    - **If the screen is black:** the collection's display settings (`config1525.dat`, in My Games) sync through Steam Cloud. Windowed mode chosen on a PC carries over, and it renders black on the Thor; set fullscreen or borderless.
-5. Install the companion APK, allow "draw over other apps" and "all files access", and start it.
+5. Install the companion APK. The first launch opens its settings: allow "draw over other apps" and "all files access".
 6. Script updates are just another `adb push` to `KH1Companion/scripts/`, then a restart of the game. The mod doesn't need reinstalling.
 
-To start the companion without its settings screen (adb or a launcher shortcut): `am start -n com.kh1companion/.MainActivity --ez start true`.
+**Opening and closing:** the app icon is an on/off switch. Tap it to put the companion on the bottom screen; tap it again to close it. You can also close it with the × in the companion's header, the **Close** button on its notification, or a long press on the icon (Close companion / Settings). Settings opens on the top screen. If a game launcher (Cocoon Shell, Odin, Argosy) doesn't list it, add "KH1 Companion" as an app in that launcher.
+
+From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
 
 ## Status
 
 | Piece | State |
 |---|---|
 | Lua bridge | Runs on the Steam build: edition, world/room, level/stats and chest flags confirmed in Dive to the Heart. |
-| Companion page | Done: Here / Map / Worlds / Collect, tested at bottom-screen size against mock and real recordings. |
+| Companion page | Done: Here / Guide / Map / Worlds / Collect / Level, tested at bottom-screen size against mock saves, sample scenarios and real recordings. |
 | World maps | All 14 worlds authored from the wiki. Dashed exits are the wiki's implications, not confirmed. |
 | Android wrapper | Passes `tools/emulator_test.py` on a two-display emulator (2026-10-23): overlay fills the 1240×1080 second display, reads the pushed state file, taps and swipes work, and focus stays on the app on the main screen throughout. Runs on the Thor (2026-10-24) with live data from KH1 in GameNative: LuaBackend as `DINPUT8.dll` → bridge → `D:\KH1Companion\state.json` → bottom-screen overlay, top screen keeps focus. |
 
 **Unverified:**
+- The bridge's newer reads (EXP, learned abilities, inventory, magic, shared abilities, Trinities, and the Dive/Destiny Islands story byte `progress_pre`) come from public scripts but haven't been checked against a live save yet. Everything that uses them stays quiet (nothing locked, path and curve left to pick) when a value is missing.
+- Destiny Islands can't yet tell the second day from the night; `progress_pre[1]` is sent so a recording can calibrate it.
 - World IDs beyond those confirmed (0, 1, 3, 9, 0x0B, 0x0D, 0x0F, 0x10). The others follow the game's world order; the header says "world id unverified" there.
 - Room IDs come from map file numbers. The rule holds for the four checked rooms but is unchecked elsewhere, and many rooms have no ID yet (use "Which room is this?").
 - The Dalmatian count assumes one save-flag bit per puppy.
@@ -116,6 +126,7 @@ To start the companion without its settings screen (adb or a launcher shortcut):
 
 ## Roadmap
 
-- **Guide tab:** a game guide driven by what you haven't done yet. Pull it up when you're stuck to see what to do next, or use it as a completionist checklist for the area you're in: unopened chests, Trinity marks, Dalmatians, story steps, and synthesis items.
+- Calibrate Destiny Islands and Dive steps from `progress_pre` once there's a recording.
+- More room gates (Traverse Town's later areas, End of the World) once their story points are pinned down.
 - Trinity marks (flag offsets are in the randomizer's `globals.lua`).
 - Synthesis helper.

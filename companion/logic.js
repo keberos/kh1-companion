@@ -2,8 +2,8 @@
 // Turns a bridge snapshot (state.json) into named, countable things. No DOM access.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory;
-  else root.KH1Logic = factory(root.KH1_CHESTS, root.KH1_REPORTS, root.KH1_MAPS, root.KH1_GUIDE, root.KH1_ROOM_NAMES);
-})(typeof self !== "undefined" ? self : this, function (CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES) {
+  else root.KH1Logic = factory(root.KH1_CHESTS, root.KH1_REPORTS, root.KH1_MAPS, root.KH1_GUIDE, root.KH1_ROOM_NAMES, root.KH1_LEVELS);
+})(typeof self !== "undefined" ? self : this, function (CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS) {
   "use strict";
 
   // World byte -> name (the chest data's world names), from Dekirai/MultiPresence's
@@ -70,22 +70,221 @@
     return (picked && node(world, picked)) || null;
   }
 
-  function chestsFor(world, opened) {
+  // ---------- what the save says you have ----------
+  // Each check answers true / false, or null when this bridge doesn't send that part of the save.
+
+  const MAGIC = ["Fire", "Blizzard", "Thunder", "Cure", "Gravity", "Stop", "Aero"];
+  const SPELL_TIERS = {
+    Fire: ["Fire", "Fira", "Firaga"], Blizzard: ["Blizzard", "Blizzara", "Blizzaga"], Thunder: ["Thunder", "Thundara", "Thundaga"],
+    Cure: ["Cure", "Cura", "Curaga"], Gravity: ["Gravity", "Gravira", "Graviga"], Stop: ["Stop", "Stopra", "Stopga"],
+    Aero: ["Aero", "Aerora", "Aeroga"],
+  };
+  const TRINITY = ["Blue", "Red", "Green", "Yellow", "White"];
+  const SHARED = { "High Jump": 1, "Mermaid Kick": 2, "Glide": 3, "Superglide": 4 };
+  const SORA_ABILITY = { "Guard": 0x15, "Leaf Bracer": 0x3E };
+  // Inventory slot = Archipelago item id - 2641000.
+  const ITEM = {
+    "Log": 192, "Cloth": 193, "Rope": 194, "Seagull Egg": 195, "Fish": 196, "Mushroom": 197, "Coconut": 198,
+    "Drinking Water": 199, "Crystal Trident": 210, "Footprints": 223, "Forget-Me-Not": 227, "Jack-In-The-Box": 228,
+    "Entry Pass": 229,
+  };
+  // Key items the story hands over (Archipelago progress thresholds); they can leave the bag later.
+  const ITEM_STORY = { "Entry Pass": [2, 0x10], "Crystal Trident": [6, 0x32], "Forget-Me-Not": [8, 0x1E] };
+
+  const bytesOf = (state, k) => (state[k] == null ? null : hexToBytes(state[k]));
+  const itemCount = (state, name) => {
+    const inv = bytesOf(state, "inventory");
+    return inv ? inv[ITEM[name]] || 0 : null;
+  };
+  const sharedCount = (state, id) => {
+    const sh = bytesOf(state, "shared");
+    return sh ? sh.filter((v) => (v & 0x7F) === id).length : null;
+  };
+
+  // One requirement atom from the chest data: "Item" or "Item:count".
+  function has(atom, state) {
+    const [name, n0] = atom.split(":");
+    const n = +(n0 || 1);
+    if (name === "High Jump" || name === "Mermaid Kick") {
+      const c = sharedCount(state, SHARED[name]);
+      return c == null ? null : c >= n;
+    }
+    if (name === "Progressive Glide") {
+      const g = sharedCount(state, SHARED.Glide), sg = sharedCount(state, SHARED.Superglide);
+      return g == null ? null : (sg ? 2 : g ? 1 : 0) >= n;
+    }
+    const m = /^Progressive (\w+)$/.exec(name);
+    if (m && MAGIC.includes(m[1])) {
+      const mg = bytesOf(state, "magic");
+      return mg ? mg[MAGIC.indexOf(m[1])] >= n : null;
+    }
+    const t = /^(\w+) Trinity$/.exec(name);
+    if (t && TRINITY.includes(t[1])) return state.trinities == null ? null : (state.trinities >> TRINITY.indexOf(t[1]) & 1) === 1;
+    if (SORA_ABILITY[name]) {
+      const ab = bytesOf(state, "abilities");
+      return ab ? ab.some((v) => (v & 0x7F) === SORA_ABILITY[name]) : null;
+    }
+    if (ITEM[name] != null) {
+      const story = ITEM_STORY[name];
+      if (story) {
+        const p = hexToBytes(state.progress);
+        if (story[0] < p.length && p[story[0]] >= story[1]) return true;
+      }
+      const c = itemCount(state, name);
+      return c == null ? null : c >= n;
+    }
+    return null; // cups, summons, torn pages, ...: can't tell, so never claim it's missing
+  }
+
+  // Player-facing name for a requirement atom.
+  function needName(atom) {
+    const [name, n0] = atom.split(":");
+    const n = +(n0 || 1);
+    if (name === "Progressive Glide") return n >= 2 ? "Superglide" : "Glide";
+    const m = /^Progressive (\w+)$/.exec(name);
+    if (m && SPELL_TIERS[m[1]]) return SPELL_TIERS[m[1]][Math.min(n, 3) - 1];
+    if (name === "High Jump" && n > 1) return `High Jump level ${n}`;
+    return n > 1 ? `${n}× ${name}` : name;
+  }
+
+  // null when reachable (or we can't tell), else the shortest list of things still missing.
+  function lockOf(q, state) {
+    if (!q) return null;
+    let best = null;
+    for (const alt of q) {
+      const missing = alt.filter((a) => has(a, state) === false);
+      if (!missing.length) return null;
+      if (!best || missing.length < best.length) best = missing;
+    }
+    return best.map(needName);
+  }
+
+  // `lock`: null when reachable, else what's missing; ["story"] when the room itself opens later.
+  function chestsFor(world, opened, state) {
     return CHESTS.filter((c) => c.w === world).map((c) => {
       const n = nodeForChest(c);
-      return { ...c, got: bit(opened, c.B, c.b), node: n ? n.id : null };
+      const got = bit(opened, c.B, c.b);
+      let lock = null;
+      if (!got && state) {
+        const room = nodeAccess(world, n, state);
+        lock = room.open ? lockOf(c.q, state) : room.story ? ["story"] : room.need;
+      }
+      return { ...c, got, node: n ? n.id : null, lock };
     });
   }
 
-  // Story steps for a world, each marked done / not done / unknown (older bridges sent
-  // fewer progress bytes). `next` is the first step not yet done.
-  function guideFor(world, state) {
+  // Can the player get into this map room yet? Rooms carry `gate`: a story point
+  // ({p, at}, same bytes as the guide) and/or an ability or item ({need}).
+  function nodeAccess(world, nd, state) {
+    const g = nd && nd.gate;
+    if (!g || !state) return { open: true };
+    if (g.p != null) {
+      const p = hexToBytes(state.progress);
+      if (g.p < p.length && p[g.p] < g.at) return { open: false, story: true };
+    }
+    if (g.need && has(g.need, state) === false) return { open: false, need: [needName(g.need)] };
+    return { open: true };
+  }
+
+  // ---------- story guide ----------
+  // Steps are done by world progress ({p, at}), by items in the bag ({items}), by how far
+  // through the Dive you are ({dive}), or only once the player has moved on ({end}).
+  // A done step implies every step before it is done too.
+
+  const DIVE_RANK = { 0x00: 0, 0x01: 1, 0x02: 2, 0x05: 3, 0x06: 3, 0x03: 4, 0x04: 4 };
+
+  function storyFacts(state) {
     const progress = hexToBytes(state.progress);
-    const steps = ((GUIDE || {})[world] || []).map((s) => {
-      const v = s.p < progress.length ? progress[s.p] : null;
-      return { ...s, done: v == null ? null : v >= s.at };
+    const elsewhere = !onTitle(state) && state.world >= 2;
+    const ttStarted = progress.length > 0 && progress[0] > 0;
+    const day2 = ["Seagull Egg", "Fish", "Mushroom", "Coconut", "Drinking Water"].some((i) => itemCount(state, i) > 0);
+    return {
+      progress,
+      diveRank: state.world === 0 && !onTitle(state) ? DIVE_RANK[state.room] : null,
+      diveDone: elsewhere || ttStarted || state.world === 1,
+      islandsDone: elsewhere || ttStarted,
+      day2,
+    };
+  }
+
+  function stepDone(s, f, state) {
+    if (s.p != null) return s.p < f.progress.length ? f.progress[s.p] >= s.at : null;
+    if (s.dive != null) return f.diveDone || (f.diveRank != null && f.diveRank > s.dive);
+    if (s.end === "dive") return f.diveDone;
+    if (s.end === "day1") return f.day2 || f.islandsDone;
+    if (s.end === "islands") return f.islandsDone;
+    if (s.items) {
+      if (f.islandsDone) return true;
+      const counts = s.items.map(([name, n]) => [itemCount(state, name), n]);
+      if (counts.some(([c]) => c == null)) return null;
+      return counts.every(([c, n]) => c >= n);
+    }
+    return null;
+  }
+
+  // `seen`: step keys this device has already seen done, for steps whose evidence leaves
+  // the save (items handed over). `next` is the first step not done, optional ones last.
+  const stepKey = (world, i) => world + "#" + i;
+  function guideFor(world, state, seen) {
+    const f = storyFacts(state);
+    const steps = ((GUIDE || {})[world] || []).map((s, i) => {
+      let done = stepDone(s, f, state);
+      if (done !== true && seen && seen.has(stepKey(world, i))) done = true;
+      const counts = s.items ? s.items.concat(s.extra || []).map(([name, n]) => ({ name, n, have: itemCount(state, name) })) : null;
+      return { ...s, key: stepKey(world, i), done, counts };
     });
-    return { steps, next: steps.find((s) => s.done === false) || null };
+    for (let i = steps.length - 1, later = false; i >= 0; i--) {
+      if (later && !steps[i].done && !steps[i].optional) steps[i].done = true;
+      if (steps[i].done && !steps[i].optional) later = true;
+    }
+    const pick = (done, optional) => steps.find((s) => s.done === done && !!s.optional === optional);
+    return { steps, next: pick(false, false) || pick(null, false) || pick(false, true) || pick(null, true) || null };
+  }
+
+  // ---------- level-ups ----------
+  // Which dream path and growth curve the save fits: the path from abilities learned so far,
+  // the curve from total EXP at the current level. `pick` is the player's own choice, used
+  // when the save fits more than one.
+
+  const PATHS = ["Warrior", "Guardian", "Mystic"];
+  const CURVES = ["Dawn", "Midday", "Dusk"];
+
+  function cumulative(curve) {
+    const out = [0, 0];
+    LEVELS.exp[curve].forEach((n, i) => { out[i + 2] = out[i + 1] + n; });
+    return out;
+  }
+
+  function levelInfo(state, pick) {
+    if (!LEVELS) return null;
+    const level = state.level || 1, exp = state.exp;
+    const cum = Object.fromEntries(CURVES.map((c) => [c, cumulative(c)]));
+    let curves = exp == null ? CURVES : CURVES.filter((c) => exp >= cum[c][level] && (level >= 100 || exp < cum[c][level + 1]));
+    const learned = {};
+    for (const v of bytesOf(state, "abilities") || []) if (v) learned[v & 0x7F] = (learned[v & 0x7F] || 0) + 1;
+    const known = state.abilities != null;
+    let paths = !known ? PATHS : PATHS.filter((p) => {
+      const need = {};
+      for (const [lv, code] of LEVELS.paths[p]) if (lv <= level && code >= 0x80) need[code & 0x7F] = (need[code & 0x7F] || 0) + 1;
+      return Object.entries(need).every(([id, n]) => (learned[id] || 0) >= n);
+    });
+    // Nothing fits (an odd save, or a read gone wrong): don't rule anything out.
+    if (!curves.length) curves = CURVES;
+    if (!paths.length) paths = PATHS;
+    const choose = (fits, picked) => (fits.length === 1 ? fits[0] : fits.includes(picked) ? picked : null);
+    const curve = choose(curves, pick && pick.curve);
+    const path = choose(paths, pick && pick.path);
+    const stats = Object.fromEntries(LEVELS.stats);
+    const rewards = (lv, p) => ({
+      stat: stats[lv] || null,
+      bonus: p ? (LEVELS.paths[p].find(([l]) => l === lv) || [])[1] || null : null,
+    });
+    return {
+      level, exp, curves, paths, curve, path, cum,
+      autoCurve: curves.length === 1 && exp != null, autoPath: paths.length === 1 && known,
+      toNext: curve && exp != null && level < 100 ? cum[curve][level + 1] - exp : null,
+      rewards, name: (code) => LEVELS.names[code],
+    };
   }
 
   // Everything the page shows, derived from one snapshot.
@@ -96,7 +295,7 @@
       .sort((a, b) => a.num - b.num);
     const worlds = {};
     for (const w of trackedWorlds()) {
-      const cs = chestsFor(w, opened);
+      const cs = chestsFor(w, opened, state);
       worlds[w] = { got: cs.filter((c) => c.got).length, total: cs.length };
     }
     const puppyChests = CHESTS.filter(isPuppies).map((c) => {
@@ -120,6 +319,7 @@
 
   return {
     WORLDS, MAPS, ROOM_NAMES, hexToBytes, bit, popcount, worldName, roomName, onTitle, trackedWorlds, isPuppies,
-    GUIDE, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
+    GUIDE, LEVELS, PATHS, CURVES, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
+    has, needName, lockOf, nodeAccess, levelInfo, itemCount,
   };
 });

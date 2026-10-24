@@ -18,6 +18,7 @@ STEAM = {  # Steam addresses, mirrored from the script's ADDR table
     "gl_check": 0x3A29A6, "world": 0x233FE84, "room": 0x233FE84 + 0x8,
     "level": 0x2DE9398, "stats": 0x2DE9366, "chests": 0x2DE992C, "reports": 0x2DEAD20,
     "puppies": 0x2DEAA63, "postcards": 0x2DEB01F, "hud": 0x281249C,
+    "magic": 0x2DE97F2, "shared": 0x2DE98F9, "trinities": 0x2DEAF7B, "progress_pre": 0x2DEA860, "exp": 0x2DE93A0, "abilities": 0x2DE93A4, "inventory": 0x2DE97F9,
 }
 
 
@@ -32,6 +33,14 @@ def run():
     mem[STEAM["reports"]] = 0b1
     mem[STEAM["puppies"]], mem[STEAM["puppies"] + 1] = 0xFF, 0b11100000  # 11 puppies
     mem[STEAM["postcards"]] = 3
+    mem[STEAM["progress_pre"] + 1] = 0x0B
+    for i, b in enumerate(struct.pack("<I", 70000)):
+        mem[STEAM["exp"] + i] = b
+    mem[STEAM["abilities"]], mem[STEAM["abilities"] + 1] = 0x81, 0x36
+    mem[STEAM["inventory"] + 192] = 2  # two Logs
+    mem[STEAM["magic"]] = 2  # Fira
+    mem[STEAM["shared"]] = 0x81  # High Jump
+    mem[STEAM["trinities"]] = 0b101
     for i, b in enumerate(struct.pack("<f", 1.0)):
         mem[STEAM["hud"] + i] = b
 
@@ -42,6 +51,7 @@ def run():
     g.GAME_ID, g.ENGINE_TYPE = 0xAF71841E, "BACKEND"
     g.ReadByte = rb
     g.ReadShort = lambda a: rb(a) | rb(a + 1) << 8
+    g.ReadInt = lambda a: struct.unpack("<i", bytes(rb(a + i) for i in range(4)))[0]
     g.ReadFloat = lambda a: struct.unpack("<f", bytes(rb(a + i) for i in range(4)))[0]
     g.ReadArray = lambda a, n: lua.table(*[rb(a + i) for i in range(int(n))])
     g.ConsolePrint = print
@@ -63,6 +73,10 @@ def run():
     assert state["in_field"] is True and state["postcards"] == 3
     assert len(state["chests"]) == 509 * 2 and state["chests"][42:44] == "05"
     assert state["reports"] == "0100" and state["puppies"][:4] == "ffe0"
+    assert state["progress_pre"] == "000b0000" and state["exp"] == 70000
+    assert state["abilities"][:4] == "8136" and len(state["abilities"]) == 96
+    assert state["magic"] == "02000000000000" and state["shared"][:2] == "81" and state["trinities"] == 5
+    assert len(state["inventory"]) == 512 and state["inventory"][384:386] == "02"
     seq_before = state["seq"]
 
     # Unchanged memory and no time passing: no rewrite.

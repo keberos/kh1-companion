@@ -14,6 +14,8 @@
 //   match   chest-name prefixes for chests that have no room in the data
 //   alone   true for rooms you only reach by story or cutscene (no exits drawn)
 // Edges: [a, b] or [a, b, "approx"] when the wiki implies the exit but doesn't spell it out.
+// `gate`: a room you can't get into until a story point ({p, at}: the guide's progress bytes,
+// where the next step leads there) or an ability ({need}, Archipelago's Beginner logic).
 window.KH1_MAPS = {
   "Awakening": {
     nodes: [
@@ -114,7 +116,7 @@ window.KH1_MAPS = {
       { id: "Camp: Tent", label: "Tent", x: 0, y: 2, rooms: [0x0E] },
       { id: "Camp", x: 1, y: 2, rooms: [0x01, 0x0C] },
       { id: "Hippos' Lagoon", x: 2, y: 2, rooms: [0x05] },
-      { id: "Cavern of Hearts", x: 3, y: 2, rooms: [0x0A] },
+      { id: "Cavern of Hearts", x: 3, y: 2, rooms: [0x0A], gate: { p: 1, at: 0x56 } },
       { id: "Jungle Slider", x: 0, y: 3, rooms: [0x0F, 0x10, 0x11, 0x12, 0x13] },
       { id: "Bamboo Thicket", x: 1, y: 3, rooms: [0x02, 0x0D] },
       { id: "Jungle: Cliff", label: "Cliff", x: 2, y: 3, rooms: [0x0B] },
@@ -181,8 +183,8 @@ window.KH1_MAPS = {
 
   "Monstro": {
     nodes: [
-      { id: "Throat", x: 0, y: 0, rooms: [0x03] },
-      { id: "Stomach", x: 1, y: 0, rooms: [0x02] },
+      { id: "Throat", x: 0, y: 0, rooms: [0x03], gate: { need: "High Jump" } },
+      { id: "Stomach", x: 1, y: 0, rooms: [0x02], gate: { need: "High Jump" } },
       { id: "Monstro: Chamber 5", label: "Chamber 5", x: 2, y: 0, rooms: [0x09] },
       { id: "Chamber 6", x: 3, y: 0, rooms: [0x0A] },
       { id: "Monstro: Mouth", label: "Mouth", x: 0, y: 1, rooms: [0x00, 0x01], save: true },
@@ -215,7 +217,7 @@ window.KH1_MAPS = {
       { id: "Undersea Cave", x: 3, y: 2, rooms: [0x04] },
       { id: "Den of Tides", x: 4, y: 2, rooms: [0x09] },
       { id: "Open Sea", x: 1, y: 3, rooms: [0x10] },
-      { id: "Ursula's Lair", x: 2, y: 3, rooms: [0x0C], match: ["Ursula's Lair"] },
+      { id: "Ursula's Lair", x: 2, y: 3, rooms: [0x0C], match: ["Ursula's Lair"], gate: { p: 6, at: 0x32 } },
       { id: "Tidal Abyss", x: 3, y: 3, rooms: [0x0B] },
       { id: "Cavern Nook", x: 4, y: 3, rooms: [0x0A], save: true },
     ],
@@ -257,7 +259,7 @@ window.KH1_MAPS = {
     nodes: [
       { id: "Coliseum Gates", x: 0, y: 0, rooms: [0x00, 0x03] },
       { id: "Lobby", x: 1, y: 0, rooms: [0x01] },
-      { id: "Coliseum", label: "Arena", x: 2, y: 0, rooms: [0x02, 0x05, 0x06] },
+      { id: "Coliseum", label: "Arena", x: 2, y: 0, rooms: [0x02, 0x05, 0x06], gate: { p: 2, at: 0x10 } },
     ],
     edges: [["Coliseum Gates", "Lobby"], ["Lobby", "Coliseum"]],
   },
@@ -271,7 +273,7 @@ window.KH1_MAPS = {
       { id: "Freezer", x: 1, y: 1, rooms: [0x03] },
       { id: "Ship: Galley", label: "Galley", x: 2, y: 1, rooms: [0x04] },
       { id: "Pirate Ship", x: 3, y: 1, rooms: [0x08] },
-      { id: "Clock Tower", x: 4, y: 1, rooms: [0x09] },
+      { id: "Clock Tower", x: 4, y: 1, rooms: [0x09], gate: { p: 9, at: 0x56 } },
     ],
     edges: [
       ["Ship: Hold", "Ship: Hold (Yellow Trinity)"], ["Ship: Hold", "Freezer"], ["Freezer", "Ship: Galley"],
@@ -286,7 +288,7 @@ window.KH1_MAPS = {
       { id: "Castle Chapel", x: 2, y: 0, rooms: [0x0B, 0x0C, 0x0D, 0x10] },
       { id: "Great Crest", x: 1, y: 1, rooms: [0x02] },
       { id: "Lift Stop", x: 2, y: 1, rooms: [0x06] },
-      { id: "Grand Hall", x: 3, y: 1, rooms: [0x0E] },
+      { id: "Grand Hall", x: 3, y: 1, rooms: [0x0E], gate: { p: 10, at: 0x6E } },
       { id: "Dark Depths", x: 4, y: 1, rooms: [0x0F] },
       { id: "Library", x: 0, y: 2, rooms: [0x05], save: true, match: ["Library"] },
       { id: "Entrance Hall", x: 1, y: 2, rooms: [0x04], match: ["Entrance Hall"] },

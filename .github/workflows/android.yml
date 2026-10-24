@@ -2,7 +2,9 @@ name: Android APK
 
 on:
   push:
-    paths: ["android/**", "companion/**", ".github/workflows/android.yml"]
+    # With only `tags` listed, GitHub skips branch pushes entirely; list the branch too.
+    branches: ["main"]
+    paths: ["android/**", "companion/**", "tools/test_logic.mjs", ".github/workflows/android.yml"]
     tags: ["v*"]
   workflow_dispatch:
 

@@ -256,6 +256,12 @@ svg.map .node { cursor: pointer; }
 svg.map .node.shut { opacity: .45; }
 svg.map .node.unknown .nl { fill: var(--muted); font-style: italic; letter-spacing: .2em; }
 svg.map .node.later .nc { fill: var(--muted); }
+/* on/off switch in option sheets */
+.switch { flex: none; width: 46px; height: 26px; border-radius: 13px; background: #20284d; box-shadow: inset 0 0 0 2px var(--silver-dim); position: relative; transition: background .15s; }
+.switch i { position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; border-radius: 50%; background: #9aa8d4; transition: left .15s, background .15s; }
+.switch.on { background: #2f6fd0; box-shadow: inset 0 0 0 2px #8fc9ff; }
+.switch.on i { left: 24px; background: #fff; }
+ul.list.options li { cursor: pointer; }
 .map-count { display: inline-flex; align-items: center; gap: 6px; font: italic 600 14px var(--ui); color: var(--sub); white-space: nowrap; }
 .map-count svg { width: 18px; height: 18px; }
 .map-count b { color: var(--text); font-style: normal; }

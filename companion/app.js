@@ -63,17 +63,17 @@
 
   // ---------- shared pieces ----------
 
-  const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach yet");
+  const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach it yet");
   // Reports named after a boss fight would spoil it: say how, not who.
   const reportHow = (r) => r.n.replace(/ Ansem's Report \d+$/, "").replace(/^Defeat .+$/, "After a boss fight");
 
   function chestRow(c, opts) {
     const n = c.node && L.node(c.w, c.node);
     const known = !n || roomKnown(c.w, n.id);
-    const sub = [opts.showRoom && n ? (known ? L.labelOf(n) : "A room you haven't been to") : null, known && showContents && c.i ? c.i : null,
+    const sub = [opts.showRoom && n && known ? L.labelOf(n) : null, showContents && c.i ? c.i : null,
       c.lock ? needText(c.lock) : null].filter(Boolean).join(" · ");
     return `<li class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
-      `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "???"}</span>` +
+      `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
       (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") +
       (c.lock ? '<span class="tag later">Later</span>' : opts.here ? '<span class="tag here">Here</span>' : "") + `</li>`;
@@ -94,18 +94,33 @@
       `<div class="bar ${got === total && total ? "done" : ""}"><i style="width:${pct}%"></i></div></div>`;
   }
 
+  // What the chest lists show, behind one "Show" button with a sheet that says what each option does.
+  const LIST_OPTIONS = [
+    ["showOpened", "Opened chests", "Also list the chests you've already opened."],
+    ["showContents", "What's inside", "Show what each chest holds."],
+    ["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."],
+  ];
+  const optionOn = { showOpened: () => showOpened, showContents: () => showContents, showNeeds: () => showNeeds };
   function toggles() {
-    return `<button class="chip ${showOpened ? "on" : ""}" data-toggle="showOpened">Opened</button>` +
-      `<button class="chip ${showContents ? "on" : ""}" data-toggle="showContents">Contents</button>` +
-      `<button class="chip ${showNeeds ? "on" : ""}" data-toggle="showNeeds">Needs</button>`;
+    const n = LIST_OPTIONS.filter(([k]) => optionOn[k]()).length;
+    return `<button class="chip" data-options>Show${n ? ` (${n})` : ""} ▾</button>`;
   }
   function wireToggles(root) {
-    root.querySelectorAll("[data-toggle]").forEach((b) => {
-      b.onclick = () => {
-        if (b.dataset.toggle === "showOpened") { showOpened = !showOpened; store.set("showOpened", showOpened); }
-        else if (b.dataset.toggle === "showNeeds") { showNeeds = !showNeeds; store.set("showNeeds", showNeeds); }
-        else { showContents = !showContents; store.set("showContents", showContents); }
-        render(true);
+    root.querySelectorAll("[data-options]").forEach((b) => { b.onclick = openListOptions; });
+  }
+  function openListOptions() {
+    openSheet(`<h2>Show in chest lists</h2><ul class="list options">${LIST_OPTIONS.map(([k, title, desc]) =>
+      `<li data-opt="${k}"><span class="grow"><span class="name">${title}</span><div class="sub">${desc}</div></span>` +
+      `<span class="switch ${optionOn[k]() ? "on" : ""}"><i></i></span></li>`).join("")}</ul>` +
+      `<div class="row"><span class="grow"></span><button class="chip" data-close>Done</button></div>`);
+    $("sheetBody").querySelectorAll("[data-opt]").forEach((li) => {
+      li.onclick = () => {
+        const k = li.dataset.opt;
+        if (k === "showOpened") showOpened = !showOpened;
+        else if (k === "showContents") showContents = !showContents;
+        else showNeeds = !showNeeds;
+        store.set(k, optionOn[k]());
+        li.querySelector(".switch").classList.toggle("on", optionOn[k]());
       };
     });
   }

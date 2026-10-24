@@ -84,7 +84,7 @@ header::after {  /* ornamental rule: silver line with a gold diamond */
 
 /* status orb: a tiny save-point glow */
 .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: radial-gradient(circle at 40% 35%, #fff, var(--warn) 55%, #7a2a12); box-shadow: 0 0 6px var(--warn); }
-.dot.live { background: radial-gradient(circle at 40% 35%, #fff, var(--save) 50%, #1b7a4a); box-shadow: 0 0 10px var(--save); animation: pulse 2.4s ease-in-out infinite; }
+.dot.live { background: radial-gradient(circle at 40% 35%, #fff, var(--save) 50%, #1b7a4a); box-shadow: 0 0 10px var(--save); }  /* steady: an endless pulse redraws the page every frame, on the GPU the game uses */
 .dot.stale { background: radial-gradient(circle at 40% 35%, #fff, var(--gold) 55%, #7a5a12); box-shadow: 0 0 6px var(--gold); }
 /* close button (only inside the Android app) and its confirm sheet */
 .xbtn {
@@ -101,7 +101,6 @@ header::after {  /* ornamental rule: silver line with a gold diamond */
 .confirm-row { display: flex; gap: 8px; justify-content: flex-end; }
 .btn { font: 600 15px var(--ui); color: var(--text); background: rgba(20,32,80,.9); border: 1px solid var(--silver-dim); border-radius: 6px; padding: 8px 14px; }
 .btn.primary { border-color: var(--gold); color: var(--gold); }
-@keyframes pulse { 50% { box-shadow: 0 0 3px var(--save); } }
 
 main { flex: 1; overflow-y: auto; padding: 12px 12px 14px; -webkit-overflow-scrolling: touch; }
 .view { display: none; }
@@ -295,7 +294,7 @@ ul.levels li.here .lvnum { color: var(--here); }
 nav button { font-size: 15px; letter-spacing: .03em; }
 /* the next-step ring stays gold even on the room you're in (the "here" style colours every rect) */
 /* !important: room styles (here, no chests, done) colour every rect in the node and must not touch this ring */
-svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !important; stroke-width: 3 !important; stroke-dasharray: 7 4; filter: none !important; animation: goalpulse 2s ease-in-out infinite; }
+svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !important; stroke-width: 3 !important; stroke-dasharray: 7 4; filter: none !important; animation: goalpulse 2s ease-in-out 3; }
 @keyframes goalpulse { 50% { opacity: .7; } }
 .lg.goal { border: 2px dashed var(--gold); border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; }
 
@@ -318,7 +317,7 @@ ul.list li[data-cn]:active, ul.list li[data-unlock]:active, .next-mini:active, .
 .seg .chip { flex: 1; }
 
 /* ---------- map: the room picked from a chest ---------- */
-svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; stroke-width: 3 !important; filter: url(#glow) !important; animation: goalpulse 1.2s ease-in-out infinite; }
+svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; stroke-width: 3 !important; filter: url(#glow) !important; animation: goalpulse 1.2s ease-in-out 4; }
 .lg.focus { box-shadow: 0 0 0 2px #fff, 0 0 6px #fff; }
 
 /* ---------- progress: finished worlds ---------- */

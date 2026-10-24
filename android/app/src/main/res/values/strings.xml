@@ -3,5 +3,5 @@
     <string name="app_name">KH1 Companion</string>
     <string name="shortcut_close">Close companion</string>
     <string name="shortcut_settings">Settings</string>
-    <string name="play_label">Play KH1</string>
+    <string name="shortcut_companion">Companion only</string>
 </resources>

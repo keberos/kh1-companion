@@ -198,6 +198,7 @@
   function nodeAccess(world, nd, state) {
     const g = nd && nd.gate;
     if (!g || !state) return { open: true };
+    if (g.scene) return { open: false, story: true, scene: true };
     if (g.p != null) {
       const p = hexToBytes(state.progress);
       if (g.p < p.length && p[g.p] < g.at) return { open: false, story: true };

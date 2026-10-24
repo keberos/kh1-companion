@@ -221,7 +221,8 @@
       `<h2>${esc(L.labelOf(nd))}</h2><div class="sub">${esc(displayWorld(world))}` +
       `${nd.save ? " · save point" : ""}${ids ? " · room " + ids : ""}</div>` +
       (access.open ? "" : `<div class="hint">${icon("ico-lock", "chip-ico")}` +
-        (access.story ? "You can't get in here yet. It opens up later in the story." : `You can't get in here yet. Needs ${esc(access.need.join(" + "))}.`) +
+        (access.scene ? "You can't walk in here. The story brings you here when it's time."
+          : access.story ? "You can't get in here yet. It opens up later in the story." : `You can't get in here yet. Needs ${esc(access.need.join(" + "))}.`) +
         `</div>`) +
       `<div style="margin-top:8px">${chests.length
         ? `<ul class="list">${chests.sort((a, b) => a.got - b.got || a.n.localeCompare(b.n)).map((c) => chestRow(c, { showRoom: false })).join("")}</ul>`

@@ -37,21 +37,14 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
-        <!-- Play KH1: companion opens with the game and closes when it exits. Invisible; it
-             waits under GameNative on the top screen. -->
+        <!-- Play: companion opens with the game and closes when it exits. Started by the app
+             icon; invisible, it waits under GameNative on the top screen. -->
         <activity
             android:name=".PlayActivity"
-            android:exported="true"
-            android:label="@string/play_label"
-            android:icon="@mipmap/ic_launcher"
+            android:exported="false"
             android:excludeFromRecents="true"
             android:taskAffinity="com.kh1companion.play"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <service
             android:name=".CompanionService"

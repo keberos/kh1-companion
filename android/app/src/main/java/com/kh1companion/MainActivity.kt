@@ -81,21 +81,23 @@ class MainActivity : Activity() {
     }
 
     /**
-     * The app icon is an on/off switch, like any other app: tap to show the companion on the
-     * bottom screen, tap again to close it. No settings screen gets in the way unless a
-     * permission is missing or Settings was asked for (long-press shortcut, notification).
+     * The app icon plays the game with its companion: tap it and the companion opens and KH1
+     * starts in GameNative (see [PlayActivity]); quitting the game closes the companion. If the
+     * game is already running, the tap just opens the companion. Tapping while the companion
+     * is open closes it. Long-press shortcuts: companion only, close, settings.
      * Returns true when the activity finished instead of showing settings.
      */
     private fun handleLaunch(intent: Intent): Boolean {
         val ready = Settings.canDrawOverlays(this) && Environment.isExternalStorageManager()
-        val start = intent.getBooleanExtra("start", false) // adb: `--ez start true`
-        val toggle = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        val start = intent.getBooleanExtra("start", false) || intent.action == ACTION_COMPANION // adb: `--ez start true`
+        val tap = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
         when {
-            intent.action == ACTION_CLOSE || (toggle && CompanionService.running) -> {
+            intent.action == ACTION_CLOSE || (tap && CompanionService.running) -> {
                 CompanionService.stop(this)
                 Toast.makeText(this, "KH1 Companion closed", Toast.LENGTH_SHORT).show()
             }
-            (start || toggle) && ready -> {
+            tap && ready && !gameRunning() -> startActivity(Intent(this, PlayActivity::class.java))
+            (start || tap) && ready -> {
                 startForegroundService(Intent(this, CompanionService::class.java))
                 Toast.makeText(this, "KH1 Companion on the bottom screen. Tap the icon again to close.", Toast.LENGTH_SHORT).show()
             }
@@ -103,6 +105,12 @@ class MainActivity : Activity() {
         }
         finish()
         return true
+    }
+
+    /** The bridge rewrites the state file every 2 s while the game runs. */
+    private fun gameRunning(): Boolean {
+        val f = File(Prefs(this).statePath)
+        return f.exists() && System.currentTimeMillis() - f.lastModified() < 6_000
     }
 
     override fun onResume() {
@@ -133,5 +141,6 @@ class MainActivity : Activity() {
     companion object {
         const val ACTION_CLOSE = "com.kh1companion.CLOSE"
         const val ACTION_SETTINGS = "com.kh1companion.SETTINGS"
+        const val ACTION_COMPANION = "com.kh1companion.COMPANION"
     }
 }

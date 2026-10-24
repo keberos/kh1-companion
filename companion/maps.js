@@ -15,7 +15,8 @@
 //   alone   true for rooms you only reach by story or cutscene (no exits drawn)
 // Edges: [a, b] or [a, b, "approx"] when the wiki implies the exit but doesn't spell it out.
 // `gate`: a room you can't get into until a story point ({p, at}: the guide's progress bytes,
-// where the next step leads there) or an ability ({need}, Archipelago's Beginner logic).
+// where the next step leads there) or an ability ({need}, Archipelago's Beginner logic), or
+// one the story only takes you to in a scene ({scene}: never open to walk into).
 window.KH1_MAPS = {
   "Awakening": {
     nodes: [
@@ -31,8 +32,8 @@ window.KH1_MAPS = {
 
   "Destiny Islands": {
     nodes: [
-      { id: "Sora's Room", x: 0, y: 0, rooms: [0x09], alone: true },
-      { id: "Island Remains", x: 2, y: 0, rooms: [0x08], alone: true },
+      { id: "Sora's Room", x: 0, y: 0, rooms: [0x09], alone: true, gate: { scene: true } },
+      { id: "Island Remains", x: 2, y: 0, rooms: [0x08], alone: true, gate: { scene: true } },
       { id: "Cove", x: 0, y: 1, rooms: [0x02] },
       { id: "Seashore", x: 1, y: 1, rooms: [0x00, 0x03, 0x05] },
       { id: "Seaside Shack", x: 2, y: 1, rooms: [0x01, 0x04, 0x06], save: true },
@@ -289,7 +290,7 @@ window.KH1_MAPS = {
       { id: "Great Crest", x: 1, y: 1, rooms: [0x02] },
       { id: "Lift Stop", x: 2, y: 1, rooms: [0x06] },
       { id: "Grand Hall", x: 3, y: 1, rooms: [0x0E], gate: { p: 10, at: 0x6E } },
-      { id: "Dark Depths", x: 4, y: 1, rooms: [0x0F] },
+      { id: "Dark Depths", x: 4, y: 1, rooms: [0x0F], gate: { p: 10, at: 0x6E } },
       { id: "Library", x: 0, y: 2, rooms: [0x05], save: true, match: ["Library"] },
       { id: "Entrance Hall", x: 1, y: 2, rooms: [0x04], match: ["Entrance Hall"] },
       { id: "Rising Falls", x: 0, y: 3, rooms: [0x00] },

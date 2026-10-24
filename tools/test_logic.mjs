@@ -242,10 +242,12 @@ test("rooms behind a story point or an ability are shut until then", () => {
   assert.equal(L.nodeAccess("Hollow Bastion", hall, blank({ progress: hexOf(p) })).open, false);
   p[10] = 0x6E;
   assert.equal(L.nodeAccess("Hollow Bastion", hall, blank({ progress: hexOf(p) })).open, true);
+  assert.equal(L.nodeAccess("Destiny Islands", L.node("Destiny Islands", "Sora's Room"), blank({})).open, false,
+    "story-scene rooms are never open to walk into");
   const throat = L.node("Monstro", "Throat");
   assert.deepEqual(L.nodeAccess("Monstro", throat, blank({ shared: "00".repeat(8) })).need, ["High Jump"]);
   for (const [w, map] of Object.entries(MAPS)) for (const n of map.nodes) if (n.gate) {
-    assert.ok(n.gate.p != null || n.gate.need, `${w} ${n.id}: empty gate`);
+    assert.ok(n.gate.p != null || n.gate.need || n.gate.scene, `${w} ${n.id}: empty gate`);
     if (n.gate.p != null) assert.ok((GUIDE[w] || []).some((s) => s.p === n.gate.p && s.at === n.gate.at) || n.gate.p === 2,
       `${w} ${n.id}: gate should match a guide step`);
   }

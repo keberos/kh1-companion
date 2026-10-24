@@ -289,6 +289,22 @@ test("level-ups: tables are complete and the save picks the path and curve", () 
   assert.equal(picked.curve, "Dusk");
 });
 
+test("worlds stay hidden until the save has found them", () => {
+  const st = (bytes) => hexOf([...bytes, ...new Array(11 - bytes.length).fill(0)]);
+  let s = L.summarize(blank({ world: 1, room: 0, progress: "00".repeat(16), world_status: st([]) }));
+  assert.equal(s.found["Destiny Islands"], "visited");
+  assert.equal(s.found["Traverse Town"], "hidden");
+  assert.equal(s.found["Hollow Bastion"], "hidden");
+  s = L.summarize(blank({ world: 3, progress: "00".repeat(16), world_status: st([3, 1, 2, 0]) }));
+  assert.equal(s.found["Traverse Town"], "visited");
+  assert.equal(s.found["Wonderland"], "seen", "on the Gummi map, not visited");
+  assert.equal(s.found["Olympus Coliseum"], "seen");
+  assert.equal(s.found["Deep Jungle"], "hidden");
+  const p = new Array(16).fill(0); p[1] = 0x10;
+  assert.equal(L.summarize(blank({ world: 3, progress: hexOf(p) })).found["Deep Jungle"], "visited", "story progress counts");
+  assert.equal(L.summarize(blank({ world: 3, progress: "00".repeat(16) })).found["Monstro"], "hidden", "old bridge: hidden without evidence");
+});
+
 test("real Steam recording: the Dive to the Heart chest flips Awakening: Chest", () => {
   const frames = readFileSync(path.join(FIXTURES, "steam-dive-to-the-heart.jsonl"), "utf8")
     .split("\n").filter(Boolean).map((l) => JSON.parse(l).state);

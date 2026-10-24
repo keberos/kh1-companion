@@ -48,6 +48,8 @@ local ADDR = {
                                               -- (KHPCSpeedrunTools magicLevels)
     shared         = {0x2DEA2F9, 0x2DE98F9},  -- 8 shared-ability slots: 1 High Jump, 2 Mermaid Kick, 3 Glide, 4 Superglide
     trinities      = {0x2DEB97B, 0x2DEAF7B},  -- bits: Blue Red Green Yellow White
+    world_status   = {0x2DEBC50, 0x2DEB250},  -- 11 bytes, TT WL OC DJ AG AT HT NL HB EotW Monstro:
+                                              -- 0 hidden, 1-2 on the map, 3 visited, 4 complete (AP client)
     hud            = {0x2812E9C, 0x281249C},  -- float > 0 while Sora's HUD is up
 }
 local CHEST_BYTES  = 509
@@ -113,6 +115,7 @@ local function snapshot()
         ',"magic":"', hex(ReadArray(addr("magic"), 7)), '"',
         ',"shared":"', hex(ReadArray(addr("shared"), 8)), '"',
         ',"trinities":', ReadByte(addr("trinities")),
+        ',"world_status":"', hex(ReadArray(addr("world_status"), 11)), '"',
     })
 end
 

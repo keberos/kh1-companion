@@ -13,6 +13,8 @@ The game stays on the top screen and is never patched. A LuaBackend script reads
 
 The current room is detected from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room (e.g. "Seaside Shack", "Piano Room").
 
+**No spoilers for worlds you haven't found.** The save's world-status array says which worlds are hidden, on the Gummi map, or visited. Unfound worlds show only as "???" (with a count), worlds on the map show their name and nothing else, and puppy chests and reports in unvisited worlds stay vague.
+
 **Progress comes from the save, not a ledger.** Everything is read live from game memory: whatever save is loaded, on whichever machine. Playing on several PCs, or syncing through Steam Cloud, just works.
 
 ```
@@ -102,7 +104,9 @@ GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bri
 5. Install the companion APK. The first launch opens its settings: allow "draw over other apps" and "all files access".
 6. Script updates are just another `adb push` to `KH1Companion/scripts/`, then a restart of the game. The mod doesn't need reinstalling.
 
-**Opening and closing:** the app icon is an on/off switch. Tap it to put the companion on the bottom screen; tap it again to close it. You can also close it with the × in the companion's header, the **Close** button on its notification, or a long press on the icon (Close companion / Settings). Settings opens on the top screen. If a game launcher (Cocoon Shell, Odin, Argosy) doesn't list it, add "KH1 Companion" as an app in that launcher.
+**Play KH1 (opens and closes with the game):** the app adds a second icon, **Play KH1**. It opens the companion, asks GameNative to start KH (GameNative's `app.gamenative.LAUNCH_GAME` intent, Steam app id 2552430, changeable in Settings), and closes the companion when the game exits. When a game was started that way, GameNative finishes its screen on exit and hands back to the caller, so nothing has to watch for it.
+
+**Opening and closing by hand:** the KH1 Companion icon is an on/off switch. Tap it to put the companion on the bottom screen; tap it again to close it. You can also close it with the × in the companion's header, the **Close** button on its notification, or a long press on the icon (Close companion / Settings). Settings opens on the top screen. If a game launcher (Cocoon Shell, Odin, Argosy) doesn't list it, add "KH1 Companion" as an app in that launcher.
 
 From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
 

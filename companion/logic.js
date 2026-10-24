@@ -29,6 +29,26 @@
     0x10: { name: "End of the World" },
   };
 
+  // ---------- which worlds the player has found ----------
+  // The save's world-status array (one byte per world in this order) says whether a world is
+  // hidden (0), on the Gummi map (1-2), or visited (3+). Story progress, opened chests and
+  // being there count as visited too. The two opening worlds are always known.
+  const STATUS_ORDER = ["Traverse Town", "Wonderland", "Olympus Coliseum", "Deep Jungle", "Agrabah", "Atlantica",
+    "Halloween Town", "Neverland", "Hollow Bastion", "End of the World", "Monstro"];
+  const PROGRESS_INDEX = { "Traverse Town": 0, "Deep Jungle": 1, "Olympus Coliseum": 2, "Wonderland": 3, "Agrabah": 4,
+    "Monstro": 5, "Atlantica": 6, "Halloween Town": 8, "Neverland": 9, "Hollow Bastion": 10, "End of the World": 11 };
+
+  function discovery(world, state, opened) {
+    if (world === "Awakening" || world === "Destiny Islands") return "visited";
+    if (!onTitle(state) && worldName(state.world) === world) return "visited";
+    if (CHESTS.some((c) => c.w === world && bit(opened, c.B, c.b))) return "visited";
+    const p = hexToBytes(state.progress), i = PROGRESS_INDEX[world];
+    if (i != null && i < p.length && p[i] > 0) return "visited";
+    const st = state.world_status == null ? null : hexToBytes(state.world_status)[STATUS_ORDER.indexOf(world)];
+    if (st == null) return "hidden";
+    return st >= 3 ? "visited" : st >= 1 ? "seen" : "hidden";
+  }
+
   const hexToBytes = (h) => {
     const a = new Uint8Array((h || "").length >> 1);
     for (let i = 0; i < a.length; i++) a[i] = parseInt(h.substr(i * 2, 2), 16);
@@ -306,6 +326,8 @@
       const cs = chestsFor(w, opened, state);
       worlds[w] = { got: cs.filter((c) => c.got).length, total: cs.length };
     }
+    const found = {};
+    for (const w of new Set([...Object.keys(MAPS), ...CHESTS.map((c) => c.w)])) found[w] = discovery(w, state, opened);
     const puppyChests = CHESTS.filter(isPuppies).map((c) => {
       const n = nodeForChest(c);
       return { ...c, got: bit(opened, c.B, c.b), node: n ? n.id : null };
@@ -316,6 +338,7 @@
       room: onTitle(state) ? null : roomName(state),
       opened,
       worlds,
+      found,
       chestsGot: CHESTS.filter((c) => bit(opened, c.B, c.b)).length,
       chestsTotal: CHESTS.length,
       puppies: Math.min(99, popcount(hexToBytes(state.puppies))),

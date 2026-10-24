@@ -198,6 +198,7 @@ li.here {
 .tag.here { color: var(--here); text-shadow: 0 0 6px rgba(111,227,255,.6); }
 .tag.pup { color: var(--gold); display: inline-flex; align-items: center; gap: 3px; }
 .tag.later { color: var(--muted); }
+.grid button.unvisited { opacity: .55; cursor: default; }
 ul.list li.locked .name { color: var(--sub); }
 ul.list li.locked > svg { opacity: .45; }
 ul.list li.hidden-step .name { color: var(--muted); letter-spacing: .2em; }

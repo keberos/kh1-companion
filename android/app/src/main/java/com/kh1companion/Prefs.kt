@@ -17,6 +17,16 @@ class Prefs(context: Context) {
         get() = sp.getString("devUrl", "") ?: ""
         set(v) = sp.edit().putString("devUrl", v.trim()).apply()
 
+    /** The game GameNative starts for "Play KH1": Steam app id of KINGDOM HEARTS HD 1.5+2.5 ReMIX. */
+    var gameAppId: Int
+        get() = sp.getInt("gameAppId", 2552430)
+        set(v) = sp.edit().putInt("gameAppId", v).apply()
+
+    /** GameNative's store name for that game (STEAM, EPIC, GOG, ...). */
+    var gameSource: String
+        get() = sp.getString("gameSource", "STEAM") ?: "STEAM"
+        set(v) = sp.edit().putString("gameSource", v.trim().uppercase()).apply()
+
     companion object {
         fun defaultStatePath(): String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

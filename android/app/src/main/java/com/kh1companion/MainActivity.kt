@@ -22,6 +22,7 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var statePath: EditText
     private lateinit var devUrl: EditText
+    private lateinit var gameId: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +54,11 @@ class MainActivity : Activity() {
         })
         col.addView(label("State file written by the game bridge"))
         col.addView(statePath)
+        gameId = EditText(this).apply {
+            setText(prefs.gameAppId.toString()); inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        col.addView(label("Play KH1 starts this GameNative game (Steam app id)"))
+        col.addView(gameId)
         col.addView(label("Dev URL (PC dev server, run with --lan)"))
         col.addView(devUrl)
         col.addView(button("Save and start companion") {
@@ -107,6 +113,7 @@ class MainActivity : Activity() {
     private fun save() {
         prefs.statePath = statePath.text.toString().ifBlank { Prefs.defaultStatePath() }
         prefs.devUrl = devUrl.text.toString()
+        gameId.text.toString().toIntOrNull()?.let { prefs.gameAppId = it }
     }
 
     private fun refresh() {

@@ -39,6 +39,9 @@
   const hex2 = (n) => "0x" + n.toString(16).toUpperCase().padStart(2, "0");
   const hereNode = () => (state ? L.nodeForRoom(state, roomLabels) : null);
   const displayWorld = (w) => (w === "Awakening" ? "Dive to the Heart" : w);
+  // Worlds the save hasn't reached stay unnamed; ones only on the Gummi map show their name, nothing more.
+  const visited = (w) => !sum || sum.found[w] === "visited";
+  const visitedWorlds = (list) => list.filter(visited);
 
   // ---------- shared pieces ----------
 
@@ -269,14 +272,16 @@
 
     if (!world) {
       // Title screen or a world without story steps: every world's next step at a glance.
+      const unseen = Object.keys(L.GUIDE).filter((w) => !visited(w)).length;
       el.innerHTML = `<div class="card"><div class="label">Story progress</div><ul class="list">` +
-        Object.keys(L.GUIDE).map((w) => {
+        visitedWorlds(Object.keys(L.GUIDE)).map((w) => {
           const g = L.guideFor(w, state, guideSeen);
           const done = g.steps.filter((s) => s.done).length;
           return `<li data-gw="${esc(w)}"><span class="grow"><span class="name">${esc(displayWorld(w))}</span>` +
             `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : "Story complete"}</div></span>` +
             `<span class="tag ${g.next ? "" : "here"}">${done}/${g.steps.length}</span></li>`;
-        }).join("") + `</ul></div>`;
+        }).join("") + (unseen ? `<li class="hidden-step"><span class="grow"><span class="name">???</span>` +
+          `<div class="sub">${unseen} more world${unseen > 1 ? "s" : ""} to find</div></span></li>` : "") + `</ul></div>`;
       el.querySelectorAll("[data-gw]").forEach((li) => { li.onclick = () => { guideWorld = li.dataset.gw; render(true); }; });
       return;
     }
@@ -325,7 +330,7 @@
       li.onclick = () => { if (li.dataset.room !== "null") openNodeSheet(world, li.dataset.room); };
     });
     $("guidePick").onclick = () => {
-      openSheet(`<h2>Guide for</h2><div class="opts">${Object.keys(L.GUIDE).map((w) =>
+      openSheet(`<h2>Guide for</h2><div class="opts">${visitedWorlds(Object.keys(L.GUIDE)).map((w) =>
         `<button class="chip" data-w="${esc(w)}">${esc(displayWorld(w))}</button>`).join("")}</div>` +
         `<div class="row"><span class="grow"></span><button class="chip" data-close>Cancel</button></div>`);
       $("sheetBody").querySelectorAll("[data-w]").forEach((b) => {
@@ -351,10 +356,16 @@
       wireToggles(el);
       return;
     }
-    el.innerHTML = `<div class="grid">${Object.entries(sum.worlds).map(([w, { got, total }]) =>
-      `<button data-w="${esc(w)}" class="${w === sum.world ? "cur" : ""}"><div class="wn">${esc(displayWorld(w))}</div>` +
-      `<div class="wc">${got} / ${total}</div><div class="bar ${got === total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div></button>`
-    ).join("")}</div>`;
+    const entries = Object.entries(sum.worlds);
+    const hidden = entries.filter(([w]) => sum.found[w] === "hidden").length;
+    el.innerHTML = `<div class="grid">${entries.filter(([w]) => sum.found[w] !== "hidden").map(([w, { got, total }]) =>
+      visited(w)
+        ? `<button data-w="${esc(w)}" class="${w === sum.world ? "cur" : ""}"><div class="wn">${esc(displayWorld(w))}</div>` +
+          `<div class="wc">${got} / ${total}</div><div class="bar ${got === total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div></button>`
+        : `<button class="unvisited" disabled><div class="wn">${esc(displayWorld(w))}</div><div class="wc">Not visited yet</div></button>`,
+    ).join("")}` +
+      (hidden ? `<button class="unvisited" disabled><div class="wn">???</div><div class="wc">${hidden} world${hidden > 1 ? "s" : ""} to find</div></button>` : "") +
+      `</div>`;
     el.querySelectorAll("[data-w]").forEach((b) => { b.onclick = () => { worldDetail = b.dataset.w; render(true); }; });
   }
 
@@ -364,20 +375,24 @@
     const el = $("v-collect");
     if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     const pupLeft = sum.puppyChests.filter((c) => !c.got);
+    const pupKnown = pupLeft.filter((c) => visited(c.w)), pupElsewhere = pupLeft.length - pupKnown.length;
     el.innerHTML =
       progressCard("All chests", sum.chestsGot, sum.chestsTotal) +
       progressCard("Dalmatians found", sum.puppies, 99) +
       `<div class="card"><div class="label">Puppy chests left · ${pupLeft.length} of ${sum.puppyChests.length}</div>` +
       (pupLeft.length
-        ? `<ul class="list">${pupLeft.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) =>
+        ? `<ul class="list">${pupKnown.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) =>
           `<li>${icon("ico-chest")}<span class="grow"><span class="name">${esc(c.n.replace(/ Chest$/, ""))}</span>` +
-          `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(L.labelOf(L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}</ul>`
+          `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(L.labelOf(L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}` +
+          (pupElsewhere ? `<li class="hidden-step">${icon("ico-chest")}<span class="grow"><span class="name">???</span>` +
+            `<div class="sub">${pupElsewhere} in worlds you haven't been to</div></span></li>` : "") + `</ul>`
         : '<div class="empty">All puppy chests opened.</div>') + `</div>` +
       progressCard("Postcards mailed", sum.postcards, 10) +
       `<div class="card"><div class="label">Ansem's Reports · ${sum.reports.filter((r) => r.got).length} / ${sum.reports.length}</div>` +
       `<ul class="list">${sum.reports.map((r) =>
         `<li class="${r.got ? "got" : ""}">${icon(r.got ? "ico-report" : "ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span>` +
-        `<div class="sub">${esc(r.w)}: ${esc(r.got ? r.n.replace(/ Ansem's Report \d+$/, "") : reportHow(r))}</div></span></li>`).join("")}</ul></div>`;
+        `<div class="sub">${r.got ? `${esc(r.w)}: ${esc(r.n.replace(/ Ansem's Report \d+$/, ""))}`
+          : visited(r.w) ? `${esc(r.w)}: ${esc(reportHow(r))}` : "Somewhere you haven't been"}</div></span></li>`).join("")}</ul></div>`;
   }
 
   // ---------- Level ----------
@@ -510,7 +525,7 @@
 
   function openWorldPicker() {
     openSheet(
-      `<h2>Show map for</h2><div class="opts">${Object.keys(sum.worlds).map((w) =>
+      `<h2>Show map for</h2><div class="opts">${visitedWorlds(Object.keys(sum.worlds)).map((w) =>
         `<button class="chip" data-w="${esc(w)}">${esc(displayWorld(w))}</button>`).join("")}</div>` +
       `<div class="row"><span class="grow"></span><button class="chip" data-close>Cancel</button></div>`,
     );

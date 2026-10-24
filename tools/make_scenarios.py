@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "dev" / "scenarios"
 
 
-def snapshot(world, room, level, exp, progress=(), inventory=None, abilities=(), magic=(), shared=(), trinities=0, chests=()):
+def snapshot(world, room, level, exp, progress=(), inventory=None, abilities=(), magic=(), shared=(), trinities=0, chests=(), status=()):
     prog = bytearray(16)
     for i, v in progress:
         prog[i] = v
@@ -28,7 +28,7 @@ def snapshot(world, room, level, exp, progress=(), inventory=None, abilities=(),
         "chests": flags.hex(), "reports": "0000", "puppies": "00" * 13, "cups": "00000000",
         "progress": prog.hex(), "progress_pre": "00000000", "exp": exp,
         "abilities": pad(abilities, 48).hex(), "inventory": inv.hex(), "magic": pad(magic, 7).hex(),
-        "shared": pad(shared, 8).hex(), "trinities": trinities, "dive": "000000000000", "seq": 1, "t": int(time.time()),
+        "shared": pad(shared, 8).hex(), "trinities": trinities, "dive": "000000000000", "world_status": pad(status, 11).hex(), "seq": 1, "t": int(time.time()),
     }
 
 
@@ -41,6 +41,7 @@ SCENARIOS = {
         progress=[(0, 0x3E), (1, 0x6E), (2, 0x28), (3, 0x30), (4, 0x78), (5, 0x46), (6, 0x64), (8, 0x6E), (9, 0x35), (10, 0x32), (14, 0x14)],
         abilities=[0xB6, 0x8A, 0xB5, 0x93, 0xBC, 0x86, 0x95, 0xB7, 0x94, 0x85, 0xB8],
         magic=[2, 2, 2, 1, 1, 1, 1], shared=[0x81, 0x81, 0x82], trinities=0b01111,
+        status=[3, 4, 4, 4, 4, 4, 4, 3, 3, 0, 4],
     ),
 }
 

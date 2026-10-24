@@ -8,7 +8,7 @@
   const params = new URLSearchParams(location.search);
   const STATE_URL = params.get("state") || "state.json";
   const POLL_MS = 250;
-  const STALE_MS = 5000;
+  const STALE_MS = 8000;  // bridge heartbeat is every 2 s; allow for emulation hiccups
   const VIEWS = ["here", "map", "worlds", "collect"];
 
   const $ = (id) => document.getElementById(id);

@@ -20,7 +20,8 @@ LUAGUI_DESC = "Writes KH1 state to a JSON file for a second-screen companion app
 OUTPUT_DIR = nil
 
 local POLL_FRAMES      = 15   -- ~4 Hz at 60 fps
-local HEARTBEAT_FRAMES = 120  -- rewrite at least every ~2 s so the app can tell we're alive
+local HEARTBEAT_SECS   = 2    -- rewrite at least this often (wall clock) so the app can tell we're alive;
+                               -- frame-based timing stretched past the app's stale limit under emulation
 
 -- Address pairs are {EGS, Steam} for 1.0.0.10, taken from the KH1FM
 -- Archipelago client (gaithern/KH-1FM-AP-LUA) and KH1FM-RANDOMIZER.
@@ -43,7 +44,7 @@ local PUPPY_BYTES  = 13
 local game_version = nil  -- 1 = EGS, 2 = Steam
 local out_dir, out_path, tmp_path
 local frame, seq = 0, 0
-local last_payload, frames_since_write = nil, 0
+local last_payload, last_write = nil, 0
 
 local function addr(name) return ADDR[name][game_version] end
 
@@ -135,13 +136,13 @@ end
 function _OnFrame()
     if not game_version then return end
     frame = frame + 1
-    frames_since_write = frames_since_write + 1
     if frame % POLL_FRAMES ~= 0 then return end
 
     local body = snapshot()
-    if body ~= last_payload or frames_since_write >= HEARTBEAT_FRAMES then
+    local now = os.time()
+    if body ~= last_payload or now - last_write >= HEARTBEAT_SECS then
         write_snapshot(body)
         last_payload = body
-        frames_since_write = 0
+        last_write = now
     end
 end

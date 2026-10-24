@@ -50,6 +50,8 @@ def run():
 
     lua.execute((ROOT / "lua" / "kh1companion.lua").read_text(encoding="utf-8"))
     g.OUTPUT_DIR = str(out_dir) + "\\"
+    clock = {"now": 1000}  # the heartbeat is wall-clock based; drive time by hand
+    g.os.time = lambda *_: clock["now"]
     g._OnInit()
     for _ in range(30):
         g._OnFrame()
@@ -63,10 +65,16 @@ def run():
     assert state["reports"] == "0100" and state["puppies"][:4] == "ffe0"
     seq_before = state["seq"]
 
-    # Unchanged memory: no rewrite until the heartbeat.
+    # Unchanged memory and no time passing: no rewrite.
+    seq_now = seq_before
     for _ in range(60):
         g._OnFrame()
-    assert json.loads((out_dir / "state.json").read_text())["seq"] == seq_before
+    assert json.loads((out_dir / "state.json").read_text())["seq"] == seq_now, "rewrote without a change"
+    clock["now"] += 3
+    for _ in range(15):
+        g._OnFrame()
+    assert json.loads((out_dir / "state.json").read_text())["seq"] == seq_now + 1, "no heartbeat after 3 s"
+    seq_before = seq_now + 1
     mem[STEAM["room"]] = 0x0C
     for _ in range(15):
         g._OnFrame()

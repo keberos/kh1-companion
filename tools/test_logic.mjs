@@ -272,6 +272,18 @@ test("level-ups: tables are complete and the save picks the path and curve", () 
   const odd = L.levelInfo(blank({ level: 38, exp: 1, abilities: "00".repeat(48) }), { curve: "Dusk" });
   assert.deepEqual(odd.curves, ["Dawn", "Midday", "Dusk"], "EXP that fits no curve rules nothing out");
   assert.equal(odd.curve, "Dusk");
+  // The save's Dive byte names the path outright, from level 1.
+  const shield = L.levelInfo(blank({ level: 1, exp: 0, abilities: "00".repeat(48), dive: "010000000000" }), { path: "Warrior" });
+  assert.equal(shield.path, "Guardian");
+  assert.equal(shield.autoPath, true);
+  // ...unless learned abilities contradict it (a bad read): then abilities decide.
+  const clash = L.levelInfo(blank({ level: 6, exp: cumMid[6], abilities: "b6" + "00".repeat(47), dive: "020000000000" }), {});
+  assert.equal(clash.path, "Warrior");
+  // A curve the device saw the save narrow down to carries on while EXP is ambiguous, in the same run only.
+  const amb = L.levelInfo(blank({ level: 1, exp: 0 }), { seen: "Dusk", seenExp: 0 });
+  assert.equal(amb.curve, "Dusk");
+  assert.equal(amb.autoCurve, true);
+  assert.equal(L.levelInfo(blank({ level: 1, exp: 0 }), { seen: "Dusk", seenExp: 500 }).curve, null, "EXP went down: a new game");
   const picked = L.levelInfo(blank({ level: 2, exp: undefined }), { path: "Guardian", curve: "Dusk" });
   assert.equal(picked.path, "Guardian");
   assert.equal(picked.curve, "Dusk");

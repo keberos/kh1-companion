@@ -9,7 +9,7 @@ The game stays on the top screen and is never patched. A LuaBackend script reads
 - **Map:** a room graph of the world: where you are, unopened chests per room, puppy chests, save points. Rooms you can't get into yet (story or ability) are dimmed with a padlock; counts read "4 + 1 later" when some chests need something you don't have. Tap a room for its chest list. Exits the sources only imply are drawn dashed.
 - **Worlds:** chest progress for every world; open one for its list or its map.
 - **Collect:** total chests (232), Dalmatians (out of 99) plus where the 33 puppy chests are, postcards, and the 13 Ansem's Reports with where each comes from.
-- **Level:** what Sora gets at each level for your build: abilities on your Dive path (Warrior / Guardian / Mystic) and the stat ups, plus EXP to the next level on your growth curve (Dawn / Midday / Dusk). The path is read from the abilities you've learned and the curve from your EXP; while the save can't tell yet (early game), pick them yourself. Tap any level for what each reward does and what the other paths get there.
+- **Level:** what Sora gets at each level for your build: abilities on your Dive path (Warrior / Guardian / Mystic) and the stat ups, plus EXP to the next level on your growth curve (Dawn / Midday / Dusk). The path comes straight from the save (what you kept at the Dive). The curve has no known save byte, so it's worked out from your EXP and remembered once it's clear; you only pick it if EXP is still ambiguous. Tap any level for what each reward does and what the other paths get there.
 
 The current room is detected from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room (e.g. "Seaside Shack", "Piano Room").
 
@@ -116,6 +116,7 @@ From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
 | Android wrapper | Passes `tools/emulator_test.py` on a two-display emulator (2026-10-23): overlay fills the 1240×1080 second display, reads the pushed state file, taps and swipes work, and focus stays on the app on the main screen throughout. Runs on the Thor (2026-10-24) with live data from KH1 in GameNative: LuaBackend as `DINPUT8.dll` → bridge → `D:\KH1Companion\state.json` → bottom-screen overlay, top screen keeps focus. |
 
 **Unverified:**
+- The Dive choice byte (`0x2DE97EC`, from KH1FM-Memory-Map's Steam 1.0.0.9 table; its neighbours match 1.0.0.10) and the five bytes after it, sent to look for the growth-curve byte.
 - The bridge's newer reads (EXP, learned abilities, inventory, magic, shared abilities, Trinities, and the Dive/Destiny Islands story byte `progress_pre`) come from public scripts but haven't been checked against a live save yet. Everything that uses them stays quiet (nothing locked, path and curve left to pick) when a value is missing.
 - Destiny Islands can't yet tell the second day from the night; `progress_pre[1]` is sent so a recording can calibrate it.
 - World IDs beyond those confirmed (0, 1, 3, 9, 0x0B, 0x0D, 0x0F, 0x10). The others follow the game's world order; the header says "world id unverified" there.

@@ -423,9 +423,10 @@
       (info.toNext != null ? `<br>${fmt(info.toNext)} to LV ${info.level + 1}` : "") + `</div></div>` +
       (info.toNext != null ? `<div class="bar"><i style="width:${pct}%"></i></div>` : "") +
       `<div class="row" style="margin-top:10px;flex-wrap:wrap;gap:6px">` +
-      chip("path", info.path, info.autoPath, info.path ? `${info.path} (${PATH_ITEM[info.path]})` : "") +
+      chip("path", info.path, info.autoPath, info.path ? `${info.path} (kept the ${PATH_ITEM[info.path]})` : "") +
       chip("curve", info.curve, info.autoCurve, info.curve ? `${info.curve}: ${CURVE_TEXT[info.curve]}` : "") + `</div>` +
-      (!info.path ? `<div class="sub" style="margin-top:8px">Abilities depend on what you kept at the Dive. Until the save shows it, pick one or see the stat ups below.</div>` : "") +
+      (!info.path ? `<div class="sub" style="margin-top:8px">Abilities depend on what you kept at the Dive. This bridge can't read that yet: pick one, or restart the game with the updated script.</div>` : "") +
+      (info.path && !info.curve ? `<div class="sub" style="margin-top:8px">Your EXP so far fits more than one growth. It settles after a few more fights, or pick it.</div>` : "") +
       `</div>` +
       `<div class="card"><div class="label">${levelAll ? "Every level" : "Coming up"}</div>` +
       (levels.length ? `<ul class="list levels">${levels.map((lv) => levelRow(info, lv)).join("")}</ul>` : `<div class="empty">Max level.</div>`) +
@@ -557,6 +558,12 @@
   // Destiny Islands errands hand their items over, so remember steps once seen done.
   // A fresh Dive (no Traverse Town progress yet) means a new game: forget them.
   function rememberSteps() {
+    // The growth curve has no save byte: keep the last one EXP pinned down, for when it's ambiguous again.
+    const info = !sum.title && L.levelInfo(state, levelPick);
+    if (info && info.seenCurve && (levelPick.seen !== info.seenCurve || levelPick.seenExp !== info.exp)) {
+      levelPick = { ...levelPick, seen: info.seenCurve, seenExp: info.exp };
+      store.set("levelPick", levelPick);
+    }
     const before = guideSeen.size;
     const tt = L.hexToBytes(state.progress)[0] || 0;
     if (state.world === 0 && !sum.title && tt === 0) {

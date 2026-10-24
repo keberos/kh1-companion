@@ -242,9 +242,11 @@
   }
 
   // ---------- level-ups ----------
-  // Which dream path and growth curve the save fits: the path from abilities learned so far,
-  // the curve from total EXP at the current level. `pick` is the player's own choice, used
-  // when the save fits more than one.
+  // The path is what Sora kept at the Dive, read from the save (checked against the abilities
+  // learned so far). The curve has no known save byte: it's the one whose EXP range holds the
+  // current EXP at this level. `pick.curve` / `pick.path` are the player's own choice, and
+  // `pick.seen` the curve this device last saw the save narrow down to (`seenExp` its EXP then),
+  // used while the EXP fits more than one.
 
   const PATHS = ["Warrior", "Guardian", "Mystic"];
   const CURVES = ["Dawn", "Midday", "Dusk"];
@@ -271,8 +273,13 @@
     // Nothing fits (an odd save, or a read gone wrong): don't rule anything out.
     if (!curves.length) curves = CURVES;
     if (!paths.length) paths = PATHS;
+    const kept = state.dive != null ? PATHS[hexToBytes(state.dive)[0]] : null;
+    const fromSave = !!kept && paths.includes(kept);
+    if (fromSave) paths = [kept];
+    // A remembered curve only counts for the same playthrough: EXP never goes down.
+    const seen = pick && pick.seen && exp != null && exp >= (pick.seenExp || 0) && curves.includes(pick.seen) ? pick.seen : null;
     const choose = (fits, picked) => (fits.length === 1 ? fits[0] : fits.includes(picked) ? picked : null);
-    const curve = choose(curves, pick && pick.curve);
+    const curve = choose(curves, seen || (pick && pick.curve));
     const path = choose(paths, pick && pick.path);
     const stats = Object.fromEntries(LEVELS.stats);
     const rewards = (lv, p) => ({
@@ -281,7 +288,8 @@
     });
     return {
       level, exp, curves, paths, curve, path, cum,
-      autoCurve: curves.length === 1 && exp != null, autoPath: paths.length === 1 && known,
+      autoCurve: exp != null && (curves.length === 1 || !!seen), autoPath: fromSave || (paths.length === 1 && known),
+      seenCurve: curves.length === 1 && exp != null ? curves[0] : null,
       toNext: curve && exp != null && level < 100 ? cum[curve][level + 1] - exp : null,
       rewards, name: (code) => LEVELS.names[code],
     };

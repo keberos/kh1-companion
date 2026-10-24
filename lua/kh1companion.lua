@@ -41,6 +41,9 @@ local ADDR = {
     sora_exp       = {0x2DE9DA0, 0x2DE93A0},  -- 4-byte total EXP (Sora's stat block +0x3C)
     sora_abilities = {0x2DE9DA4, 0x2DE93A4},  -- 48 ability slots, id | 0x80 when equipped
     inventory      = {0x2DEA1F9, 0x2DE97F9},  -- item counts by item id (AP: inventory + id)
+    dive_choice    = {0x2DEA1EC, 0x2DE97EC},  -- +0: what Sora kept at the Dive, 0 Sword 1 Shield 2 Rod
+                                              -- (HydroSulphide/KH1FM-Memory-Map "Start choice"); +1..+5 sent
+                                              -- unlabelled, to find the growth curve byte
     magic          = {0x2DEA1F2, 0x2DE97F2},  -- 7 spell levels: Fire Blizzard Thunder Cure Gravity Stop Aero
                                               -- (KHPCSpeedrunTools magicLevels)
     shared         = {0x2DEA2F9, 0x2DE98F9},  -- 8 shared-ability slots: 1 High Jump, 2 Mermaid Kick, 3 Glide, 4 Superglide
@@ -106,6 +109,7 @@ local function snapshot()
         ',"exp":', ReadInt(addr("sora_exp")),
         ',"abilities":"', hex(ReadArray(addr("sora_abilities"), 48)), '"',
         ',"inventory":"', hex(ReadArray(addr("inventory"), 256)), '"',
+        ',"dive":"', hex(ReadArray(addr("dive_choice"), 6)), '"',
         ',"magic":"', hex(ReadArray(addr("magic"), 7)), '"',
         ',"shared":"', hex(ReadArray(addr("shared"), 8)), '"',
         ',"trinities":', ReadByte(addr("trinities")),

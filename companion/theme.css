@@ -287,6 +287,7 @@ ul.levels li.here .lvnum { color: var(--here); }
 .detail .reward { justify-self: start; font-size: 16px; }
 nav button { font-size: 15px; letter-spacing: .03em; }
 /* the next-step ring stays gold even on the room you're in (the "here" style colours every rect) */
-svg.map .node .goalring, svg.map .node.here .goalring { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-dasharray: 6 4; filter: none; animation: goalpulse 2s ease-in-out infinite; }
-@keyframes goalpulse { 50% { opacity: .35; } }
+/* !important: room styles (here, no chests, done) colour every rect in the node and must not touch this ring */
+svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !important; stroke-width: 3 !important; stroke-dasharray: 7 4; filter: none !important; animation: goalpulse 2s ease-in-out infinite; }
+@keyframes goalpulse { 50% { opacity: .7; } }
 .lg.goal { border: 2px dashed var(--gold); border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; }

@@ -50,7 +50,9 @@ while True:
                 "v": 1, "edition": "steam", "world": WORLD_IDS[world], "room": room, "in_field": True,
                 "level": level, "max_hp": 84, "max_mp": 6, "ap": 22, "postcards": 4,
                 "chests": flags.hex(), "reports": reports.hex(), "puppies": puppies.hex(),
-                "cups": "00000000", "progress": "00" * 12, "seq": seq, "t": int(time.time()),
+                "cups": "00000000", "progress": "00" * 16, "progress_pre": "00000000", "exp": 0,
+                "abilities": "00" * 48, "inventory": "00" * 256, "magic": "00" * 7, "shared": "00" * 8,
+                "trinities": 0, "dive": "00" * 6, "world_status": "03" * 11, "seq": seq, "t": int(time.time()),
             }
             tmp = OUT.with_suffix(".json.tmp")
             tmp.write_text(json.dumps(state))

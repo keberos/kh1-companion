@@ -79,15 +79,11 @@
       || null;
   }
 
-  // Which map node the player is in: from the room bytes in the map data. `labels` maps
-  // "world:room" to a node the player picked on this device, for any room the data lacks.
-  function nodeForRoom(state, labels) {
+  // Which map node the player is in, from the room bytes in the map data (every named room has one).
+  function nodeForRoom(state) {
     const world = worldName(state.world);
     if (!world || onTitle(state)) return null;
-    const known = nodesOf(world).find((n) => (n.rooms || []).includes(state.room));
-    if (known) return known;
-    const picked = labels && labels[state.world + ":" + state.room];
-    return (picked && node(world, picked)) || null;
+    return nodesOf(world).find((n) => (n.rooms || []).includes(state.room)) || null;
   }
 
   // ---------- what the save says you have ----------
@@ -213,7 +209,7 @@
   // happened there. Unvisited rooms keep their names hidden.
   function knownRooms(world, state, opened, seen, guideSeen) {
     const known = new Set(seen || []);
-    const here = nodeForRoom(state, {});
+    const here = nodeForRoom(state);
     if (here && worldName(state.world) === world) known.add(here.id);
     for (const c of chestsFor(world, opened)) if (c.got && c.node) known.add(c.node);
     for (const s of guideFor(world, state, guideSeen).steps) if (s.done && s.where) known.add(s.where);

@@ -13,7 +13,7 @@
 //   save    true if the wiki mentions a save point here
 //   match   chest-name prefixes for chests that have no room in the data
 //   alone   true for rooms you only reach by story or cutscene (no exits drawn)
-// Edges: [a, b]. [a, b, "approx"] would mark an exit the sources only imply (the map draws it dashed); none are left.
+// Edges: [a, b], a confirmed way between two rooms.
 // Paths follow the KH Wiki's room descriptions and KH1 walkthroughs (Walkthrough:Kingdom_Hearts/<world>),
 // cross-checked against Archipelago chest names; every one is confirmed (checked 2026-10-24).
 // `gate`: a room you can't get into until a story point ({p, at}: the guide's progress bytes,

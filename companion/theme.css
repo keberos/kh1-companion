@@ -243,7 +243,6 @@ ul.list li.hidden-step .name { color: var(--muted); letter-spacing: .2em; }
 .mapcard { padding: 8px; }
 svg.map { width: 100%; height: auto; max-height: calc(100vh - 236px); display: block; }
 svg.map .edge { stroke: #6f86c4; stroke-width: 3; stroke-linecap: round; opacity: .75; }
-svg.map .edge.approx { stroke-dasharray: 2 7; opacity: .6; }
 svg.map .node rect { fill: url(#nodeFill); stroke: var(--silver-dim); stroke-width: 2; }
 svg.map .node.bare rect { fill: rgba(6,10,32,.9); stroke: rgba(93,108,152,.7); }
 svg.map .node.done rect { stroke: var(--hp-top); }
@@ -270,7 +269,6 @@ ul.list.options li { cursor: pointer; }
 .legend svg { width: 16px; height: 16px; }
 .lg { display: inline-block; width: 14px; height: 10px; border-radius: 3px; }
 .lg.here { box-shadow: 0 0 0 2px var(--here), 0 0 6px var(--here); }
-.lg.dash { width: 18px; height: 0; border-top: 3px dotted #6f86c4; border-radius: 0; }
 
 /* ---------- guide ---------- */
 .step-title { font: 700 20px/1.2 var(--title); letter-spacing: .03em; color: var(--text); margin: 4px 0 2px; }

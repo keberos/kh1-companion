@@ -37,11 +37,10 @@
   let waitHelp = false;  // waiting screen: troubleshooting shown
   let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
   let allNames = store.get("allNames", false);  // show every room name, visited or not
-  let roomLabels = store.get("rooms", {});
 
   const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
   const hex2 = (n) => "0x" + n.toString(16).toUpperCase().padStart(2, "0");
-  const hereNode = () => (state ? L.nodeForRoom(state, roomLabels) : null);
+  const hereNode = () => (state ? L.nodeForRoom(state) : null);
   const displayWorld = (w) => (w === "Awakening" ? "Dive to the Heart" : w);
   // Worlds the save hasn't reached stay unnamed; ones only on the Gummi map show their name, nothing more.
   const visited = (w) => !sum || sum.found[w] === "visited";
@@ -143,7 +142,6 @@
 
   function renderHere() {
     const el = $("v-here");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for <code>${esc(STATE_URL)}</code>…</div>`; return; }
     const world = sum.world;
     if (!world || !L.MAPS[world]) {
       el.innerHTML = `<div class="empty">${sum.title ? "On the title screen." : "Nothing to track in this world."}</div>`;
@@ -151,14 +149,12 @@
     }
     const n = hereNode();
     const chests = L.chestsFor(world, sum.opened, state);
-    const multi = L.nodesOf(world).length > 1;
     el.innerHTML =
       progressCard(displayWorld(world) + " chests", sum.worlds[world].got, sum.worlds[world].total) +
       `<div class="row" style="margin-bottom:10px">` +
-      (multi ? `<button class="chip" id="pickRoom">${n ? "In: " + esc(L.labelOf(n)) : "Which room is this?"}</button>` : "") +
+
       `<span class="grow"></span>${toggles()}</div>` +
       `<div class="card">${chestList(chests, n && n.id)}</div>`;
-    if ($("pickRoom")) $("pickRoom").onclick = () => openRoomPicker(world);
     wireToggles(el);
   }
 
@@ -176,9 +172,9 @@
     const cx = (n) => n.x * CELL_W + CELL_W / 2, cy = (n) => n.y * CELL_H + CELL_H / 2;
     const at = Object.fromEntries(map.nodes.map((n) => [n.id, n]));
 
-    const edges = map.edges.map(([a, b, kind]) => {
+    const edges = map.edges.map(([a, b]) => {
       if (!at[a] || !at[b]) return "";
-      return `<line x1="${cx(at[a])}" y1="${cy(at[a])}" x2="${cx(at[b])}" y2="${cy(at[b])}" class="edge ${kind === "approx" ? "approx" : ""}"/>`;
+      return `<line x1="${cx(at[a])}" y1="${cy(at[a])}" x2="${cx(at[b])}" y2="${cy(at[b])}" class="edge"/>`;
     }).join("");
 
     const nodes = map.nodes.map((n) => {
@@ -221,7 +217,6 @@
 
   function renderMap() {
     const el = $("v-map");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     const world = mapWorld || (L.MAPS[sum.world] ? sum.world : null);
     if (!world) {
       el.innerHTML = `<div class="empty">${sum.title ? "On the title screen." : "No map for this world."}<br><br>` +
@@ -232,7 +227,6 @@
     const n = world === sum.world ? hereNode() : null;
     const next = L.guideFor(world, state, guideSeen).next;
     const goal = next && whereShown.has(next.key) ? next : null;  // only once the player asked "Where?"
-    const approx = L.MAPS[world].edges.some((e) => e[2] === "approx");
     const anyShut = L.nodesOf(world).some((nd) => !L.nodeAccess(world, nd, state).open);
     el.innerHTML =
       `<div class="row" style="margin-bottom:8px"><button class="chip" id="pickMapWorld">${esc(displayWorld(world))} ▾</button>` +
@@ -242,7 +236,7 @@
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
-      `${approx ? '<span><i class="lg dash"></i>approximate path</span>' : ""}</div>`;
+      `</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     $("allNames").onclick = () => { allNames = !allNames; store.set("allNames", allNames); render(true); };
     if ($("mapHere")) $("mapHere").onclick = () => { mapWorld = null; render(true); };
@@ -305,7 +299,6 @@
 
   function renderGuide() {
     const el = $("v-guide");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     const world = guideWorld || (L.GUIDE[sum.world] ? sum.world : null);
 
     if (!world) {
@@ -382,7 +375,6 @@
 
   function renderWorlds() {
     const el = $("v-worlds");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     if (worldDetail) {
       const w = sum.worlds[worldDetail];
       el.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="chip" id="back">‹ All</button>` +
@@ -411,7 +403,6 @@
 
   function renderCollect() {
     const el = $("v-collect");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     const pupLeft = sum.puppyChests.filter((c) => !c.got);
     const pupKnown = pupLeft.filter((c) => visited(c.w)), pupElsewhere = pupLeft.length - pupKnown.length;
     el.innerHTML =
@@ -458,7 +449,6 @@
 
   function renderLevel() {
     const el = $("v-level");
-    if (!state) { el.innerHTML = `<div class="empty">Waiting for game…</div>`; return; }
     const info = L.levelInfo(state, levelPick);
     if (!info) { el.innerHTML = `<div class="empty">No level data.</div>`; return; }
     const lo = info.curve ? info.cum[info.curve][info.level] : 0, hi = info.curve && info.level < 100 ? info.cum[info.curve][info.level + 1] : 0;
@@ -598,24 +588,6 @@
   function closeSheet() { $("sheet").classList.remove("on"); render(true); }
   $("sheet").onclick = (e) => { if (e.target.id === "sheet") closeSheet(); };
 
-  function openRoomPicker(world) {
-    const key = state.world + ":" + state.room, cur = hereNode();
-    openSheet(
-      `<h2>Which room is this?</h2><div class="sub">${esc(displayWorld(world))}, room ${hex2(state.room)}. ` +
-      `Saved on this device; that room's chests get pinned to the top and it lights up on the map.</div>` +
-      `<div class="opts">${L.nodesOf(world).map((n) =>
-        `<button class="chip ${cur && n.id === cur.id ? "on" : ""}" data-n="${esc(n.id)}">${esc(L.labelOf(n))}</button>`).join("")}</div>` +
-      `<div class="row"><button class="chip" data-n="">Clear</button><span class="grow"></span><button class="chip" data-close>Cancel</button></div>`,
-    );
-    $("sheetBody").querySelectorAll("[data-n]").forEach((b) => {
-      b.onclick = () => {
-        if (b.dataset.n) roomLabels[key] = b.dataset.n; else delete roomLabels[key];
-        store.set("rooms", roomLabels);
-        closeSheet();
-      };
-    });
-  }
-
   function openWorldPicker() {
     openSheet(
       `<h2>Show map for</h2><div class="opts">${visitedWorlds(Object.keys(sum.worlds)).map((w) =>
@@ -636,7 +608,7 @@
     // Heartbeat writes bump seq/t only; re-rendering on those would swap buttons out from under a tap.
     const data = state ? JSON.stringify({ ...state, seq: 0, t: 0 }) : "";
     const sig = [data, view, showOpened, showContents, showNeeds, worldDetail, mapWorld, guideWorld, [...hintsShown].join(","),
-      [...whereShown].join(","), JSON.stringify(roomLabels), JSON.stringify(levelPick), levelAll, waitHelp, allNames,
+      [...whereShown].join(","), JSON.stringify(levelPick), levelAll, waitHelp, allNames,
       JSON.stringify(visitedRooms)].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;

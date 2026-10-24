@@ -72,20 +72,16 @@ test("chests with no room in the data still land in the right room", () => {
 });
 
 test("room bytes confirmed by community scripts resolve to the right room", () => {
-  const at = (world, room) => L.nodeForRoom(blank({ world, room }), {})?.id;
+  const at = (world, room) => L.nodeForRoom(blank({ world, room }))?.id;
   assert.equal(at(3, 0x0B), "Item Workshop");
   assert.equal(at(3, 0x16), "Secret Waterway");
   assert.equal(at(15, 0x04), "Entrance Hall");
   assert.equal(at(0, 0x02), "Alice Platform");
-  assert.equal(L.nodeForRoom(blank({ world: 0, room: 0, in_field: false }), {}), null, "title screen is nowhere");
+  assert.equal(L.nodeForRoom(blank({ world: 0, room: 0, in_field: false })), null, "title screen is nowhere");
 });
 
-test("a room picked on the device only fills rooms the map data lacks", () => {
-  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x0B }), { "3:11": "Accessory Shop" }).id, "Item Workshop",
-    "map data wins for named rooms");
-  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x15 }), { "3:21": "Magician's Lab" }).id, "Magician's Lab",
-    "a pick names an unnamed room");
-  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x30 }), {}), null, "unknown room byte");
+test("an unknown room byte maps to no room", () => {
+  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x30 })), null);
 });
 
 test("all 33 puppy chests are known and placed", () => {
@@ -158,9 +154,9 @@ test("every named room in every mapped world belongs to exactly one map node", (
 
 test("the header names the exact room", () => {
   assert.equal(L.summarize(blank({ world: 1, room: 0x04 })).room, "Seaside Shack");
-  assert.equal(L.nodeForRoom(blank({ world: 1, room: 0x04 }), {}).id, "Seaside Shack");
+  assert.equal(L.nodeForRoom(blank({ world: 1, room: 0x04 })).id, "Seaside Shack");
   assert.equal(L.summarize(blank({ world: 3, room: 0x10 })).room, "Piano Room");
-  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x10 }), {}).id, "Dalmatians' House");
+  assert.equal(L.nodeForRoom(blank({ world: 3, room: 0x10 })).id, "Dalmatians' House");
   assert.equal(L.summarize(blank({ world: 3, room: 0x15 })).room, null, "unnamed rooms show no name");
 });
 

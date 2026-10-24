@@ -3,8 +3,7 @@
 Archipelago (MIT) names every chest and Ansem Report by its save-flag bit:
   chest   location id = 2650000 + byte_index * 10 + bit   (byte_index and bit are 1-based)
   report  location id = 2657000 + byte_index * 10 + bit
-The KH1FM randomizer docs (MIT) add, per chest, the room it sits in and its vanilla contents,
-and (via map file names) which in-game room byte each named room has.
+The KH1FM randomizer docs (MIT) add, per chest, the room it sits in and its vanilla contents.
 
 Usage:  python tools/gen_data.py
 """
@@ -72,14 +71,6 @@ def main():
             byte, bit = divmod(loc_id - 2657000, 10)
             reports.append({"w": world, "n": strip_world(name, world), "B": byte - 1, "b": bit - 1})
 
-    # Room bytes: "<ww><NN>.ard" map files, room byte = NN - 1.
-    room_ids = defaultdict(dict)
-    for r in csv.DictReader((SRC / "rando-static-items.csv").open(encoding="utf-8-sig")):
-        m = re.search(r"/([a-z]{2})(\d\d)\.ard/", r["File"])
-        if m:
-            room_ids[r["World"].strip()].setdefault(r["Location"].strip(), set()).add(int(m.group(2)) - 1)
-    room_ids = {w: {n: sorted(ids) for n, ids in rooms.items()} for w, rooms in room_ids.items()}
-
     # Room names by world byte, indexed by room byte, from MultiPresence (list index = room byte).
     worlds_cs = (SRC / "multipresence-kh1-Worlds.cs").read_text(encoding="utf-8-sig")
     world_ids = {}
@@ -104,8 +95,6 @@ def main():
         "// q = what reaching it takes (Archipelago Beginner logic): any one list; \"Item:n\" = n of it.\n"
         f"window.KH1_CHESTS = {json.dumps(chests, ensure_ascii=False)};\n"
         f"window.KH1_REPORTS = {json.dumps(reports, ensure_ascii=False)};\n"
-        "// Room bytes seen in map file names, by world and room name (room byte = .ard number - 1).\n"
-        f"window.KH1_ROOM_IDS = {json.dumps(room_ids, ensure_ascii=False, sort_keys=True)};\n"
         "// Room names by world byte, indexed by room byte (Dekirai/MultiPresence, MIT).\n"
         f"window.KH1_ROOM_NAMES = {json.dumps(room_names, ensure_ascii=False, sort_keys=True)};\n"
         "// Sora's level-ups (KH1FM-RANDOMIZER battle-table docs, MIT). paths: [level, code] per dream path,\n"

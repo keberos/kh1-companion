@@ -2,14 +2,17 @@
 
 A bottom-screen companion for **KINGDOM HEARTS Final Mix** (HD 1.5+2.5 ReMIX, Steam or Epic, 1.0.0.10), aimed at the AYN Thor running the game through GameNative.
 
-The game stays on the top screen and is never patched. A LuaBackend script reads game memory and writes a small JSON snapshot about 4 times a second. The companion page reads that snapshot and shows four tabs:
+The game stays on the top screen and is never patched. A LuaBackend script reads game memory and writes a small JSON snapshot about 4 times a second. The companion page reads that snapshot and shows five tabs:
 
 - **Here:** chest progress for the current world and its unopened chests. The room you're in is pinned to the top, and each chest shows its vanilla contents (toggle with "Contents").
+- **Guide:** the next story step for this world (title, rewards, the room it happens in, and a hint you tap to reveal), what's left in your current room and world, this world's Ansem's Reports, and the world's story checklist. On the title screen it lists every world's next step.
 - **Map:** a room graph of the world: where you are, unopened chests per room, puppy chests (gold dot), save points (green dot). Tap a room for its chest list. Exits the sources only imply are drawn dashed.
 - **Worlds:** chest progress for every world; open one for its list or its map.
 - **Collect:** total chests (232), Dalmatians (out of 99) plus where the 33 puppy chests are, postcards, and the 13 Ansem's Reports with where each comes from.
 
-The current room is detected from the game's room byte where that's known (see "Room IDs" below). Anywhere else, tap "Which room is this?" once and it's remembered on that device.
+The current room is detected from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room (e.g. "Seaside Shack", "Piano Room").
+
+**Progress comes from the save, not a ledger.** Everything is read live from game memory: whatever save is loaded, on whichever machine. Playing on several PCs, or syncing through Steam Cloud, just works.
 
 ```
 KH1 (top screen)  ──LuaBackend──▶  kh1companion.lua  ──▶  state.json  ──▶  companion page (bottom screen)
@@ -39,7 +42,9 @@ All public, no game files needed:
 - **Memory addresses:** the KH1FM Archipelago client ([gaithern/KH-1FM-AP-LUA](https://github.com/gaithern/KH-1FM-AP-LUA)) and [KH1FM-RANDOMIZER](https://github.com/gaithern/KH1FM-RANDOMIZER).
 - **Chest and report names:** [Archipelago](https://github.com/ArchipelagoMW/Archipelago) `worlds/kh1/Locations.py` (MIT). Chest location ID = `2650000 + byte*10 + bit`, so a raw flag bit maps straight to a named chest.
 - **Chest rooms and contents:** the KH1FM randomizer's documentation (MIT): 217 of 232 chests have a room; the rest are matched by name prefix.
-- **Room IDs:** room byte = the room's `.ard` map file number − 1, read from the randomizer docs. The rule checks out against three IDs confirmed by community scripts and against Dive to the Heart in game.
+- **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT), covering every room byte in every world.
+- **Story milestones:** the KH1FM Archipelago client's per-world story-progress thresholds (credited to RetroAchievements' code notes). The hints are written for this project.
+- **Room IDs (older, partial):** room byte = the room's `.ard` map file number − 1, read from the randomizer docs. The rule checks out against three IDs confirmed by community scripts and against Dive to the Heart in game.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world (KH1 part).
 
 The vendored copies and their commits are in `tools/sources/`.

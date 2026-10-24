@@ -1,0 +1,21 @@
+# LuaBackend config for KINGDOM HEARTS HD 1.5+2.5 (Steam) under GameNative.
+# KH1 scripts load from D:, which GameNative maps to Android's Download folder.
+[kh1]
+scripts = [{ path = "D:/KH1Companion/scripts/", relative = false }]
+exe = "KINGDOM HEARTS FINAL MIX.exe"
+game_docs = "My Games/KINGDOM HEARTS HD 1.5+2.5 ReMIX"
+
+[kh2]
+scripts = [{ path = "scripts/kh2/", relative = true }]
+exe = "KINGDOM HEARTS II FINAL MIX.exe"
+game_docs = "My Games/KINGDOM HEARTS HD 1.5+2.5 ReMIX"
+
+[bbs]
+scripts = [{ path = "scripts/bbs/", relative = true }]
+exe = "KINGDOM HEARTS Birth by Sleep FINAL MIX.exe"
+game_docs = "My Games/KINGDOM HEARTS HD 1.5+2.5 ReMIX"
+
+[recom]
+scripts = [{ path = "scripts/recom/", relative = true }]
+exe = "KINGDOM HEARTS Re_Chain of Memories.exe"
+game_docs = "My Games/KINGDOM HEARTS HD 1.5+2.5 ReMIX"

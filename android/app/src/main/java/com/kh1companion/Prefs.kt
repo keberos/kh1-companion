@@ -27,6 +27,11 @@ class Prefs(context: Context) {
         get() = sp.getString("gameSource", "STEAM") ?: "STEAM"
         set(v) = sp.edit().putString("gameSource", v.trim().uppercase()).apply()
 
+    /** App version whose shipped files were last copied to Download/KH1Companion/. */
+    var deployedVersion: Long
+        get() = sp.getLong("deployedVersion", 0)
+        set(v) = sp.edit().putLong("deployedVersion", v).apply()
+
     companion object {
         fun defaultStatePath(): String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

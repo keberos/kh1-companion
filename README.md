@@ -87,7 +87,30 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 - LuaBackend v1.9.1 (`DBGHELP.dll` + `LuaBackend.toml`) is in the Steam KH folder. Its KH1 script path points straight at this repo's `lua/` folder, so script edits apply in game after pressing **F1**. **F2** opens the LuaBackend console.
 - To uninstall, delete `DBGHELP.dll` from the game folder.
 
-## On the Thor (GameNative)
+## Install (users)
+
+Download the APK from the latest GitHub release and follow the in-app setup: two permissions, then **Install**, which has GameNative run a one-time installer inside KH's container. No manual GameNative steps. The user instructions are in `RELEASE_NOTES.md`, which is also the release page text.
+
+How the one-tap install works: the APK ships the bridge script and the LuaBackend files (`android/app/src/main/assets/mod/`, built by `tools/build_gamenative_mod.py`). The app copies them to `Download/KH1Companion/`, then sends GameNative's `app.gamenative.LAUNCH_GAME` intent with a `container_config` that overrides the executable for that one launch with `D:\KH1Companion\mod\install.bat`. The bat finds the game folder, copies `DINPUT8.dll` and `LuaBackend.toml` in, sets `HKCU\Software\Wine\AppDefaults\KINGDOM HEARTS FINAL MIX.exe\DllOverrides` (dinput8 native,builtin; dbghelp builtin), and writes `install.log`, which the setup screen reads. GameNative then asks whether to keep the temporary settings: Discard is right (Settings → Advanced → Repair game launch fixes a Save).
+
+## Uninstall
+
+**From the app (any install done through setup):** Settings → Advanced → Remove everything, three buttons in order:
+1. **Remove the mod from the game**: GameNative runs `uninstall.bat` in the container, which deletes `DINPUT8.dll` and `LuaBackend.toml` from the game folder and removes the registry override (choose Discard if GameNative asks to save settings).
+2. **Delete the companion's files**: removes `Download/KH1Companion/`.
+3. **Uninstall this app**.
+
+The game is then exactly as before. Step 1 can also be skipped by reinstalling or verifying the game in GameNative, which replaces the folder.
+
+**Prototype extras (installed by hand before the in-app setup existed):**
+- **Thor:** the steps above remove the files and registry entry, but the container also has `WINEDLLOVERRIDES=dinput8=n,b;dbghelp=b` in GameNative → KH 1.5+2.5 → ⚙ → Edit container → Environment. Delete that variable. If you changed the container's executable to `KINGDOM HEARTS FINAL MIX.exe`, you can set it back too (optional; it only skips the collection menu).
+- **PC (Steam):** delete `DBGHELP.dll` and `LuaBackend.toml` from the KINGDOM HEARTS -HD 1.5+2.5 ReMIX- folder, and `%LOCALAPPDATA%\KH1Companion\`.
+
+## Releasing
+
+Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, then push a `v*` tag. CI builds a release APK signed with the project key from the repo secrets (`KH1C_KEYSTORE_B64`, `KH1C_KEYSTORE_PASSWORD`, `KH1C_KEY_ALIAS`, `KH1C_KEY_PASSWORD`) and publishes it with `RELEASE_NOTES.md`; tags with a `-` (e.g. `v1.1.0-beta1`) are prereleases. The key lives outside the repo (`C:\Users\lasco\dev-tools\keys\`); keep a backup, since a different key can't update existing installs.
+
+## On the Thor by hand (GameNative)
 
 GameNative maps the Wine drive `D:` to Android's `Download/`. Under Wine the bridge detects that (Linux's `/proc` shows up as `Z:\proc`) and writes `D:\KH1Companion\state.json`, which is the file the companion app reads by default.
 

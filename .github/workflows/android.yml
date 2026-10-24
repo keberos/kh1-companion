@@ -4,7 +4,7 @@ on:
   push:
     # With only `tags` listed, GitHub skips branch pushes entirely; list the branch too.
     branches: ["main"]
-    paths: ["android/**", "companion/**", "tools/test_logic.mjs", ".github/workflows/android.yml"]
+    paths: ["android/**", "companion/**", "lua/**", "tools/test_logic.mjs", ".github/workflows/android.yml"]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -30,9 +30,24 @@ jobs:
         with:
           name: kh1-companion-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-      - name: Prerelease for tags
+      # Tags build a release APK signed with the project key (repo secrets), so each release
+      # installs over the previous one.
+      - name: Build signed release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: android
+        env:
+          KH1C_KEYSTORE_B64: ${{ secrets.KH1C_KEYSTORE_B64 }}
+          KH1C_KEYSTORE_PASSWORD: ${{ secrets.KH1C_KEYSTORE_PASSWORD }}
+          KH1C_KEY_ALIAS: ${{ secrets.KH1C_KEY_ALIAS }}
+          KH1C_KEY_PASSWORD: ${{ secrets.KH1C_KEY_PASSWORD }}
+        run: |
+          echo "$KH1C_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          KH1C_KEYSTORE="$RUNNER_TEMP/release.jks" ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/KH1-Companion-${GITHUB_REF_NAME}.apk"
+      - name: Release for tags
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          prerelease: true
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: RELEASE_NOTES.md
+          files: ${{ runner.temp }}/KH1-Companion-${{ github.ref_name }}.apk

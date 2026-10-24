@@ -46,6 +46,7 @@ class PlayActivity : Activity() {
         }
 
         val prefs = Prefs(this)
+        Installer.deploy(this)
         startForegroundService(Intent(this, CompanionService::class.java))
         val game = Intent(ACTION_LAUNCH_GAME)
             .setPackage(GAMENATIVE)

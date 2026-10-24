@@ -1,0 +1,3 @@
+DINPUT8.dll is LuaBackend Hook v1.9.1-hook by Sirius902 (DBGHELP.dll from the release,
+renamed, otherwise unmodified), licensed under the GNU General Public License v3.0 (see
+LuaBackend-LICENSE.txt). Source code: https://github.com/Sirius902/LuaBackend/tree/v1.9.1-hook

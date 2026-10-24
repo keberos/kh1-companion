@@ -19,7 +19,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
+      # ubuntu-latest already ships the Android SDK (ANDROID_HOME) with licenses accepted;
+      # android-actions/setup-android@v3 stalls on a license prompt with cmdline-tools 16.
       - name: Logic tests
         run: node --test tools/test_logic.mjs
       - name: Build debug APK

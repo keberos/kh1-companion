@@ -21,7 +21,8 @@
 
   let state = null, sum = null;
   let lastSeq = null, lastChange = 0;
-  let view = VIEWS.includes(store.get("view")) ? store.get("view") : "here";
+  // ?view= opens a given tab (screenshots, dev), otherwise the last one used.
+  let view = VIEWS.includes(params.get("view")) ? params.get("view") : VIEWS.includes(store.get("view")) ? store.get("view") : "here";
   let showOpened = store.get("showOpened", false);
   let showContents = store.get("showContents", true);
   let showNeeds = store.get("showNeeds", false);  // name what a locked chest needs (mild spoiler)

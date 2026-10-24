@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KH1 Companion banner</title>
+<!-- Rendered to docs/banner.png by tools/make_screenshots.py (--banner). Original art only. -->
+<style>
+  @font-face { font-family: "Cinzel"; src: url("../companion/fonts/cinzel.woff2") format("woff2"); font-weight: 400 900; }
+  @font-face { font-family: "Barlow SC"; src: url("../companion/fonts/barlow-sc-600.woff2") format("woff2"); font-weight: 600; }
+  @font-face { font-family: "Barlow SC"; src: url("../companion/fonts/barlow-sc-600i.woff2") format("woff2"); font-weight: 600; font-style: italic; }
+  :root { --gold: #f6d77a; --gold-deep: #c99a2e; --sub: #8fc9ff; --silver: #c9d3f0; }
+  html, body { margin: 0; width: 1600px; height: 760px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1200px 700px at 72% 40%, #22357f 0%, #0d1640 45%, #050818 100%);
+    color: #e9eeff; font-family: "Barlow SC", sans-serif; position: relative;
+  }
+  .stars { position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 8% 20%, #fff8, transparent), radial-gradient(1px 1px at 22% 72%, #fff6, transparent),
+      radial-gradient(1.5px 1.5px at 40% 12%, #fff7, transparent), radial-gradient(1px 1px at 55% 88%, #fff5, transparent),
+      radial-gradient(1.5px 1.5px at 93% 18%, #fff8, transparent), radial-gradient(1px 1px at 86% 82%, #fff6, transparent),
+      radial-gradient(1px 1px at 33% 45%, #fff4, transparent), radial-gradient(1.5px 1.5px at 66% 30%, #fff5, transparent); }
+  .crown { position: absolute; right: -60px; bottom: -80px; width: 560px; opacity: .06; }
+  .left { position: absolute; left: 90px; top: 175px; width: 760px; }
+  h1 { margin: 0; font: 900 76px/1 "Cinzel", serif; letter-spacing: .03em; white-space: nowrap;
+    background: linear-gradient(180deg, #fff6d6 0%, var(--gold) 45%, var(--gold-deep) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 #0008); }
+  .rule { height: 14px; margin: 22px 0 26px; width: 520px;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0L12 6L6 12L0 6Z' fill='%23f6d77a'/%3E%3C/svg%3E") center / 14px 14px no-repeat,
+      linear-gradient(90deg, transparent, #5d6c98 15%, var(--silver) 50%, #5d6c98 85%, transparent) center / 100% 2px no-repeat; }
+  .tag { font: italic 600 34px/1.25 "Barlow SC", sans-serif; color: var(--sub); }
+  .chips { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 14px; }
+  .chip { font: 600 24px "Barlow SC", sans-serif; padding: 10px 20px; border-radius: 10px; color: #fff;
+    background: linear-gradient(180deg, rgba(36,58,128,.95), rgba(12,20,58,.95));
+    box-shadow: 0 0 0 2px #5d6c98, 0 6px 18px #0008; }
+  .device { position: absolute; right: 110px; top: 26px; width: 500px; padding: 22px 22px 26px; border-radius: 42px;
+    background: linear-gradient(180deg, #2b2f3a, #16181f); box-shadow: 0 30px 80px #000c, inset 0 0 0 2px #3c4150; }
+  .top { height: 190px; border-radius: 14px; overflow: hidden; position: relative;
+    background: radial-gradient(400px 220px at 50% 60%, #26305e, #090c1c); display: grid; place-items: center; }
+  .top span { font: 700 26px "Cinzel", serif; letter-spacing: .12em; color: #c9d3f0aa; }
+  .hinge { width: 60%; height: 10px; margin: 16px auto; border-radius: 5px; background: #0c0d12; }
+  .bottom { border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 2px #000; }
+  .bottom img { display: block; width: 100%; }
+</style>
+</head>
+<body>
+  <div class="stars"></div>
+  <svg class="crown" viewBox="0 0 200 200"><g fill="#e8ecff">
+    <path d="M30 140 L22 62 L62 100 L80 44 L100 92 L120 44 L138 100 L178 62 L170 140 Z"/>
+    <rect x="30" y="148" width="140" height="18" rx="4"/>
+    <circle cx="22" cy="56" r="9"/><circle cx="80" cy="38" r="9"/><circle cx="120" cy="38" r="9"/><circle cx="178" cy="56" r="9"/>
+    <circle cx="100" cy="24" r="7"/><path d="M100 30 L106 60 L100 86 L94 60 Z"/></g></svg>
+  <div class="left">
+    <h1>KH1 Companion</h1>
+    <div class="rule"></div>
+    <div class="tag">A second screen for Kingdom Hearts Final&nbsp;Mix on dual&#8209;screen handhelds</div>
+    <div class="chips">
+      <span class="chip">Spoiler-free guide</span><span class="chip">Live room maps</span>
+      <span class="chip">Every chest</span><span class="chip">Level-up planner</span>
+    </div>
+  </div>
+  <div class="device">
+    <div class="top"><span>THE GAME</span></div>
+    <div class="hinge"></div>
+    <div class="bottom"><img src="screenshots/map.png" alt=""></div>
+  </div>
+</body>
+</html>

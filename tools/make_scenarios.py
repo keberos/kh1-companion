@@ -39,8 +39,36 @@ def title():
     return s
 
 
+def chests_named(world, names):
+    """Flag bits of the named chests, from the generated chest data."""
+    import re
+    data = (ROOT / "companion" / "data.js").read_text(encoding="utf-8")
+    chests = json.loads(re.search(r"KH1_CHESTS = (\[.*?\]);", data).group(1))
+    found = [(c["B"], c["b"]) for c in chests if c["w"] == world and c["n"] in names]
+    assert len(found) == len(names), f"missing chests in {world}"
+    return found
+
+
+def traverse_town():
+    """Early game for showcase screenshots: back in Traverse Town after the first Guard Armor,
+    LV 9 Warrior/Midday, Wonderland and Olympus on the Gummi map, nothing past that revealed."""
+    cum = [0, 0]
+    exp_chart = (ROOT / "tools" / "sources" / "rando-exp-chart.csv").read_text(encoding="utf-8").splitlines()[1:]
+    mid = sorted((int(r.split(",")[2]), int(r.split(",")[6])) for r in exp_chart if ",Midday," in r)
+    for _, n in mid:
+        cum.append(cum[-1] + n)
+    opened = chests_named("Traverse Town", ["2nd District Boots and Shoes Awning Chest", "2nd District Rooftop Chest",
+                                            "Accessory Shop Chest", "Alleyway Balcony Chest", "Green Room Table Chest",
+                                            "Red Room Chest"]) + chests_named("Destiny Islands", ["Chest"])
+    s = snapshot(3, 0x01, 9, cum[9] + 40, progress=[(0, 0x31)], abilities=[0xB6, 0x8A], magic=[1],
+                 trinities=0b00001, chests=opened, status=[3, 2, 1])
+    s["level"] = 9
+    return s
+
+
 SCENARIOS = {
     "title": title(),
+    "traverse-town": traverse_town(),
     # Day 1 on the islands, one log and the cloth found.
     "destiny-islands": snapshot(1, 0x00, 3, 30, inventory={192: 1, 193: 1}),
     # Hollow Bastion before Maleficent: Warrior path, Midday, High Jump 2, no Glide yet.

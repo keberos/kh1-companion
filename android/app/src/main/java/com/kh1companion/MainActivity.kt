@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
@@ -13,6 +14,7 @@ import android.text.InputType
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -144,17 +146,30 @@ class MainActivity : Activity() {
             step("3. GameNative", false, "Install GameNative and KINGDOM HEARTS HD 1.5+2.5 ReMIX in it first.", emptyList())
         } else {
             step("3. Copy the mod into the game", working,
-                "In GameNative, open KINGDOM HEARTS HD 1.5+2.5 ReMIX → ⚙ → Import Files. Pick both files in " +
-                    "Download/KH1Companion/mod (DINPUT8.dll and LuaBackend.toml), choose Game Directory, then Copy.",
+                "In GameNative, copy two files the app has ready for you into the game's folder. About a minute.",
                 if (!working && files) listOf(openGameNative) else emptyList())
+            if (!working && files) guide("import", listOf(
+                "In GameNative, pick KINGDOM HEARTS HD 1.5+2.5 ReMIX and tap the gear." to "gear",
+                "Scroll down and tap Import Files." to "import-menu",
+                "Tap Select files." to "select-files",
+                "Go to Download › KH1Companion › mod. Press and hold DINPUT8.dll, tap LuaBackend.toml so both are " +
+                    "selected, then tap Select." to "pick-files",
+                "Leave Game Directory as the place, tick Replace existing files, and tap Copy 2 files." to "copy",
+            ))
             step("4. Turn the mod on", working,
-                "Still in GameNative: ⚙ → Edit container → Environment variables → add\n" +
-                    "${Installer.OVERRIDE_NAME} = ${Installer.OVERRIDE_VALUE}\nand save.",
-                if (!working && files) listOf(
-                    "Copy name" to { copy(Installer.OVERRIDE_NAME) },
-                    "Copy value" to { copy(Installer.OVERRIDE_VALUE) },
-                    openGameNative,
-                ) else emptyList())
+                "Add one setting to the game in GameNative. The app copies the text for you, so there's nothing to type.",
+                if (!working && files) listOf(openGameNative) else emptyList())
+            if (!working && files) guide("setting", listOf(
+                "Tap the gear again, then Edit container." to "edit-container",
+                "Open the Environment tab." to "environment-tab",
+                "Scroll to the bottom and tap the + button." to "add-variable",
+                "Tap Copy name below, then press and hold the Name box in GameNative and choose Paste. Do the same with " +
+                    "Copy value for the Value box. Tap Ok." to "new-variable",
+                "Tap the save icon at the top right." to "save",
+            ), actionsAfter = 3, actions = listOf(
+                "Copy name" to { copy(Installer.OVERRIDE_NAME) },
+                "Copy value" to { copy(Installer.OVERRIDE_VALUE) },
+            ))
             step("5. Check it", working,
                 if (working) "Working: the game has talked to the companion."
                 else "Start the game here. Once its title screen shows, the companion connects and this ticks itself off. " +
@@ -210,6 +225,36 @@ class MainActivity : Activity() {
             CompanionService.stop(this)
             startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$packageName")))
         }), into = removal, mark = false)
+    }
+
+    private val guidesOpen = mutableSetOf<String>()
+
+    /** "Show me how": numbered pictures of the GameNative screens, plus any buttons the steps need. */
+    private fun guide(key: String, shots: List<Pair<String, String>>, actions: List<Pair<String, () -> Unit>> = emptyList(),
+                      actionsAfter: Int = shots.lastIndex) {
+        val open = key in guidesOpen
+        steps.addView(button(if (open) "Hide the pictures" else "Show me how, with pictures") {
+            if (!guidesOpen.remove(key)) guidesOpen.add(key)
+            refresh()
+        })
+        if (!open) return
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, 0, 0, pad) }
+        shots.forEachIndexed { i, (text, image) ->
+            box.addView(text("${i + 1}. $text", 15f, bold = true))
+            try {
+                // Screenshots of this very screen: show them pixel for pixel, not scaled up by density.
+                val bmp = assets.open("guide/$image.png").use { BitmapFactory.decodeStream(it) }
+                bmp.density = resources.displayMetrics.densityDpi
+                box.addView(ImageView(this).apply {
+                    setImageBitmap(bmp)
+                    adjustViewBounds = true
+                    scaleType = ImageView.ScaleType.FIT_START
+                    setPadding(0, pad / 4, 0, pad / 2)
+                }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+            } catch (e: Exception) { /* picture missing: the text still says it */ }
+            if (i == actionsAfter) for ((label, run) in actions) box.addView(button(label, run))
+        }
+        steps.addView(box)
     }
 
     private fun step(title: String, done: Boolean, detail: String, actions: List<Pair<String, () -> Unit>>,

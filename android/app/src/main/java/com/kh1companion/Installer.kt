@@ -24,7 +24,9 @@ object Installer {
         get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).resolve("KH1Companion")
     private val flag: File get() = root.resolve("mod/uninstall.flag")
     private val unlog: File get() = root.resolve("mod/uninstall.log")
-    private val MOD_FILES = listOf("DINPUT8.dll", "LuaBackend.toml", "LuaBackend-LICENSE.txt", "NOTICE.txt")
+    // Only the two files to import sit in mod/, so the file picker shows nothing else to choose.
+    private val MOD_FILES = listOf("DINPUT8.dll", "LuaBackend.toml")
+    private val LICENSE_FILES = listOf("LuaBackend-LICENSE.txt", "NOTICE.txt")
 
     const val OVERRIDE_NAME = "WINEDLLOVERRIDES"
     const val OVERRIDE_VALUE = "dinput8=n,b;dbghelp=b"
@@ -38,6 +40,10 @@ object Installer {
         return try {
             copyAsset(context, "kh1companion.lua", root.resolve("scripts/kh1companion.lua"))
             for (f in MOD_FILES) copyAsset(context, "mod/$f", root.resolve("mod/$f"))
+            for (f in LICENSE_FILES) {
+                copyAsset(context, "mod/$f", root.resolve("mod/licenses/$f"))
+                root.resolve("mod/$f").delete() // older versions kept them next to the mod files
+            }
             prefs.deployedVersion = version
             true
         } catch (e: Exception) {

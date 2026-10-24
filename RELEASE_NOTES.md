@@ -5,6 +5,16 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 
 > **Beta.** Works end to end on the AYN Thor; still being tested across a full playthrough. Your game and saves are never changed.
 
+### What's new since beta.4 (not released yet)
+
+- **It reacts as you play.** Chests opened, level-ups (with what Sora learned), puppies, Ansem's Reports, story steps, new worlds and finished worlds pop up as short notes above the tabs.
+- **Here is your "what now" screen**: the next story nudge, this room's chests, then the other rooms that still hold chests.
+- **Five tabs.** Worlds and Collect are now one **Progress** tab, with each world's story progress and a crown on worlds you've cleared out.
+- **Tap any chest or room** to see what's in it, then **Show on map** to have it ringed on the map.
+- **First time or Replay.** The eye at the top holds every spoiler setting. *Replay* shows room names, chest contents, what unlocks them and the full guide up front.
+- **What opens the most chests**, on Progress: for example, Glide opens 22 chests in 9 worlds. Tap one for the list.
+- **Next ability** on the Level tab, with the EXP to go.
+
 ### What's new in beta.4
 
 - **No spoilers from room names.** Rooms you haven't been to show as "???" on the map, in chest lists and in Collect. Tap **All names** on the map to see them anyway (handy on a second device, which hasn't seen where you've been).
@@ -26,9 +36,9 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 | | |
 |---|---|
 | <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/guide.png" width="400"><br>**Guide**: a nudge first, then *Where?*, then *Show me*. No spoilers unless you ask. | <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/map.png" width="400"><br>**Map**: every room, where you are, chests left, and what you can't reach yet. |
-| <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/here.png" width="400"><br>**Here**: chests left in this world, your room first. | <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/level.png" width="400"><br>**Level**: what Sora learns at each level for your Dive choices. |
+| <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/here.png" width="400"><br>**Here**: the next nudge, this room's chests, and where else to look. | <img src="https://github.com/keberos/kh1-companion/raw/main/docs/screenshots/level.png" width="400"><br>**Level**: what Sora learns at each level for your Dive choices. |
 
-Plus **Worlds** (progress everywhere you've been) and **Collect** (232 chests, 99 Dalmatians, postcards, Ansem's Reports). It reads the loaded save, so any save on any device is up to date.
+Plus **Progress**: every world you've found, 232 chests, 99 Dalmatians, postcards and Ansem's Reports. It reads the loaded save, so any save on any device is up to date.
 
 ### Install
 

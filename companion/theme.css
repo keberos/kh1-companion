@@ -298,3 +298,53 @@ nav button { font-size: 15px; letter-spacing: .03em; }
 svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !important; stroke-width: 3 !important; stroke-dasharray: 7 4; filter: none !important; animation: goalpulse 2s ease-in-out infinite; }
 @keyframes goalpulse { 50% { opacity: .7; } }
 .lg.goal { border: 2px dashed var(--gold); border-radius: 4px; width: 16px; height: 12px; box-sizing: border-box; }
+
+/* ---------- Here dashboard ---------- */
+.here-top { margin-bottom: 10px; gap: 10px; }
+.here-top .bar { margin-top: 0; }
+.next-mini { cursor: pointer; padding: 10px 14px; }
+.next-mini .step-nudge { font-size: 16px; }
+.tag.more { color: var(--sub); font-size: 14px; }
+.empty.small { padding: 10px 8px; font-size: 14px; }
+ul.list li[data-cn], ul.list li[data-unlock] { cursor: pointer; }
+ul.list li[data-cn]:active, ul.list li[data-unlock]:active, .next-mini:active, .next-ab:active { filter: brightness(1.25); }
+
+/* header: what-to-show button */
+#modeBtn { display: grid; place-items: center; }
+#modeBtn .ico { width: 20px; height: 20px; color: var(--sub); }
+
+/* ---------- "What to show" sheet ---------- */
+.seg { display: flex; gap: 8px; margin: 12px 0 8px; }
+.seg .chip { flex: 1; }
+
+/* ---------- map: the room picked from a chest ---------- */
+svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; stroke-width: 3 !important; filter: url(#glow) !important; animation: goalpulse 1.2s ease-in-out infinite; }
+.lg.focus { box-shadow: 0 0 0 2px #fff, 0 0 6px #fff; }
+
+/* ---------- progress: finished worlds ---------- */
+.grid { margin-bottom: 12px; }
+.grid button.complete { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 0 2px var(--gold), 0 0 12px rgba(246,215,122,.4); }
+.grid button.cur.complete { box-shadow: 0 0 0 1px rgba(0,0,0,.7), 0 0 0 2px var(--here), 0 0 0 4px var(--gold), 0 0 12px rgba(111,227,255,.45); }
+.grid button.complete { padding-right: 36px; }
+.grid .crown { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; filter: drop-shadow(0 0 4px rgba(246,215,122,.7)); }
+
+/* ---------- level: next ability ---------- */
+.next-ab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  background: linear-gradient(90deg, rgba(246,215,122,.12), rgba(246,215,122,.02)); box-shadow: inset 3px 0 0 var(--gold); }
+
+/* ---------- toasts: events from the game, above the tab bar; taps pass through ---------- */
+.toasts { position: fixed; left: 12px; right: 12px; bottom: 70px; z-index: 4; display: grid; gap: 8px; pointer-events: none; }
+.toast {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(36,56,122,.97), rgba(10,16,48,.97));
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--gold-deep), inset 0 1px 0 rgba(255,255,255,.25), 0 8px 18px rgba(0,0,0,.6);
+  animation: toastin .32s cubic-bezier(.2,1.4,.4,1);
+}
+.toast.big { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--gold), 0 0 18px rgba(246,215,122,.55), 0 8px 18px rgba(0,0,0,.6); }
+.toast.out { animation: toastout .26s ease-in forwards; }
+.toast-ico { width: 34px; height: 34px; flex: none; filter: drop-shadow(0 0 6px rgba(246,215,122,.6)); }
+.toast.big .toast-ico { animation: spinin .6s ease-out; }
+.toast-title { font: 700 16px/1.2 var(--title); letter-spacing: .04em; color: var(--gold); }
+@keyframes toastin { from { opacity: 0; transform: translateY(18px) scale(.96); } }
+@keyframes toastout { to { opacity: 0; transform: translateY(10px); } }
+@keyframes spinin { from { transform: rotate(-120deg) scale(.4); } }

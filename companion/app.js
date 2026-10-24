@@ -9,7 +9,9 @@
   const STATE_URL = params.get("state") || "state.json";
   const POLL_MS = 250;
   const STALE_MS = 8000;  // bridge heartbeat is every 2 s; allow for emulation hiccups
-  const VIEWS = ["here", "guide", "map", "worlds", "collect", "level"];
+  const VIEWS = ["here", "guide", "map", "progress", "level"];
+  const OLD_VIEWS = { worlds: "progress", collect: "progress" };  // tabs merged into Progress
+  const TOAST_MS = 4500;
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -22,7 +24,11 @@
   let state = null, sum = null;
   let lastSeq = null, lastChange = 0;
   // ?view= opens a given tab (screenshots, dev), otherwise the last one used.
-  let view = VIEWS.includes(params.get("view")) ? params.get("view") : VIEWS.includes(store.get("view")) ? store.get("view") : "here";
+  const asView = (v) => OLD_VIEWS[v] || v;
+  let view = [asView(params.get("view")), asView(store.get("view"))].find((v) => VIEWS.includes(v)) || "here";
+  // "first": the guide and names reveal in layers; "replay": everything shown up front.
+  let mode = store.get("mode", "first");
+  const replay = () => mode === "replay";
   let showOpened = store.get("showOpened", false);
   let showContents = store.get("showContents", true);
   let showNeeds = store.get("showNeeds", false);  // name what a locked chest needs (mild spoiler)
@@ -30,7 +36,10 @@
   let mapWorld = null;      // Map tab: world shown instead of the current one
   let guideWorld = null;    // Guide tab: world shown instead of the current one
   const hintsShown = new Set();  // guide steps the player chose to reveal in full
+  const hintsHidden = new Set(); // replay: steps the player folded back up
   const whereShown = new Set();  // guide steps whose location the player asked for
+  const stepFull = (key) => (replay() ? !hintsHidden.has(key) : hintsShown.has(key));
+  let mapFocus = null;           // Map tab: room ringed after "Show on map"
   const guideSeen = new Set(store.get("guideSeen", []));  // steps seen done whose evidence can leave the save
   let levelPick = store.get("levelPick", {});  // the player's own path / curve choice
   let levelAll = false;  // Level tab: full table instead of the next few levels
@@ -43,7 +52,7 @@
   const hereNode = () => (state ? L.nodeForRoom(state) : null);
   const displayWorld = (w) => (w === "Awakening" ? "Dive to the Heart" : w);
   // Worlds the save hasn't reached stay unnamed; ones only on the Gummi map show their name, nothing more.
-  const visited = (w) => !sum || sum.found[w] === "visited";
+  const visited = (w) => !sum || replay() || sum.found[w] === "visited";
   const visitedWorlds = (list) => list.filter(visited);
   // Room names stay hidden until the player has been there (or asks for all names).
   const knownCache = {};
@@ -56,7 +65,7 @@
       knownCache[key] = set;
     }
     const step = L.guideFor(world, state, guideSeen).next;
-    return knownCache[key].has(id) || !!(step && step.where === id && (whereShown.has(step.key) || hintsShown.has(step.key)));
+    return knownCache[key].has(id) || !!(step && step.where === id && (whereShown.has(step.key) || stepFull(step.key)));
   }
   const roomLabel = (world, nd) => (nd && roomKnown(world, nd.id) ? L.labelOf(nd) : "???");
 
@@ -71,7 +80,9 @@
     const known = !n || roomKnown(c.w, n.id);
     const sub = [opts.showRoom && n && known ? L.labelOf(n) : null, showContents && c.i ? c.i : null,
       c.lock ? needText(c.lock) : null].filter(Boolean).join(" · ");
-    return `<li class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
+    // Outside a room's own sheet, tapping a chest opens its room (and from there the map).
+    const tap = !opts.inSheet && n ? ` data-cw="${esc(c.w)}" data-cn="${esc(n.id)}"` : "";
+    return `<li${tap} class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
       `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
       (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") +
@@ -93,35 +104,74 @@
       `<div class="bar ${got === total && total ? "done" : ""}"><i style="width:${pct}%"></i></div></div>`;
   }
 
-  // What the chest lists show, behind one "Show" button with a sheet that says what each option does.
+  // Everything about how much the app reveals, in one sheet: the playthrough mode, then each switch.
   const LIST_OPTIONS = [
     ["showOpened", "Opened chests", "Also list the chests you've already opened."],
     ["showContents", "What's inside", "Show what each chest holds."],
     ["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."],
+    ["allNames", "Room names", "Name rooms you haven't been to yet, on the map and in lists."],
   ];
-  const optionOn = { showOpened: () => showOpened, showContents: () => showContents, showNeeds: () => showNeeds };
+  const optionOn = { showOpened: () => showOpened, showContents: () => showContents, showNeeds: () => showNeeds, allNames: () => allNames };
+  function setOption(k, on) {
+    if (k === "showOpened") showOpened = on;
+    else if (k === "showContents") showContents = on;
+    else if (k === "showNeeds") showNeeds = on;
+    else allNames = on;
+    store.set(k, on);
+  }
+  // Replay turns every reveal on; first time puts the spoilers back behind their buttons.
+  function setMode(m) {
+    mode = m; store.set("mode", m);
+    const on = m === "replay";
+    setOption("showNeeds", on); setOption("allNames", on);
+    if (on) setOption("showContents", true);
+    hintsHidden.clear();
+  }
   function toggles() {
-    const n = LIST_OPTIONS.filter(([k]) => optionOn[k]()).length;
+    const n = ["showOpened", "showContents", "showNeeds"].filter((k) => optionOn[k]()).length;
     return `<button class="chip" data-options>Show${n ? ` (${n})` : ""} ▾</button>`;
   }
   function wireToggles(root) {
-    root.querySelectorAll("[data-options]").forEach((b) => { b.onclick = openListOptions; });
+    root.querySelectorAll("[data-options]").forEach((b) => { b.onclick = openShowSheet; });
   }
-  function openListOptions() {
-    openSheet(`<h2>Show in chest lists</h2><ul class="list options">${LIST_OPTIONS.map(([k, title, desc]) =>
-      `<li data-opt="${k}"><span class="grow"><span class="name">${title}</span><div class="sub">${desc}</div></span>` +
-      `<span class="switch ${optionOn[k]() ? "on" : ""}"><i></i></span></li>`).join("")}</ul>` +
+  function openShowSheet() {
+    openSheet(`<h2>What to show</h2>` +
+      `<div class="seg">${[["first", "First time"], ["replay", "Replay"]].map(([m, t]) =>
+        `<button class="chip ${mode === m ? "on" : ""}" data-mode="${m}">${t}</button>`).join("")}</div>` +
+      `<div class="sub">${replay()
+        ? "Replay: room names, chest contents, what unlocks them and the full guide are all shown up front."
+        : "First time: the guide hints in layers and rooms stay unnamed until you've been there. Tap Where? or Show me when you want more."}</div>` +
+      `<ul class="list options">${LIST_OPTIONS.map(([k, title, desc]) =>
+        `<li data-opt="${k}"><span class="grow"><span class="name">${title}</span><div class="sub">${desc}</div></span>` +
+        `<span class="switch ${optionOn[k]() ? "on" : ""}"><i></i></span></li>`).join("")}</ul>` +
       `<div class="row"><span class="grow"></span><button class="chip" data-close>Done</button></div>`);
+    $("sheetBody").querySelectorAll("[data-mode]").forEach((b) => {
+      b.onclick = () => { if (mode !== b.dataset.mode) { setMode(b.dataset.mode); openShowSheet(); } };
+    });
     $("sheetBody").querySelectorAll("[data-opt]").forEach((li) => {
       li.onclick = () => {
         const k = li.dataset.opt;
-        if (k === "showOpened") showOpened = !showOpened;
-        else if (k === "showContents") showContents = !showContents;
-        else showNeeds = !showNeeds;
-        store.set(k, optionOn[k]());
+        setOption(k, !optionOn[k]());
         li.querySelector(".switch").classList.toggle("on", optionOn[k]());
       };
     });
+  }
+
+  // Rooms in a world that still hold chests, best first: what you can open now, then the most chests.
+  function roomRows(world, chests, hereId) {
+    const byRoom = {};
+    for (const c of chests) if (c.node !== hereId) (byRoom[c.node] = byRoom[c.node] || []).push(c);
+    const open = (cs) => cs.filter((c) => !c.lock).length;
+    const rooms = Object.entries(byRoom).sort((a, b) => open(b[1]) - open(a[1]) || b[1].length - a[1].length);
+    return rooms.map(([id, cs]) => {
+      const nd = id !== "null" && L.node(world, id);
+      return `<li${nd ? ` data-cw="${esc(world)}" data-cn="${esc(id)}"` : ""}>${icon("ico-chest")}<span class="grow">` +
+        `<span class="name">${esc(nd ? roomLabel(world, nd) : "Elsewhere")}</span>` +
+        `<div class="sub">${open(cs) === cs.length ? `${cs.length} chest${cs.length > 1 ? "s" : ""}`
+          : open(cs) ? `${open(cs)} now, ${cs.length - open(cs)} later` : `${cs.length} later`}` +
+        `${cs.some(L.isPuppies) ? " · puppies" : ""}${nd && !L.nodeAccess(world, nd, state).open ? " · can't get in yet" : ""}</div></span>` +
+        (nd ? '<span class="tag more">›</span>' : "") + `</li>`;
+    }).join("");
   }
 
   // ---------- header ----------
@@ -131,6 +181,7 @@
     const age = Date.now() - lastChange;
     dot.className = "dot" + (!state ? "" : age < STALE_MS ? " live" : " stale");
     dot.title = !state ? "Not connected" : age < STALE_MS ? "Live" : `No update for ${Math.round(age / 1000)}s`;
+    $("modeBtn").hidden = !state || sum.title;
     if (!state) return;
     $("hWorld").textContent = sum.title ? "Title / menu" : sum.world ? displayWorld(sum.world) : `World ${hex2(state.world)}`;
     const n = hereNode();
@@ -147,15 +198,29 @@
       el.innerHTML = `<div class="empty">${sum.title ? "On the title screen." : "Nothing to track in this world."}</div>`;
       return;
     }
+    // What now, at a glance: the story nudge, this room's chests, then where else to look.
     const n = hereNode();
     const chests = L.chestsFor(world, sum.opened, state);
+    const { got, total } = sum.worlds[world];
+    const next = L.GUIDE[world] ? L.guideFor(world, state, guideSeen).next : null;
+    const inRoom = n ? chests.filter((c) => c.node === n.id) : [];
+    const elsewhere = chests.filter((c) => !c.got && (!n || c.node !== n.id));
+    const reportsLeft = sum.reports.filter((r) => r.w === world && !r.got);
     el.innerHTML =
-      progressCard(displayWorld(world) + " chests", sum.worlds[world].got, sum.worlds[world].total) +
-      `<div class="row" style="margin-bottom:10px">` +
-
-      `<span class="grow"></span>${toggles()}</div>` +
-      `<div class="card">${chestList(chests, n && n.id)}</div>`;
+      `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
+      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
+      (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
+        `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
+      (n ? `<div class="card"><div class="label">In ${esc(sum.room || L.labelOf(n))}</div>` +
+        (inRoom.some((c) => showOpened || !c.got) ? chestList(inRoom, n.id, { showRoom: false })
+          : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) + `</div>` : "") +
+      `<div class="card"><div class="label">${n ? "Elsewhere in" : "Left in"} ${esc(displayWorld(world))} · ${elsewhere.length} chest${elsewhere.length === 1 ? "" : "s"}</div>` +
+      (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
+      (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
+        `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "") +
+      `</div>`;
     wireToggles(el);
+    if ($("toGuide")) $("toGuide").onclick = () => { guideWorld = null; setView("guide"); };
   }
 
   // ---------- Map ----------
@@ -191,6 +256,7 @@
       const lines = label.length > 13 && label.includes(" ") ? splitLabel(label) : [label];
       return `<g class="${cls}" data-node="${esc(n.id)}">` +
         (n.id === goalId ? `<rect x="${x - 5}" y="${y - 5}" width="${BOX_W + 10}" height="${BOX_H + 10}" rx="12" class="goalring"/>` : "") +
+        (n.id === mapFocus ? `<rect x="${x - 5}" y="${y - 5}" width="${BOX_W + 10}" height="${BOX_H + 10}" rx="12" class="focusring"/>` : "") +
         `<rect x="${x}" y="${y}" width="${BOX_W}" height="${BOX_H}" rx="9"/>` +
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
         (cs.length ? `<text x="${cx(n)}" y="${y + BOX_H - 7}" class="nc">${!left ? "✓ all" : shut || !reachable ? left + " later"
@@ -226,7 +292,7 @@
     }
     const n = world === sum.world ? hereNode() : null;
     const next = L.guideFor(world, state, guideSeen).next;
-    const goal = next && whereShown.has(next.key) ? next : null;  // only once the player asked "Where?"
+    const goal = next && (whereShown.has(next.key) || stepFull(next.key)) ? next : null;  // only once the player asked "Where?"
     const anyShut = L.nodesOf(world).some((nd) => !L.nodeAccess(world, nd, state).open);
     el.innerHTML =
       `<div class="row" style="margin-bottom:8px"><button class="chip" id="pickMapWorld">${esc(displayWorld(world))} ▾</button>` +
@@ -236,6 +302,7 @@
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
       `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
+      (mapFocus && L.node(world, mapFocus) ? '<span><i class="lg focus"></i>the room you picked</span>' : "") +
       `</div>`;
     $("pickMapWorld").onclick = openWorldPicker;
     $("allNames").onclick = () => { allNames = !allNames; store.set("allNames", allNames); render(true); };
@@ -256,10 +323,17 @@
           : access.story ? "You can't get in here yet. It opens up later in the story." : `You can't get in here yet. Needs ${esc(access.need.join(" + "))}.`) +
         `</div>`) +
       `<div style="margin-top:8px">${chests.length
-        ? `<ul class="list">${chests.sort((a, b) => a.got - b.got || a.n.localeCompare(b.n)).map((c) => chestRow(c, { showRoom: false })).join("")}</ul>`
+        ? `<ul class="list">${chests.sort((a, b) => a.got - b.got || a.n.localeCompare(b.n)).map((c) => chestRow(c, { showRoom: false, inSheet: true })).join("")}</ul>`
         : '<div class="empty">No chests in this room.</div>'}</div>` +
-      `<div class="row"><span class="grow"></span><button class="chip" data-close>Close</button></div>`,
+      `<div class="row">${view === "map" && (mapWorld || sum.world) === world ? "" : `<button class="chip" id="showOnMap">${icon("ico-pin", "chip-ico")}Show on map</button>`}` +
+      `<span class="grow"></span><button class="chip" data-close>Close</button></div>`,
     );
+    if ($("showOnMap")) $("showOnMap").onclick = () => {
+      mapWorld = world === sum.world ? null : world;
+      mapFocus = id;
+      $("sheet").classList.remove("on");
+      setView("map");
+    };
   }
 
   // ---------- Guide ----------
@@ -269,7 +343,7 @@
   function stepCard(world, step, current) {
     const key = step.key;
     const where = step.where ? L.node(world, step.where) : null;
-    const full = hintsShown.has(key), placed = whereShown.has(key) || full;
+    const full = stepFull(key), placed = whereShown.has(key) || full;
     const counts = step.counts ? `<div class="counts">${step.counts.map((c) =>
       `<span class="count ${c.have != null && c.have >= c.n ? "ok" : ""}">${esc(c.name)} ${c.have == null ? "?" : Math.min(c.have, c.n)}/${c.n}</span>`).join("")}</div>` : "";
     return `<div class="card guide-next"><div class="label">${current ? "Next step" : "Next"} · ${esc(displayWorld(world))}` +
@@ -288,10 +362,13 @@
   function storyList(world, g) {
     return `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><ul class="list">${g.steps.map((s) => {
       const isNext = s === g.next;
-      const text = s.done ? esc(s.title) : isNext ? esc(s.nudge) : s.optional ? "Optional: ???" : "???";
+      const ahead = !s.done && !isNext;  // later steps: hidden on a first playthrough
+      const text = s.done || (replay() && !isNext) ? esc((s.optional && !s.done ? "Optional: " : "") + s.title)
+        : isNext ? esc(stepFull(s.key) ? s.title : s.nudge) : s.optional ? "Optional: ???" : "???";
       const sub = s.done && s.rewards && s.rewards.length ? `Got ${esc(s.rewards.join(", "))}`
+        : ahead && replay() && s.rewards && s.rewards.length ? `Gives ${esc(s.rewards.join(", "))}`
         : s.done === null && s.p != null ? "Needs the updated bridge script" : "";
-      return `<li class="${s.done ? "got" : ""} ${isNext ? "here" : ""} ${!s.done && !isNext ? "hidden-step" : ""}">` +
+      return `<li class="${s.done ? "got" : ""} ${isNext ? "here" : ""} ${ahead && !replay() ? "hidden-step" : ""}">` +
         `<span class="step-dot ${s.done ? "done" : s.done === null ? "unknown" : ""}"></span>` +
         `<span class="grow"><span class="name">${text}</span>${sub ? `<div class="sub">${sub}</div>` : ""}</span></li>`;
     }).join("")}</ul></div>`;
@@ -319,46 +396,25 @@
 
     const g = L.guideFor(world, state, guideSeen);
     const current = world === sum.world;
-    const here = current ? hereNode() : null;
-    const chests = L.chestsFor(world, sum.opened, state).filter((c) => !c.got);
-    const hereLeft = here ? chests.filter((c) => c.node === here.id) : [];
-    const byRoom = {};
-    for (const c of chests) (byRoom[c.node] = byRoom[c.node] || []).push(c);
-    const open = (cs) => cs.filter((c) => !c.lock).length;
-    const rooms = Object.entries(byRoom).sort((a, b) => open(b[1]) - open(a[1]) || b[1].length - a[1].length);
-    const reportsLeft = sum.reports.filter((r) => r.w === world && !r.got);
-
+    // The Guide is the story; chests and reports live on Here and Progress.
     el.innerHTML =
       `<div class="row" style="margin-bottom:10px"><button class="chip" id="guidePick">${esc(displayWorld(world))} ▾</button>` +
       (guideWorld && guideWorld !== sum.world && L.GUIDE[sum.world] ? `<button class="chip" id="guideHere">Current world</button>` : "") +
       `<span class="grow"></span></div>` +
       (g.next ? stepCard(world, g.next, current)
         : g.steps.length ? `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><div class="empty">Story complete here.</div></div>` : "") +
-      (here ? `<div class="card"><div class="label">Left in ${esc(sum.room || L.labelOf(here))}</div>` +
-        (hereLeft.length ? chestList(hereLeft, here.id, { showRoom: false }) : `<div class="empty">Nothing left in this room.</div>`) + `</div>` : "") +
-      `<div class="card"><div class="label">Left in ${esc(displayWorld(world))} · ${chests.length} chest${chests.length === 1 ? "" : "s"}</div>` +
-      (rooms.length ? `<ul class="list">${rooms.map(([id, cs]) => {
-        const nd = id !== "null" && L.node(world, id);
-        return `<li data-room="${esc(id)}">${icon("ico-chest")}<span class="grow"><span class="name">${esc(nd ? roomLabel(world, nd) : "Elsewhere")}</span>` +
-          `<div class="sub">${open(cs) === cs.length ? `${cs.length} chest${cs.length > 1 ? "s" : ""}`
-            : open(cs) ? `${open(cs)} now, ${cs.length - open(cs)} later` : `${cs.length} later`}` +
-          `${cs.some(L.isPuppies) ? " · puppies" : ""}${nd && !L.nodeAccess(world, nd, state).open ? " · can't get in yet" : ""}</div></span>` +
-          (here && id === here.id ? '<span class="tag here">Here</span>' : "") + `</li>`;
-      }).join("")}</ul>` : `<div class="empty">Every chest here is open.</div>`) +
-      (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
-        `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "") +
-      `</div>` +
       (g.steps.length ? storyList(world, g) : "");
 
     el.querySelectorAll("[data-hint]").forEach((b) => {
-      b.onclick = () => { const k = b.dataset.hint; if (hintsShown.has(k)) hintsShown.delete(k); else hintsShown.add(k); render(true); };
+      b.onclick = () => {
+        const k = b.dataset.hint, set = replay() ? hintsHidden : hintsShown;
+        if (set.has(k)) set.delete(k); else set.add(k);
+        render(true);
+      };
     });
     el.querySelectorAll("[data-where]").forEach((b) => { b.onclick = () => { whereShown.add(b.dataset.where); render(true); }; });
     el.querySelectorAll("[data-goto]").forEach((b) => {
       b.onclick = () => { mapWorld = b.dataset.goto === sum.world ? null : b.dataset.goto; setView("map"); };
-    });
-    el.querySelectorAll("[data-room]").forEach((li) => {
-      li.onclick = () => { if (li.dataset.room !== "null") openNodeSheet(world, li.dataset.room); };
     });
     $("guidePick").onclick = () => {
       openSheet(`<h2>Guide for</h2><div class="opts">${visitedWorlds(Object.keys(L.GUIDE)).map((w) =>
@@ -371,10 +427,10 @@
     if ($("guideHere")) $("guideHere").onclick = () => { guideWorld = null; render(true); };
   }
 
-  // ---------- Worlds ----------
+  // ---------- Progress (worlds + collectibles) ----------
 
-  function renderWorlds() {
-    const el = $("v-worlds");
+  function renderProgress() {
+    const el = $("v-progress");
     if (worldDetail) {
       const w = sum.worlds[worldDetail];
       el.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="chip" id="back">‹ All</button>` +
@@ -382,37 +438,42 @@
         progressCard(displayWorld(worldDetail) + " chests", w.got, w.total) +
         `<div class="card">${chestList(L.chestsFor(worldDetail, sum.opened, state), null)}</div>`;
       $("back").onclick = () => { worldDetail = null; render(true); };
-      $("toMap").onclick = () => { mapWorld = worldDetail; worldDetail = null; setView("map"); };
+      $("toMap").onclick = () => { mapWorld = worldDetail === sum.world ? null : worldDetail; worldDetail = null; setView("map"); };
       wireToggles(el);
       return;
     }
     const entries = Object.entries(sum.worlds);
-    const hidden = entries.filter(([w]) => sum.found[w] === "hidden").length;
-    el.innerHTML = `<div class="grid">${entries.filter(([w]) => sum.found[w] !== "hidden").map(([w, { got, total }]) =>
-      visited(w)
-        ? `<button data-w="${esc(w)}" class="${w === sum.world ? "cur" : ""}"><div class="wn">${esc(displayWorld(w))}</div>` +
-          `<div class="wc">${got} / ${total}</div><div class="bar ${got === total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div></button>`
-        : `<button class="unvisited" disabled><div class="wn">${esc(displayWorld(w))}</div><div class="wc">Not visited yet</div></button>`,
-    ).join("")}` +
-      (hidden ? `<button class="unvisited" disabled><div class="wn">???</div><div class="wc">${hidden} world${hidden > 1 ? "s" : ""} to find</div></button>` : "") +
-      `</div>`;
-    el.querySelectorAll("[data-w]").forEach((b) => { b.onclick = () => { worldDetail = b.dataset.w; render(true); }; });
-  }
-
-  // ---------- Collect ----------
-
-  function renderCollect() {
-    const el = $("v-collect");
+    const hidden = replay() ? 0 : entries.filter(([w]) => sum.found[w] === "hidden").length;
+    const story = (w) => {
+      if (!L.GUIDE[w]) return "";
+      const steps = L.guideFor(w, state, guideSeen).steps.filter((s) => !s.optional);
+      return steps.length ? ` · story ${steps.filter((s) => s.done).length}/${steps.length}` : "";
+    };
     const pupLeft = sum.puppyChests.filter((c) => !c.got);
     const pupKnown = pupLeft.filter((c) => visited(c.w)), pupElsewhere = pupLeft.length - pupKnown.length;
     el.innerHTML =
       progressCard("All chests", sum.chestsGot, sum.chestsTotal) +
+      `<div class="grid">${entries.filter(([w]) => replay() || sum.found[w] !== "hidden").map(([w, { got, total }]) => {
+        const complete = total && got === total;
+        return visited(w)
+          ? `<button data-w="${esc(w)}" class="${w === sum.world ? "cur" : ""} ${complete ? "complete" : ""}">` +
+            (complete ? `<img class="crown" src="art/crown.svg" alt="">` : "") +
+            `<div class="wn">${esc(displayWorld(w))}</div>` +
+            `<div class="wc">${got} / ${total}${story(w)}</div><div class="bar ${complete ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div></button>`
+          : `<button class="unvisited" disabled><div class="wn">${esc(displayWorld(w))}</div><div class="wc">Not visited yet</div></button>`;
+      }).join("")}` +
+      (hidden ? `<button class="unvisited" disabled><div class="wn">???</div><div class="wc">${hidden} world${hidden > 1 ? "s" : ""} to find</div></button>` : "") +
+      `</div>` +
+      unlocksCard() +
       progressCard("Dalmatians found", sum.puppies, 99) +
       `<div class="card"><div class="label">Puppy chests left · ${pupLeft.length} of ${sum.puppyChests.length}</div>` +
       (pupLeft.length
-        ? `<ul class="list">${pupKnown.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) =>
-          `<li>${icon("ico-chest")}<span class="grow"><span class="name">${!c.node || roomKnown(c.w, c.node) ? esc(c.n.replace(/ Chest$/, "")) : "???"}</span>` +
-          `<div class="sub">${esc(displayWorld(c.w))}${c.node ? " · " + esc(roomLabel(c.w, L.node(c.w, c.node))) : ""}</div></span></li>`).join("")}` +
+        ? `<ul class="list">${pupKnown.sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n)).map((c) => {
+          const nd = c.node && L.node(c.w, c.node), known = !nd || roomKnown(c.w, nd.id);
+          return `<li${nd ? ` data-cw="${esc(c.w)}" data-cn="${esc(nd.id)}"` : ""}>${icon("ico-chest")}<span class="grow">` +
+            `<span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
+            `<div class="sub">${esc(displayWorld(c.w))}${nd && known ? " · " + esc(L.labelOf(nd)) : ""}</div></span></li>`;
+        }).join("")}` +
           (pupElsewhere ? `<li class="hidden-step">${icon("ico-chest")}<span class="grow"><span class="name">???</span>` +
             `<div class="sub">${pupElsewhere} in worlds you haven't been to</div></span></li>` : "") + `</ul>`
         : '<div class="empty">All puppy chests opened.</div>') + `</div>` +
@@ -420,8 +481,55 @@
       `<div class="card"><div class="label">Ansem's Reports · ${sum.reports.filter((r) => r.got).length} / ${sum.reports.length}</div>` +
       `<ul class="list">${sum.reports.map((r) =>
         `<li class="${r.got ? "got" : ""}">${icon(r.got ? "ico-report" : "ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span>` +
-        `<div class="sub">${r.got ? `${esc(r.w)}: ${esc(r.n.replace(/ Ansem's Report \d+$/, ""))}`
-          : visited(r.w) ? `${esc(r.w)}: ${esc(reportHow(r))}` : "Somewhere you haven't been"}</div></span></li>`).join("")}</ul></div>`;
+        `<div class="sub">${r.got ? `${esc(displayWorld(r.w))}: ${esc(r.n.replace(/ Ansem's Report \d+$/, ""))}`
+          : visited(r.w) ? `${esc(displayWorld(r.w))}: ${esc(reportHow(r))}` : "Somewhere you haven't been"}</div></span></li>`).join("")}</ul></div>`;
+    el.querySelectorAll("[data-w]").forEach((b) => { b.onclick = () => { worldDetail = b.dataset.w; render(true); }; });
+    el.querySelectorAll("[data-unlock]").forEach((li) => { li.onclick = () => openUnlockSheet(li.dataset.unlock); });
+    if ($("unlockShow")) $("unlockShow").onclick = () => { setOption("showNeeds", true); render(true); };
+  }
+
+  // Chests the player can't reach yet, by what would open them (story-locked rooms left out:
+  // nothing to go and get for those). Only worlds the player has been to, unless replaying.
+  function lockedByNeed() {
+    const out = {};
+    for (const w of Object.keys(sum.worlds)) {
+      if (!visited(w)) continue;
+      for (const c of L.chestsFor(w, sum.opened, state)) {
+        if (c.got || !c.lock || c.lock[0] === "story") continue;
+        const k = c.lock.join(" + ");
+        (out[k] = out[k] || []).push(c);
+      }
+    }
+    return out;
+  }
+
+  function unlocksCard() {
+    const by = Object.entries(lockedByNeed()).sort((a, b) => b[1].length - a[1].length);
+    if (!by.length) return "";
+    const head = `<div class="card"><div class="label">What opens the most chests</div>`;
+    if (!showNeeds) {
+      return head + `<div class="row" style="margin-top:6px"><div class="sub grow">Names the abilities and items you don't have yet. ` +
+        `${by.length} would open chests you've passed.</div><button class="chip" id="unlockShow">Show</button></div></div>`;
+    }
+    return head + `<ul class="list">${by.slice(0, 6).map(([k, cs]) => {
+      const worlds = new Set(cs.map((c) => c.w)).size;
+      return `<li data-unlock="${esc(k)}"><span class="grow"><span class="name">${esc(k)}</span>` +
+        `<div class="sub">${cs.length} chest${cs.length > 1 ? "s" : ""} in ${worlds} world${worlds > 1 ? "s" : ""}</div></span>` +
+        `<span class="tag more">›</span></li>`;
+    }).join("")}</ul></div>`;
+  }
+
+  function openUnlockSheet(k) {
+    const cs = (lockedByNeed()[k] || []).sort((a, b) => a.w.localeCompare(b.w) || a.n.localeCompare(b.n));
+    openSheet(`<h2>${esc(k)}</h2><div class="sub">Opens ${cs.length} chest${cs.length > 1 ? "s" : ""} you can't reach yet.</div>` +
+      `<ul class="list" style="margin-top:8px">${cs.map((c) => {
+        const nd = c.node && L.node(c.w, c.node), known = !nd || roomKnown(c.w, nd.id);
+        const where = [displayWorld(c.w), nd && known ? L.labelOf(nd) : null, showContents && c.i ? c.i : null].filter(Boolean).join(" · ");
+        return `<li class="locked">${icon("ico-chest")}<span class="grow"><span class="name">` +
+          `${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span><div class="sub">${esc(where)}</div></span>` +
+          (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") + `</li>`;
+      }).join("")}</ul>` +
+      `<div class="row"><span class="grow"></span><button class="chip" data-close>Close</button></div>`);
   }
 
   // ---------- Level ----------
@@ -456,6 +564,12 @@
     const chip = (kind, value, auto, text) =>
       `<button class="chip ${value ? "on" : ""}" data-pick="${kind}">${value ? esc(text) : kind === "path" ? "Pick your path" : "Pick your growth"}` +
       `${value && auto ? " · from save" : ""} ▾</button>`;
+    // The next ability this path learns, so it's visible without scrolling the table.
+    let nextAb = null;
+    for (let lv = info.level + 1; info.path && lv <= 100 && !nextAb; lv++) {
+      const b = info.rewards(lv, info.path).bonus;
+      if (b >= 0x80) nextAb = { lv, name: info.name(b), need: info.curve ? info.cum[info.curve][lv] - info.exp : null };
+    }
     const levels = [];
     const last = levelAll ? 100 : Math.min(100, info.level + 10);
     for (let lv = levelAll ? 2 : info.level + 1; lv <= last; lv++) levels.push(lv);
@@ -468,6 +582,9 @@
       `<div class="row" style="margin-top:10px;flex-wrap:wrap;gap:6px">` +
       chip("path", info.path, info.autoPath, info.path ? `${info.path} (kept the ${PATH_ITEM[info.path]})` : "") +
       chip("curve", info.curve, info.autoCurve, info.curve ? `${info.curve}: ${CURVE_TEXT[info.curve]}` : "") + `</div>` +
+      (nextAb ? `<div class="next-ab" data-lv="${nextAb.lv}"><span class="sub">Next ability</span>` +
+        `<span class="reward ability">${esc(nextAb.name)}</span><span class="sub">at LV ${nextAb.lv}` +
+        `${nextAb.need != null ? ` · ${fmt(nextAb.need)} EXP to go` : ""}</span><span class="grow"></span><span class="tag more">›</span></div>` : "") +
       (!info.path ? `<div class="sub" style="margin-top:8px">Abilities depend on what you kept at the Dive. This bridge can't read that yet: pick one, or restart the game with the updated script.</div>` : "") +
       (info.path && !info.curve ? `<div class="sub" style="margin-top:8px">Your EXP so far fits more than one growth. It settles after a few more fights, or pick it.</div>` : "") +
       `</div>` +
@@ -608,7 +725,7 @@
     // Heartbeat writes bump seq/t only; re-rendering on those would swap buttons out from under a tap.
     const data = state ? JSON.stringify({ ...state, seq: 0, t: 0 }) : "";
     const sig = [data, view, showOpened, showContents, showNeeds, worldDetail, mapWorld, guideWorld, [...hintsShown].join(","),
-      [...whereShown].join(","), JSON.stringify(levelPick), levelAll, waitHelp, allNames,
+      [...whereShown].join(","), JSON.stringify(levelPick), levelAll, waitHelp, allNames, mode, mapFocus, [...hintsHidden].join(","),
       JSON.stringify(visitedRooms)].join("|");
     if (!force && sig === lastRendered) return;
     lastRendered = sig;
@@ -618,12 +735,13 @@
         `<span class="sub">Nothing is shown from the title screen: until a save loads, the game's memory is empty or left over from the last one.</span></div>`;
       return;
     }
-    ({ here: renderHere, guide: renderGuide, map: renderMap, worlds: renderWorlds, collect: renderCollect, level: renderLevel })[view]();
+    ({ here: renderHere, guide: renderGuide, map: renderMap, progress: renderProgress, level: renderLevel })[view]();
   }
 
   function setView(v) {
     view = v; store.set("view", view);
-    if (view !== "worlds") worldDetail = null;
+    if (view !== "progress") worldDetail = null;
+    if (view !== "map") mapFocus = null;
     document.querySelectorAll("nav button").forEach((x) => x.classList.toggle("on", x.dataset.view === view));
     document.querySelectorAll(".view").forEach((s) => s.classList.toggle("on", s.id === "v-" + view));
     document.querySelector("main").scrollTop = 0;
@@ -641,8 +759,101 @@
     sum = L.summarize(state);
     rememberSteps();
     rememberRooms();
+    announce();
     render();
   }
+
+  // ---------- toasts: say what just happened in the game ----------
+  // Compares each new snapshot with the last one. Loading a save (from the title, or a jump
+  // too big to be play) only sets the baseline, so nothing old gets announced.
+
+  let lastFacts = null, lastFactsData = null;
+  function facts() {
+    const steps = sum.world && L.GUIDE[sum.world]
+      ? L.guideFor(sum.world, state, guideSeen).steps.filter((s) => s.done).map((s) => s.key) : [];
+    return {
+      title: sum.title, level: state.level, opened: sum.opened, world: sum.world, puppies: sum.puppies,
+      found: { ...sum.found }, reports: sum.reports.filter((r) => r.got).map((r) => r.num), steps,
+      done: Object.fromEntries(Object.entries(sum.worlds).map(([w, v]) => [w, v.total && v.got === v.total])),
+    };
+  }
+  function announce() {
+    const data = JSON.stringify({ ...state, seq: 0, t: 0 });
+    if (data === lastFactsData) return;
+    lastFactsData = data;
+    const now = facts(), was = lastFacts;
+    lastFacts = now;
+    if (!was || was.title || now.title) return;
+    const fresh = (window.KH1_CHESTS || []).filter((c) => L.bit(now.opened, c.B, c.b) && !L.bit(was.opened, c.B, c.b));
+    if (fresh.length > 6 || now.level - was.level > 3 || now.reports.length - was.reports.length > 2) return;  // a save load
+
+    const out = [];
+    const pups = now.puppies - was.puppies;
+    for (const c of fresh) {
+      const w = sum.worlds[c.w] || { got: 0, total: 0 };
+      if (L.isPuppies(c)) continue;  // the puppy toast covers it
+      out.push({ ico: "ico-chest", title: c.i ? `Chest opened · ${c.i}` : "Chest opened", sub: `${w.got} of ${w.total} in ${displayWorld(c.w)}` });
+    }
+    if (pups > 0) {
+      out.push({ ico: "ico-paw", title: pups > 1 ? `Puppies ${now.puppies - pups + 1}–${now.puppies} found!` : `Puppy ${now.puppies} found!`, sub: `${now.puppies} of 99 Dalmatians` });
+    }
+    if (now.level > was.level) {
+      const info = L.levelInfo(state, levelPick);
+      const got = [];
+      for (let lv = was.level + 1; info && lv <= now.level; lv++) {
+        const r = info.rewards(lv, info.path);
+        if (r.bonus) got.push(info.name(r.bonus));
+        if (r.stat) got.push(STAT_INFO[r.stat] ? STAT_INFO[r.stat][0] : r.stat);
+      }
+      out.push({ ico: "ico-star", title: `Level up! LV ${now.level}`, sub: got.join(" · "), big: true });
+    }
+    for (const w of Object.keys(now.found)) {
+      if (now.found[w] === "visited" && was.found[w] !== "visited" && w !== "Awakening") {
+        out.push({ ico: "ico-pin", title: `New world: ${displayWorld(w)}`, sub: sum.worlds[w] ? `${sum.worlds[w].total} chests to find` : "", big: true });
+      }
+    }
+    for (const num of now.reports) if (!was.reports.includes(num)) out.push({ ico: "ico-report", title: `Ansem's Report ${num} found`, sub: `${now.reports.length} of ${sum.reports.length}` });
+    if (now.world === was.world) {
+      for (const k of now.steps) {
+        if (was.steps.includes(k)) continue;
+        const s = L.guideFor(now.world, state, guideSeen).steps.find((x) => x.key === k);
+        if (s) out.push({ ico: "ico-check", title: "Story step done", sub: s.title + (s.rewards && s.rewards.length ? ` · got ${s.rewards.join(", ")}` : "") });
+      }
+    }
+    for (const w of Object.keys(now.done)) {
+      if (now.done[w] && !was.done[w]) out.push({ ico: "ico-crown", title: `${displayWorld(w)} complete!`, sub: `All ${sum.worlds[w].total} chests opened`, big: true });
+    }
+    out.forEach(toast);
+  }
+
+  const toastQueue = [];
+  function toast(t) {
+    toastQueue.push(t);
+    if (toastQueue.length === 1) showToast();
+  }
+  // One at a time, so a burst (a chest that levels you up) reads in order.
+  function showToast() {
+    const t = toastQueue[0];
+    if (!t) return;
+    const box = $("toasts");
+    const el = document.createElement("div");
+    el.className = "toast" + (t.big ? " big" : "");
+    el.innerHTML = `${icon(t.ico, "toast-ico")}<div class="grow"><div class="toast-title">${esc(t.title)}</div>` +
+      (t.sub ? `<div class="sub">${esc(t.sub)}</div>` : "") + `</div>`;
+    box.appendChild(el);
+    const ms = toastQueue.length > 2 ? 2200 : TOAST_MS;  // catch up when a few pile up
+    setTimeout(() => {
+      el.classList.add("out");
+      setTimeout(() => { el.remove(); toastQueue.shift(); showToast(); }, 260);
+    }, ms);
+  }
+
+  // Any chest or room row (data-cw / data-cn) opens that room, on every tab.
+  document.querySelector("main").addEventListener("click", (e) => {
+    const li = e.target.closest("[data-cn]");
+    if (li && state && !sum.title) openNodeSheet(li.dataset.cw, li.dataset.cn);
+  });
+  $("modeBtn").onclick = () => { if (state && !sum.title) openShowSheet(); };
   // Destiny Islands errands hand their items over, so remember steps once seen done.
   // A fresh Dive (no Traverse Town progress yet) means a new game: forget them.
   function rememberRooms() {

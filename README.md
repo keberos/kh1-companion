@@ -16,20 +16,20 @@
 
 ## What it shows
 
-Six tabs, all live from the save you have loaded. It never tells you anything you haven't reached yet unless you ask.
+Five tabs, all live from the save you have loaded. It never tells you anything you haven't reached yet unless you ask.
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: what now, at a glance. The next story nudge, the chests in the room you're in, and which other rooms still hold chests. Tap any room or chest to see it on the map.</td>
     <td width="50%"><img src="docs/screenshots/guide.png" alt="Guide tab"><br><b>Guide</b>: stuck? A gentle nudge first, then <i>Where?</i> for the room, then <i>Show me</i> for the full hint. No boss or reward names until you've earned them.</td>
-    <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, how many chests are left in each, and which rooms or chests you can't reach yet. Rooms you haven't been to stay "???".</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: the chests left in this world, the room you're in pinned to the top, with what's inside if you want to know.</td>
-    <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, and how much EXP until the next one. Tap a level for details.</td>
+    <td><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, how many chests are left in each, and which rooms or chests you can't reach yet. Rooms you haven't been to stay "???".</td>
+    <td><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: every world you've found, with chests and story so far (a crown when a world's chests are all open), what ability would open the most chests, the 99 Dalmatians, postcards and Ansem's Reports.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/worlds.png" alt="Worlds tab"><br><b>Worlds</b>: chest progress everywhere you've been. Worlds you haven't found stay a mystery.</td>
-    <td><img src="docs/screenshots/collect.png" alt="Collect tab"><br><b>Collect</b>: all 232 chests, the 99 Dalmatians, postcards and Ansem's Reports.</td>
+    <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, your next ability and how much EXP until it. Tap a level for details.</td>
+    <td><b>It reacts as you play.</b> Open a chest, level up, find puppies or a report, finish a story step or reach a new world, and a short note pops up on the bottom screen.<br><br><b>First time or replay?</b> Tap the eye at the top. <i>First time</i> keeps everything behind a tap; <i>Replay</i> shows room names, chest contents, what unlocks them and the full guide up front, for 100% runs and speed routes.</td>
   </tr>
 </table>
 
@@ -102,7 +102,7 @@ No. Everything comes from the save that's loaded right now, so playing on severa
 
 <details><summary><b>Will it spoil the story?</b></summary>
 
-Not unless you ask. The guide starts with a vague nudge; places, names and full hints are each one tap further. Worlds you haven't found show as "???", future story steps stay hidden, and rewards appear once you've earned them.
+Not unless you ask. The guide starts with a vague nudge; places, names and full hints are each one tap further. Worlds you haven't found show as "???", future story steps stay hidden, and rewards appear once you've earned them. On a replay, tap the eye at the top and pick **Replay** to see everything up front.
 </details>
 
 ---
@@ -124,8 +124,9 @@ Details the tabs rely on:
 - **Rooms:** the current room comes from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room.
 - **Reachability:** chests come with what reaching them takes (from Archipelago's logic), checked against the magic, shared abilities, Trinities and key items in the save. Rooms are gated on story points.
 - **Level path and curve:** the path is the Dive choice byte; the curve is inferred from EXP at the current level and remembered per device once unambiguous.
-- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "All names" chip shows them all.
+- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "Unhide names" chip (or Replay mode) shows them all.
 - **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there.
+- **Pop-up notes:** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status, guide steps). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
 
 ### Install, by design
 

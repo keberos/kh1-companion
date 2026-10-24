@@ -17,7 +17,7 @@ CHROME = [
     Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
     Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
 ]
-TABS = ["here", "guide", "map", "worlds", "collect", "level"]
+TABS = ["here", "guide", "map", "progress", "level"]
 
 
 def main():

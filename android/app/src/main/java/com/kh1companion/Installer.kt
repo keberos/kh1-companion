@@ -40,12 +40,16 @@ object Installer {
         val version = context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
         if (!force && prefs.deployedVersion == version && root.resolve("mod/DINPUT8.dll").exists()) return true
         return try {
-            copyAsset(context, "kh1companion.lua", root.resolve("scripts/kh1companion.lua"))
-            for (f in MOD_FILES) copyAsset(context, "mod/$f", root.resolve("mod/$f"))
+            val copied = mutableListOf(root.resolve("scripts/kh1companion.lua"))
+            copyAsset(context, "kh1companion.lua", copied[0])
+            for (f in MOD_FILES) copyAsset(context, "mod/$f", root.resolve("mod/$f").also { copied += it })
             for (f in LICENSE_FILES) {
-                copyAsset(context, "mod/$f", root.resolve("mod/licenses/$f"))
+                copyAsset(context, "mod/$f", root.resolve("mod/licenses/$f").also { copied += it })
                 root.resolve("mod/$f").delete() // older versions kept them next to the mod files
             }
+            // The file picker lists Downloads from Android's media index, which doesn't notice files
+            // written straight to disk: without this a fresh install's picker shows an empty mod folder.
+            android.media.MediaScannerConnection.scanFile(context, copied.map { it.path }.toTypedArray(), null, null)
             prefs.deployedVersion = version
             true
         } catch (e: Exception) {

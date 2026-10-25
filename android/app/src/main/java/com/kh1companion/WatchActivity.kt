@@ -34,11 +34,14 @@ class WatchActivity : Activity() {
             return
         }
 
-        val front = packageManager.getLaunchIntentForPackage(Installer.GAMENATIVE)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        if (front == null) { finish(); return }
-        startActivity(front, ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY).toBundle())
+        if (!focusGame(this)) { finish(); return }
         sent = true
+        watching = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (sent) watching = false
     }
 
     override fun onPause() {
@@ -62,6 +65,27 @@ class WatchActivity : Activity() {
     }
 
     companion object {
+        /** A watcher is waiting under the game, so another launch only needs to hand focus back. */
+        @Volatile var watching = false
+
+        /**
+         * Bring GameNative's window forward on the main screen. Besides putting the game on top, this
+         * gives it input focus back: opening the companion from a launcher on the bottom screen
+         * (Cocoon Shell) leaves focus there, and the controller does nothing until the top is tapped.
+         */
+        fun focusGame(context: android.content.Context): Boolean {
+            val front = context.packageManager.getLaunchIntentForPackage(Installer.GAMENATIVE)
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED) ?: return false
+            context.startActivity(front, ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY).toBundle())
+            return true
+        }
+
+        /** Start watching for the game to exit, or, if already watching, just hand focus back to it. */
+        fun watchOrFocus(context: android.content.Context) {
+            if (watching) focusGame(context)
+            else context.startActivity(Intent(context, WatchActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+
         private const val EXTRA_MOVED = "moved"
         private const val KEY_SENT = "sent"
         private const val KEY_AWAY = "away"

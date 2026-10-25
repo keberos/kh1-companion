@@ -106,7 +106,6 @@ object Installer {
      * player starts the game, and the companion closes itself when the game exits.
      */
     fun launchGame(context: Context): Boolean {
-        val watching = CompanionService.running
         if (android.provider.Settings.canDrawOverlays(context)) {
             context.startForegroundService(android.content.Intent(context, CompanionService::class.java))
         }
@@ -118,8 +117,7 @@ object Installer {
         return try {
             context.startActivity(game, main.toBundle())
             // Close the companion the moment the game exits, as when a launcher opens it (see WatchActivity).
-            if (!watching) context.startActivity(android.content.Intent(context, WatchActivity::class.java)
-                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            WatchActivity.watchOrFocus(context)
             true
         } catch (e: android.content.ActivityNotFoundException) { false }
     }

@@ -112,10 +112,9 @@ class MainActivity : Activity() {
                 Toast.makeText(this, "Companion closed", Toast.LENGTH_SHORT).show()
             }
             (start || (tap && setUp)) && ready -> {
-                val already = CompanionService.running
                 startForegroundService(Intent(this, CompanionService::class.java))
-                // Watch for the game closing (see WatchActivity); once is enough.
-                if (!already) startActivity(Intent(this, WatchActivity::class.java))
+                // Watch for the game closing, and give the game the controller back (see WatchActivity).
+                WatchActivity.watchOrFocus(this)
             }
             else -> return false
         }

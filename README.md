@@ -33,8 +33,6 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
   </tr>
 </table>
 
-**Hidden for now:** the story guide, what a chest still needs to reach, and rooms that open later in the story. They came from secondhand sources (PS2 notes, randomizer logic) that real play broke, and the goal is a simple companion you can trust. Each is behind a switch at the top of `companion/app.js`.
-
 **It reads your save, so there's nothing to keep in sync.** Load any save on any device and it's up to date. Starting the companion partway through a playthrough is fine.
 
 **It looks like part of the game.** Deep-blue menus, silver frames and gold titles, all drawn for this project.
@@ -143,12 +141,10 @@ The game is never patched. [LuaBackend](https://github.com/Sirius902/LuaBackend)
 
 Details the tabs rely on:
 - **Rooms:** the current room comes from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room.
-- **Reachability:** chests come with what reaching them takes (from Archipelago's logic), checked against the magic, shared abilities, Trinities and key items in the save. Rooms are gated on story points.
 - **Level path and curve:** the path is the Dive choice byte; the curve has no save byte, so every EXP reading of the playthrough rules curves out until one is left (lower EXP means a new game).
-- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "Unhide names" chip (or Replay mode) shows them all.
+- **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there or you've opened a chest in it; the map's "Unhide names" chip (or Replay mode) shows them all.
 - **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there. The Dive's weapon choice reads the same, so the Dive's story byte (or save data changing) tells them apart.
-- **Scenes:** a newly unlocked guide step waits for the HUD (`in_field`), so it never shows while the scene that reveals it plays.
-- **Pop-up notes (optional, off by default):** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status, guide steps). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
+- **Pop-up notes (optional, off by default):** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
 
 ### Install, by design
 
@@ -172,9 +168,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 - **Chest and report names:** [Archipelago](https://github.com/ArchipelagoMW/Archipelago) `worlds/kh1/Locations.py` (MIT). Chest location ID = `2650000 + byte*10 + bit`, so a raw flag bit maps straight to a named chest.
 - **Chest rooms and contents:** the KH1FM randomizer's documentation (MIT): 217 of 232 chests have a room; the rest are matched by name prefix.
 - **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT).
-- **Story steps:** each world's story counter as documented in the [RetroAchievements KH1 Final Mix code notes](https://retroachievements.org/codenotes.php?g=2780) (the source of the Archipelago client's thresholds too); the values used are in `docs/guide-reference.md`. Nudges and hints are written for this project from the KH Wiki walkthroughs.
 - **Chest locations:** written for this project from the KH Wiki's KH1 walkthroughs (`companion/chesthints.js`); where a chest isn't clearly placed there, the hint says only what its Archipelago name says.
-- **What a chest needs:** Archipelago `worlds/kh1/Rules.py` (MIT), read at Beginner difficulty with randomizer options off. Anything it can't express counts as met, so a chest is never wrongly shown as locked.
 - **Level-ups:** the randomizer's battle-table docs (MIT). Ability descriptions are written for this project.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world.
 

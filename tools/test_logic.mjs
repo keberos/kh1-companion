@@ -503,3 +503,37 @@ test("checked steps are real steps, and the reference lists every step's story v
   assert.ok(r.lines.some((l) => l.startsWith("new value: p0 = 05")), r.lines.join("\n"));
   assert.ok(!r.lines.some((l) => l.includes("Sign up")), "never names a step that isn't done");
 });
+
+test("walkthrough chest needs name real chests, and has() can judge every need", async () => {
+  globalThis.window = globalThis.window || {};
+  await import("../companion/chestneeds.js");
+  const needs = globalThis.window.KH1_CHEST_NEEDS;
+  // Everything learned: Glide + Superglide, High Jump, all spells at level 3, all five Trinities.
+  const all = blank({ shared: "01030400" + "00".repeat(4), magic: "03030303030303", magic_unlocked: 0x7F, trinities: 0x1F });
+  const none = blank({ shared: "00".repeat(8), magic: "01010101010101", magic_unlocked: 0, trinities: 0 });
+  let n = 0;
+  for (const [w, byName] of Object.entries(needs)) for (const [name, e] of Object.entries(byName)) {
+    n++;
+    assert.ok(CHESTS.some((c) => c.w === w && c.n === name), `needs for a chest that doesn't exist: ${w} / ${name}`);
+    assert.ok(e.need.length && e.src.split(" ").length >= 2, `${w} / ${name}: needs 2+ sources`);
+    for (const a of e.need) {
+      assert.equal(L.has(a, all), true, `${a} reads as learned`);
+      assert.equal(L.has(a, none), false, `${a} reads as missing`);
+    }
+    assert.equal(L.lockOf([e.need], all), null);
+    assert.deepEqual(L.lockOf([e.need], none), e.need.map(L.needName));
+  }
+  assert.equal(n, 55);
+  // Only what's still missing is named.
+  const gates = needs["Agrabah"]["Palace Gates High Opposite Palace Chest"].need;
+  assert.deepEqual(L.lockOf([gates], blank({ shared: "01" + "00".repeat(7) })), ["Glide"]);
+  assert.deepEqual(L.lockOf([needs["Olympus Coliseum"]["Coliseum Gates Blizzaga Chest"].need],
+    blank({ magic: "01020101010101", magic_unlocked: 2 })), ["Blizzaga"]);
+});
+
+test("the chest sheet takes needs from the walkthroughs, never the randomizer logic", () => {
+  const src = readFileSync(path.join(ROOT, "companion/app.js"), "utf8");
+  assert.match(src, /const SHOW = \{ chestNeeds: true, roomLocks: false,/);
+  assert.match(src, /lock: SHOW\.roomLocks && c\.lock && c\.lock\[0\] === "story" \? c\.lock : SHOW\.chestNeeds \? guideLock\(c, state\) : null/);
+  assert.match(readFileSync(path.join(ROOT, "companion/index.html"), "utf8"), /<script src="chestneeds.js"><\/script>\s*<script src="logic.js">/);
+});

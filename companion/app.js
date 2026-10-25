@@ -5,15 +5,22 @@
   "use strict";
 
   // Shown only once normal play can prove them right (README, "What's confirmed"). Hidden for now:
-  //   chestNeeds  what a chest still needs, and "What opens the most chests" (randomizer logic)
+  //   chestNeeds  what a chest still needs, and "What opens the most chests": only needs 2+ walkthroughs
+  //               agree on (chestneeds.js), never the randomizer logic in the chest data
   //   roomLocks   rooms marked as opening later in the story
   //   guide       the story guide (Guide tab, next step on Here, its map ring); kept simple for now
   //   unconfirmedGuide  guide steps not yet checked on PC (guide-checked.js), when the guide is on
-  const SHOW = { chestNeeds: false, roomLocks: false, guide: false, unconfirmedGuide: false };
+  const SHOW = { chestNeeds: true, roomLocks: false, guide: false, unconfirmedGuide: false };
+  const NEEDS = window.KH1_CHEST_NEEDS || {};
+  // What the player still lacks of a chest's walkthrough-confirmed needs, judged with has().
+  const guideLock = (c, state) => {
+    const e = (NEEDS[c.w] || {})[c.n];
+    return e && !c.got && state ? window.KH1Logic.lockOf([e.need], state) : null;
+  };
   const L = Object.assign(Object.create(window.KH1Logic), {
     nodeAccess: SHOW.roomLocks ? window.KH1Logic.nodeAccess : () => ({ open: true }),
-    chestsFor: SHOW.chestNeeds && SHOW.roomLocks ? window.KH1Logic.chestsFor
-      : (...a) => window.KH1Logic.chestsFor(...a).map((c) => ({ ...c, lock: null })),
+    chestsFor: (world, opened, state) => window.KH1Logic.chestsFor(world, opened, state).map((c) => ({ ...c,
+      lock: SHOW.roomLocks && c.lock && c.lock[0] === "story" ? c.lock : SHOW.chestNeeds ? guideLock(c, state) : null })),
     // Unconfirmed steps still count as done for what follows; they're just not shown or offered.
     guideFor: !SHOW.guide ? () => ({ steps: [], next: null }) : SHOW.unconfirmedGuide ? window.KH1Logic.guideFor : (...a) => {
       const g = window.KH1Logic.guideFor(...a);

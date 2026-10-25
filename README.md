@@ -21,7 +21,7 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is. A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) is marked <i>Later</i>.</td>
     <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
   </tr>
   <tr>
@@ -169,6 +169,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 - **Chest rooms and contents:** the KH1FM randomizer's documentation (MIT): 217 of 232 chests have a room; the rest are matched by name prefix.
 - **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT).
 - **Chest locations:** written for this project from the KH Wiki's KH1 walkthroughs (`companion/chesthints.js`); where a chest isn't clearly placed there, the hint says only what its Archipelago name says.
+- **What a chest needs:** cross-checked across eight walkthroughs (the KH Wiki, six GameFAQs guides, IGN) and kept only where two or more state it and none says otherwise: 55 chests (`companion/chestneeds.js`). Sources and disagreements: [docs/chest-needs-sources.md](docs/chest-needs-sources.md).
 - **Level-ups:** the randomizer's battle-table docs (MIT). Ability descriptions are written for this project.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world.
 
@@ -177,7 +178,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | Path | What |
 |---|---|
 | `lua/kh1companion.lua` | Game bridge. Read-only (apart from removing itself on request); detects Steam vs Epic; writes `state.json`. |
-| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `chesthints.js` where each chest is, `data.js` is generated. Plain HTML, no build step. |
+| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `chesthints.js` where each chest is, `chestneeds.js` what a chest needs, `data.js` is generated. Plain HTML, no build step. |
 | `companion/theme.css`, `art/`, `fonts/` | KH1-menu look. Original SVG art only; Cinzel and Barlow Semi Condensed under the SIL OFL, bundled so the app works offline. |
 | `android/` | Android app: setup, the overlay service, and the watcher that closes it with the game. `assets/mod/` holds LuaBackend; `assets/guide/` the setup pictures. |
 | `docs/` | README banner (`banner.html` → `banner.png`) and screenshots (companion 0.9.0 betas, rendered from sample saves). |

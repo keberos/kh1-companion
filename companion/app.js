@@ -403,7 +403,7 @@
     const counts = step.counts ? `<div class="counts">${step.counts.map((c) =>
       `<span class="count ${c.have != null && c.have >= c.n ? "ok" : ""}">${esc(c.name)} ${c.have == null ? "?" : Math.min(c.have, c.n)}/${c.n}</span>`).join("")}</div>` : "";
     return `<div class="card guide-next"><div class="label">${current ? "Next step" : "Next"} · ${esc(displayWorld(world))}` +
-      `${step.optional ? " · optional" : ""}</div>` +
+      `${step.optional ? " · optional" : ""}${step.checked ? "" : ` · <span class="unconfirmed">unconfirmed</span>`}</div>` +
       `<div class="step-nudge">${esc(step.nudge)}</div>` + counts +
       (full ? `<div class="step-title">${esc(step.title)}</div>` : "") +
       `<div class="row" style="margin-top:10px">` +
@@ -411,7 +411,8 @@
         ? `<button class="chip" data-goto="${esc(world)}">${icon("ico-pin", "chip-ico")}${esc(L.labelOf(where))}</button>`
         : `<button class="chip" data-where="${esc(key)}">${icon("ico-pin", "chip-ico")}Where?</button>`) : "") +
       `<span class="grow"></span><button class="chip ${full ? "on" : ""}" data-hint="${esc(key)}">${full ? "Hide" : "Show me"}</button></div>` +
-      (full ? `<div class="hint">${esc(step.hint)}</div>` : "") + `</div>`;
+      (full ? `<div class="hint">${esc(step.hint)}</div>` : "") +
+      (full && !step.checked ? `<div class="sub unconfirmed-note">Not checked on PC yet: this step comes from the PS2 notes. If it's off, a save from here helps fix it.</div>` : "") + `</div>`;
   }
 
   // Checklist: done steps by name with what they gave; the next one as its nudge; later ones hidden.

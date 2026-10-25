@@ -2,8 +2,8 @@
 // Turns a bridge snapshot (state.json) into named, countable things. No DOM access.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory;
-  else root.KH1Logic = factory(root.KH1_CHESTS, root.KH1_REPORTS, root.KH1_MAPS, root.KH1_GUIDE, root.KH1_ROOM_NAMES, root.KH1_LEVELS);
-})(typeof self !== "undefined" ? self : this, function (CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS) {
+  else root.KH1Logic = factory(root.KH1_CHESTS, root.KH1_REPORTS, root.KH1_MAPS, root.KH1_GUIDE, root.KH1_ROOM_NAMES, root.KH1_LEVELS, root.KH1_GUIDE_CHECKED);
+})(typeof self !== "undefined" ? self : this, function (CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS, CHECKED) {
   "use strict";
 
   // World byte -> name (the chest data's world names), from Dekirai/MultiPresence's
@@ -299,7 +299,8 @@
       if (done !== true && s.or && test(s.or, f, state, world) === true) done = true;
       if (done !== true && seen && seen.has(stepKey(world, s))) done = true;
       const counts = s.items ? s.items.concat(s.extra || []).map(([name, n]) => ({ name, n, have: itemCount(state, name) })) : null;
-      return { ...s, key: stepKey(world, s), done, counts };
+      // `checked`: confirmed on the real PC game (guide-checked.js); the rest are from the PS2 notes.
+      return { ...s, key: stepKey(world, s), done, counts, checked: !!(CHECKED || {})[stepKey(world, s)] };
     });
     for (let i = steps.length - 1, later = false; i >= 0; i--) {
       if (later && !steps[i].done && !steps[i].optional) steps[i].done = true;
@@ -412,7 +413,7 @@
 
   return {
     WORLDS, MAPS, ROOM_NAMES, hexToBytes, bit, popcount, worldName, roomName, onTitle, trackedWorlds, isPuppies,
-    GUIDE, LEVELS, PATHS, CURVES, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
+    GUIDE, CHECKED: CHECKED || {}, LEVELS, PATHS, CURVES, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
     has, needName, lockOf, nodeAccess, levelInfo, itemCount, knownRooms,
   };
 });

@@ -11,9 +11,9 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sandbox = { window: {} };
-for (const f of ["data.js", "maps.js", "guide.js", "abilities.js"]) vm.runInNewContext(readFileSync(path.join(ROOT, "companion", f), "utf8"), sandbox);
+for (const f of ["data.js", "maps.js", "guide.js", "guide-checked.js", "abilities.js"]) vm.runInNewContext(readFileSync(path.join(ROOT, "companion", f), "utf8"), sandbox);
 const W = JSON.parse(JSON.stringify(sandbox.window));
-const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(W.KH1_CHESTS, W.KH1_REPORTS, W.KH1_MAPS, W.KH1_GUIDE, W.KH1_ROOM_NAMES, W.KH1_LEVELS);
+const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(W.KH1_CHESTS, W.KH1_REPORTS, W.KH1_MAPS, W.KH1_GUIDE, W.KH1_ROOM_NAMES, W.KH1_LEVELS, W.KH1_GUIDE_CHECKED);
 const GUIDE = W.KH1_GUIDE;
 const FILE = JSON.parse(readFileSync(path.join(ROOT, "tools/fixtures/story-points.json"), "utf8"));
 

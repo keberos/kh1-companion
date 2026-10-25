@@ -303,6 +303,8 @@ svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !import
 .here-top .bar { margin-top: 0; }
 .next-mini { cursor: pointer; padding: 10px 14px; }
 .next-mini .step-nudge { font-size: 16px; }
+.unconfirmed { color: var(--muted); }
+.unconfirmed-note { margin-top: 8px; color: var(--muted); font-style: italic; }
 .tag.more { color: var(--sub); font-size: 14px; }
 .empty.small { padding: 10px 8px; font-size: 14px; }
 ul.list li[data-cn], ul.list li[data-unlock] { cursor: pointer; }

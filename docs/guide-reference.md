@@ -81,6 +81,20 @@ Heartless · 8C/96/A0 back as Sora · AA second landing · B9 Behemoth · BE/C3 
 Also in the notes and not used yet: a game-mode byte (cutscene, FMV, boss), per-chest and Trinity bit flags with
 names, the 100 Acre Wood's progress, the Olympus cups, and event flags for Wonderland's evidence and Jane's slides.
 
+## Checked on PC
+
+The values above come from the PS2 notes. A step counts as checked once a real PC save or recording shows its
+value; `companion/guide-checked.js` lists those, and the page marks every other step *unconfirmed* (with a note in
+"Show me"). So far: the Dive and Destiny Islands.
+
+To check more, export saves as you play and run
+
+    node tools/check_saves.mjs <saves .zip>
+
+It prints, for each save, where it is, which done steps its counters confirm, any counter value not in this page
+(add it here), and the Guide's next nudge. If the nudge matches what you were doing, run it again with `--confirm`.
+It never names a step you haven't done.
+
 ## Testing without playing
 
 `tools/make_story_fixtures.mjs` plays the story forward from real saves through these values, in game order, and

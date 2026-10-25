@@ -193,6 +193,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | `tools/make_scenarios.py`, `tools/make_screenshots.py`, `tools/make_guide_images.py` | Sample saves; README screenshots and banner (headless Chrome); setup pictures from GameNative screenshots. |
 | `tools/test_logic.mjs`, `tools/test_bridge.py` | Node tests for decoding, maps, guide and levels plus recorded fixtures; the Lua bridge against fake memory (needs `pip install lupa`). |
 | `tools/make_story_fixtures.mjs`, `tools/test_story.mjs`, `tools/fixtures/` | Story-point fixtures: from real saves, a `state.json` just before and after every Guide step in every world (and the waits in between), checked by Node tests that walk the whole story and make sure no later save falls back to an earlier step. |
+| `tools/check_saves.mjs`, `companion/guide-checked.js` | Checks exported saves against the Guide: where each one is, which steps its story counters confirm on PC, and values the reference doesn't know. `--confirm` records confirmed steps, which the page then stops marking *unconfirmed*. |
 | `tools/kh1save.py` | Reads real KH1FM PC saves (`KHFM_WW.png`, or GameNative's *Export saves* ZIP): lists the slots and turns each into the bridge's `state.json`, since a save slot is the same block of memory the bridge reads. |
 | `tools/emulator_test.py`, `tools/mock_state.py` | Two-display emulator check of the overlay; a fake, changing state file for UI work. |
 

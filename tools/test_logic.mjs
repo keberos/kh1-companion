@@ -13,11 +13,12 @@ const sandbox = { window: {} };
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/data.js"), "utf8"), sandbox);
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/maps.js"), "utf8"), sandbox);
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/guide.js"), "utf8"), sandbox);
+vm.runInNewContext(readFileSync(path.join(ROOT, "companion/guide-checked.js"), "utf8"), sandbox);
 // JSON round-trip so arrays come from this realm (deepStrictEqual checks prototypes).
 vm.runInNewContext(readFileSync(path.join(ROOT, "companion/abilities.js"), "utf8"), sandbox);
 const { KH1_CHESTS: CHESTS, KH1_REPORTS: REPORTS, KH1_MAPS: MAPS, KH1_GUIDE: GUIDE, KH1_ROOM_NAMES: ROOM_NAMES, KH1_LEVELS: LEVELS,
-  KH1_ABILITY_INFO: ABILITY_INFO, KH1_STAT_INFO: STAT_INFO } = JSON.parse(JSON.stringify(sandbox.window));
-const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS);
+  KH1_ABILITY_INFO: ABILITY_INFO, KH1_STAT_INFO: STAT_INFO, KH1_GUIDE_CHECKED: CHECKED } = JSON.parse(JSON.stringify(sandbox.window));
+const L = createRequire(import.meta.url)(path.join(ROOT, "companion/logic.js"))(CHESTS, REPORTS, MAPS, GUIDE, ROOM_NAMES, LEVELS, CHECKED);
 
 const FIXTURES = path.join(ROOT, "recordings/fixtures");
 const blank = (over = {}) => ({
@@ -449,4 +450,23 @@ test("every chest has a location hint, and every hint matches a real chest", asy
   }
   const missing = CHESTS.filter((c) => !(hints[c.w] || {})[c.n]).map((c) => `${c.w} / ${c.n}`);
   assert.deepEqual(missing, [], "chests without a hint");
+});
+
+test("checked steps are real steps, and the reference lists every step's story value", async () => {
+  const { knownValues, checkSave } = await import("./check_saves.mjs");
+  const keys = Object.entries(GUIDE).flatMap(([w, steps]) => steps.map((s) => `${w}#${s.title}`));
+  for (const k of Object.keys(CHECKED)) assert.ok(keys.includes(k), `guide-checked.js names a missing step: ${k}`);
+  const known = knownValues();
+  for (const [w, steps] of Object.entries(GUIDE)) for (const s of steps) {
+    const c = s.p != null ? [`p${s.p}`, s.at] : s.pre ? [`pre[${s.pre[0]}]`, s.pre[1]] : null;
+    if (c) assert.ok(known[c[0]] && known[c[0]].has(c[1]), `${w}: "${s.title}" waits for ${c[0]} = ${c[1].toString(16)}, which docs/guide-reference.md doesn't list`);
+  }
+  assert.equal(L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress_pre: "0a560100", inventory: inv({}) })).next.checked, true);
+  assert.equal(L.guideFor("Olympus Coliseum", blank({ world: 0x0B, room: 0 })).next.checked, false);
+  // A save sitting on a step's value confirms it; a value the reference doesn't know is reported.
+  const p = new Array(16).fill(0); p[2] = 0x10; p[0] = 0x05;
+  const r = checkSave(L, GUIDE, known, blank({ world: 0x0B, room: 0, progress: hexOf(p) }));
+  assert.deepEqual(r.confirms, ["Olympus Coliseum#Get an Entry Pass"]);
+  assert.ok(r.lines.some((l) => l.startsWith("new value: p0 = 05")), r.lines.join("\n"));
+  assert.ok(!r.lines.some((l) => l.includes("Sign up")), "never names a step that isn't done");
 });

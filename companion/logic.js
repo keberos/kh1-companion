@@ -58,7 +58,11 @@
   const popcount = (bytes) => bytes.reduce((n, x) => { while (x) { n += x & 1; x >>= 1; } return n; }, 0);
 
   const worldName = (id) => (WORLDS[id] ? WORLDS[id].name : null);
-  const onTitle = (state) => state.world === 0 && state.room === 0 && !state.in_field;
+  // The Dive's first platform (where you pick Sword, Shield or Rod) also reports world 0, room 0, no HUD.
+  // Two tells that it's a game, not the title: a new game marks the Dive answers it hasn't asked yet
+  // as 0xFF, and `live` is set by the page when save data changes while here (the title never changes it).
+  const diveUnanswered = (state) => state.dive != null && hexToBytes(state.dive).some((b) => b === 0xff);
+  const onTitle = (state) => state.world === 0 && state.room === 0 && !state.in_field && !diveUnanswered(state) && !state.live;
   // The game's own name for the exact room (e.g. "Piano Room"), or null for unnamed rooms.
   const roomName = (state) => {
     const r = ((ROOM_NAMES || {})[state.world] || [])[state.room];

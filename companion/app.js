@@ -657,7 +657,8 @@
   function renderWaiting() {
     const el = $("v-" + view);
     let html = `<div class="waiting">${icon("ico-save", "big-ico")}<div class="wait-title">Waiting for Kingdom Hearts…</div>` +
-      `<div class="sub">This connects on its own a few seconds after the game starts.</div>` +
+      // The bridge runs on game frames, so a full-screen movie (the new-game intro is ~3 min) pauses it.
+      `<div class="sub">This connects on its own a few seconds after the game starts. During a movie, like the opening, it waits until the movie ends.</div>` +
       `<button class="chip ${waitHelp ? "on" : ""}" id="waitHelp">${waitHelp ? "Hide help" : "Not connecting?"}</button></div>`;
     if (waitHelp) {
       const st = bridgeStatus();
@@ -752,9 +753,22 @@
 
   // State arrives either from the Android wrapper (window.KH1Companion.push(json))
   // or by polling STATE_URL over http.
+  // World 0, room 0 without a HUD is the title screen or the Dive's first platform. Save data that
+  // changes while there means a game is running (the title never touches it).
+  let titleSeen = null, liveHere = false;
+  function markLive(next) {
+    const titleLike = next.world === 0 && next.room === 0 && !next.in_field;
+    if (!titleLike) { titleSeen = null; liveHere = false; return next; }
+    const save = [next.progress_pre, next.dive, next.inventory, next.exp, next.level].join("|");
+    if (titleSeen != null && save !== titleSeen) liveHere = true;
+    titleSeen = save;
+    return liveHere ? { ...next, live: true } : next;
+  }
+
   function accept(next) {
     if (!next || typeof next.seq !== "number") return;
     if (next.seq !== lastSeq) { lastSeq = next.seq; lastChange = Date.now(); }
+    next = markLive(next);
     state = next;
     sum = L.summarize(state);
     rememberSteps();

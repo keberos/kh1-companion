@@ -134,13 +134,17 @@ test("world 0 is the title screen in room 0 and Dive to the Heart otherwise", ()
 });
 
 test("the Dive's weapon choice isn't the title, though it reports world 0, room 0, no HUD", () => {
-  // Read on the Thor at the Sword/Shield/Rod pedestals of a new game (2026-10-24).
-  const choosing = L.summarize(blank({ world: 0, room: 0, in_field: false, dive: "000000ffffff", progress_pre: "0a040000" }));
-  assert.equal(choosing.title, false, "unanswered Dive questions (0xFF) mean a new game");
+  // Both read on the Thor (2026-10-24): the Sword/Shield/Rod pedestals of a new game, and the title
+  // after quitting. The Dive answers read the same on both; only the Dive's story byte differs.
+  const at = { world: 0, room: 0, in_field: false, dive: "000000ffffff", progress: "00".repeat(16) };
+  const choosing = L.summarize(blank({ ...at, progress_pre: "0a040000" }));
+  assert.equal(choosing.title, false, "the Dive's story byte has started: a new game");
   assert.equal(choosing.world, "Awakening");
-  const answered = blank({ world: 0, room: 0, in_field: false, dive: "000102000000" });
-  assert.equal(L.summarize(answered).title, true, "no 0xFF and nothing changing: the title");
-  assert.equal(L.summarize({ ...answered, live: true }).title, false, "save data changed here: a game is running");
+  const title = blank({ ...at, progress_pre: "00000000" });
+  assert.equal(L.summarize(title).title, true, "story bytes all zero and nothing changing: the title");
+  assert.equal(L.summarize({ ...title, live: true }).title, false, "save data changed here: a game is running");
+  const leftover = blank({ ...at, progress_pre: "0a7f0000", progress: "40" + "00".repeat(15) });
+  assert.equal(L.summarize(leftover).title, true, "a save past the Dive left in memory still counts as the title");
 });
 
 test("every named room in every mapped world belongs to exactly one map node", () => {

@@ -59,10 +59,13 @@
 
   const worldName = (id) => (WORLDS[id] ? WORLDS[id].name : null);
   // The Dive's first platform (where you pick Sword, Shield or Rod) also reports world 0, room 0, no HUD.
-  // Two tells that it's a game, not the title: a new game marks the Dive answers it hasn't asked yet
-  // as 0xFF, and `live` is set by the page when save data changes while here (the title never changes it).
-  const diveUnanswered = (state) => state.dive != null && hexToBytes(state.dive).some((b) => b === 0xff);
-  const onTitle = (state) => state.world === 0 && state.room === 0 && !state.in_field && !diveUnanswered(state) && !state.live;
+  // Two tells that it's a game, not the title: the Dive's story byte (progress_pre) has started while the
+  // main story bytes are still all zero (read on the Thor: 0a04.. at the pedestals, all zero on the title,
+  // whose Dive answers read 000000ffffff just like a fresh game's), and `live`, set by the page when save
+  // data changes while here.
+  const diveStarted = (state) => state.progress_pre != null && hexToBytes(state.progress_pre).some((b) => b) &&
+    hexToBytes(state.progress).every((b) => !b);
+  const onTitle = (state) => state.world === 0 && state.room === 0 && !state.in_field && !diveStarted(state) && !state.live;
   // The game's own name for the exact room (e.g. "Piano Room"), or null for unnamed rooms.
   const roomName = (state) => {
     const r = ((ROOM_NAMES || {})[state.world] || [])[state.room];

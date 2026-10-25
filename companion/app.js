@@ -46,6 +46,7 @@
   let waitHelp = false;  // waiting screen: troubleshooting shown
   let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
   let allNames = store.get("allNames", false);  // show every room name, visited or not
+  let toastsOn = store.get("toasts", false);     // pop-up notes for game events: opt-in, they can distract
 
   const icon = (id, cls = "ico") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
   const hex2 = (n) => "0x" + n.toString(16).toUpperCase().padStart(2, "0");
@@ -110,12 +111,14 @@
     ["showContents", "What's inside", "Show what each chest holds."],
     ["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."],
     ["allNames", "Room names", "Name rooms you haven't been to yet, on the map and in lists."],
+    ["toasts", "Pop-up notes", "A short note above the tabs when you open a chest, level up, find puppies or reach a new world."],
   ];
-  const optionOn = { showOpened: () => showOpened, showContents: () => showContents, showNeeds: () => showNeeds, allNames: () => allNames };
+  const optionOn = { showOpened: () => showOpened, showContents: () => showContents, showNeeds: () => showNeeds, allNames: () => allNames, toasts: () => toastsOn };
   function setOption(k, on) {
     if (k === "showOpened") showOpened = on;
     else if (k === "showContents") showContents = on;
     else if (k === "showNeeds") showNeeds = on;
+    else if (k === "toasts") toastsOn = on;
     else allNames = on;
     store.set(k, on);
   }
@@ -858,7 +861,7 @@
     for (const w of Object.keys(now.done)) {
       if (now.done[w] && !was.done[w]) out.push({ ico: "ico-crown", title: `${displayWorld(w)} complete!`, sub: `All ${sum.worlds[w].total} chests opened`, big: true });
     }
-    out.forEach(toast);
+    if (toastsOn) out.forEach(toast);
   }
 
   const toastQueue = [];

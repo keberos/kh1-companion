@@ -7,7 +7,7 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 
 ### What's new since beta.4 (not released yet)
 
-- **It reacts as you play.** Chests opened, level-ups (with what Sora learned), puppies, Ansem's Reports, story steps, new worlds and finished worlds pop up as short notes above the tabs.
+- **Optional pop-up notes** for chests opened, level-ups (with what Sora learned), puppies, Ansem's Reports, story steps, new worlds and finished worlds. Off by default; turn them on under the eye at the top.
 - **Here is your "what now" screen**: the next story nudge, this room's chests, then the other rooms that still hold chests.
 - **Five tabs.** Worlds and Collect are now one **Progress** tab, with each world's story progress and a crown on worlds you've cleared out.
 - **Tap any chest or room** to see what's in it, then **Show on map** to have it ringed on the map.

@@ -29,7 +29,7 @@ Five tabs, all live from the save you have loaded. It never tells you anything y
   </tr>
   <tr>
     <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, your next ability and how much EXP until it. Tap a level for details.</td>
-    <td><b>It reacts as you play.</b> Open a chest, level up, find puppies or a report, finish a story step or reach a new world, and a short note pops up on the bottom screen.<br><br><b>First time or replay?</b> Tap the eye at the top. <i>First time</i> keeps everything behind a tap; <i>Replay</i> shows room names, chest contents, what unlocks them and the full guide up front, for 100% runs and speed routes.</td>
+    <td><b>First time or replay?</b> Tap the eye at the top. It also has optional pop-up notes for chests, level-ups and new worlds (off by default). <i>First time</i> keeps everything behind a tap; <i>Replay</i> shows room names, chest contents, what unlocks them and the full guide up front, for 100% runs and speed routes.</td>
   </tr>
 </table>
 
@@ -126,7 +126,7 @@ Details the tabs rely on:
 - **Level path and curve:** the path is the Dive choice byte; the curve is inferred from EXP at the current level and remembered per device once unambiguous.
 - **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "Unhide names" chip (or Replay mode) shows them all.
 - **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there.
-- **Pop-up notes:** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status, guide steps). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
+- **Pop-up notes (optional, off by default):** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status, guide steps). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
 
 ### Install, by design
 

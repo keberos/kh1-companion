@@ -39,6 +39,16 @@
   const hintsHidden = new Set(); // replay: steps the player folded back up
   const whereShown = new Set();  // guide steps whose location the player asked for
   const stepFull = (key) => (replay() ? !hintsHidden.has(key) : hintsShown.has(key));
+  // A new objective shows only once the scene that unlocks it has finished: the bridge's in_field is
+  // off while the HUD is hidden, as in cutscenes. Steps already shown stay (menus hide the HUD too).
+  // The Dive's first platform has no HUD at all, so its steps aren't held back.
+  const revealed = new Set(store.get("revealed", []));
+  function guide(world) {
+    const g = L.guideFor(world, state, guideSeen);
+    if (!g.next || world !== sum.world || world === "Awakening" || revealed.has(g.next.key)) return g;
+    if (state.in_field) { revealed.add(g.next.key); store.set("revealed", [...revealed]); return g; }
+    return { ...g, next: null, waiting: true };
+  }
   let mapFocus = null;           // Map tab: room ringed after "Show on map"
   const guideSeen = new Set(store.get("guideSeen", []));  // steps seen done whose evidence can leave the save
   let levelPick = store.get("levelPick", {});  // the player's own path / curve choice
@@ -65,7 +75,7 @@
       for (const k of Object.keys(knownCache)) delete knownCache[k];
       knownCache[key] = set;
     }
-    const step = L.guideFor(world, state, guideSeen).next;
+    const step = guide(world).next;
     return knownCache[key].has(id) || !!(step && step.where === id && (whereShown.has(step.key) || stepFull(step.key)));
   }
   const roomLabel = (world, nd) => (nd && roomKnown(world, nd.id) ? L.labelOf(nd) : "???");
@@ -205,7 +215,7 @@
     const n = hereNode();
     const chests = L.chestsFor(world, sum.opened, state);
     const { got, total } = sum.worlds[world];
-    const next = L.GUIDE[world] ? L.guideFor(world, state, guideSeen).next : null;
+    const next = L.GUIDE[world] ? guide(world).next : null;
     const inRoom = n ? chests.filter((c) => c.node === n.id) : [];
     const elsewhere = chests.filter((c) => !c.got && (!n || c.node !== n.id));
     const reportsLeft = sum.reports.filter((r) => r.w === world && !r.got);
@@ -312,7 +322,7 @@
       return;
     }
     const n = world === sum.world ? hereNode() : null;
-    const next = L.guideFor(world, state, guideSeen).next;
+    const next = guide(world).next;
     const goal = next && (whereShown.has(next.key) || stepFull(next.key)) ? next : null;  // only once the player asked "Where?"
     const anyShut = L.nodesOf(world).some((nd) => !L.nodeAccess(world, nd, state).open);
     el.innerHTML =
@@ -404,7 +414,7 @@
       const unseen = Object.keys(L.GUIDE).filter((w) => !visited(w)).length;
       el.innerHTML = `<div class="card"><div class="label">Story progress</div><ul class="list">` +
         visitedWorlds(Object.keys(L.GUIDE)).map((w) => {
-          const g = L.guideFor(w, state, guideSeen);
+          const g = guide(w);
           const done = g.steps.filter((s) => s.done).length;
           return `<li data-gw="${esc(w)}"><span class="grow"><span class="name">${esc(displayWorld(w))}</span>` +
             `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : g.waiting ? "Nothing to do right now" : "Story complete"}</div></span>` +
@@ -415,7 +425,7 @@
       return;
     }
 
-    const g = L.guideFor(world, state, guideSeen);
+    const g = guide(world);
     const current = world === sum.world;
     // The Guide is the story; chests and reports live on Here and Progress.
     el.innerHTML =
@@ -914,14 +924,17 @@
       levelPick = { ...rest, fits: info.curves, fitsExp: info.exp };
       store.set("levelPick", levelPick);
     }
+    // Remember finished steps in every world: much of what proves a step done doesn't last (items
+    // handed over, a room walked through). The Dive with no town progress yet means a new game: forget.
     const before = guideSeen.size;
     const tt = L.hexToBytes(state.progress)[0] || 0;
     if (state.world === 0 && !sum.title && tt === 0) {
-      for (const k of [...guideSeen]) if (k.startsWith("Destiny Islands#")) guideSeen.delete(k);
-    } else if (sum.world === "Destiny Islands") {
+      guideSeen.clear();
+      if (revealed.size) { revealed.clear(); store.set("revealed", []); }
+    } else if (sum.world && L.GUIDE[sum.world]) {
       for (const s of L.guideFor(sum.world, state, guideSeen).steps) if (s.done) guideSeen.add(s.key);
     }
-    if (guideSeen.size !== before || state.world === 0) store.set("guideSeen", [...guideSeen]);
+    if (guideSeen.size !== before) store.set("guideSeen", [...guideSeen]);
   }
   window.KH1Companion = { push: (s) => accept(typeof s === "string" ? JSON.parse(s) : s) };
 

@@ -109,7 +109,9 @@
   const ITEM = {
     "Log": 192, "Cloth": 193, "Rope": 194, "Seagull Egg": 195, "Fish": 196, "Mushroom": 197, "Coconut": 198,
     "Drinking Water": 199, "Crystal Trident": 210, "Footprints": 223, "Forget-Me-Not": 227, "Jack-In-The-Box": 228,
-    "Entry Pass": 229,
+    "Entry Pass": 229, "Slides": 217, "Claw Marks": 224, "Stench": 225, "Antenna": 226, "Theon Vol. 6": 183,
+    "Old Book": 187, "Emblem Piece (Flame)": 188, "Emblem Piece (Chest)": 189, "Emblem Piece (Statue)": 190,
+    "Emblem Piece (Fountain)": 191,
   };
   // Key items the story hands over (Archipelago progress thresholds); they can leave the bag later.
   const ITEM_STORY = { "Entry Pass": [2, 0x10], "Crystal Trident": [6, 0x32], "Forget-Me-Not": [8, 0x1E] };
@@ -251,20 +253,38 @@
     return b && i < b.length ? b[i] >= v : null;
   };
 
-  function stepDone(s, f, state) {
-    if (s.p != null) return s.p < f.progress.length ? f.progress[s.p] >= s.at : null;
-    if (s.pre) return f.islandsDone || preAt(state, s.pre);
-    if (s.dive != null) return f.diveDone || (f.diveRank != null && f.diveRank > s.dive);
-    if (s.end === "dive") return f.diveDone;
-    if (s.end === "islands") return f.islandsDone;
-    if (s.items) {
+  // One test, used both for "done" (the step's own fields) and for `from` (when the game hands it out):
+  //   {p, at} story byte · {pre} byte before the main ones · {dive} Dive room order · {end} moved on ·
+  //   {items} counts in the bag · {has} an item, spell, ability or Trinity (see has()) ·
+  //   {reach} the player is in that map room now (judged only for the current step, see guideFor) ·
+  //   {all} / {any} lists of tests.
+  function test(c, f, state, world) {
+    if (c.p != null) return c.p < f.progress.length ? f.progress[c.p] >= c.at : null;
+    if (c.pre) return (world === "Destiny Islands" && f.islandsDone) || preAt(state, c.pre);
+    if (c.dive != null) return f.diveDone || (f.diveRank != null && f.diveRank > c.dive);
+    if (c.end === "dive") return f.diveDone;
+    if (c.end === "islands") return f.islandsDone;
+    if (c.items) {
       if (f.islandsDone) return true;
-      const counts = s.items.map(([name, n]) => [itemCount(state, name), n]);
-      if (counts.some(([c]) => c == null)) return null;
-      return counts.every(([c, n]) => c >= n);
+      const counts = c.items.map(([name, n]) => [itemCount(state, name), n]);
+      if (counts.some(([n]) => n == null)) return null;
+      return counts.every(([have, n]) => have >= n);
     }
+    if (c.has) return has(c.has, state);
+    if (c.reach) {
+      const here = worldName(state.world) === world && !onTitle(state) ? nodeForRoom(state) : null;
+      return !!here && here.id === c.reach;
+    }
+    const all = (list, every) => {
+      const r = list.map((x) => test(x, f, state, world));
+      return every ? (r.includes(false) ? false : r.includes(null) ? null : true)
+        : (r.includes(true) ? true : r.includes(null) ? null : false);
+    };
+    if (c.all) return all(c.all, true);
+    if (c.any) return all(c.any, false);
     return null;
   }
+  const stepDone = (s, f, state, world) => test(s, f, state, world);
 
   // `seen`: step keys this device has already seen done, for steps whose evidence leaves
   // the save (items handed over). `next` is the first step not done, optional ones last.
@@ -272,8 +292,9 @@
   const stepKey = (world, s) => world + "#" + s.title;
   function guideFor(world, state, seen) {
     const f = storyFacts(state);
-    const steps = ((GUIDE || {})[world] || []).map((s, i) => {
-      let done = stepDone(s, f, state);
+    const steps = ((GUIDE || {})[world] || []).map((s) => {
+      // Being in a room only finishes a step that's current, so walking through early doesn't skip it.
+      let done = s.reach ? false : stepDone(s, f, state, world);
       if (done !== true && seen && seen.has(stepKey(world, s))) done = true;
       const counts = s.items ? s.items.concat(s.extra || []).map(([name, n]) => ({ name, n, have: itemCount(state, name) })) : null;
       return { ...s, key: stepKey(world, s), done, counts };
@@ -283,10 +304,13 @@
       if (steps[i].done && !steps[i].optional) later = true;
     }
     // The first step not known to be done, in story order; optional ones only when nothing else is left.
-    const next = steps.find((s) => s.done !== true && !s.optional) || steps.find((s) => s.done !== true) || null;
+    const first = () => steps.find((s) => s.done !== true && !s.optional) || steps.find((s) => s.done !== true) || null;
+    let next = first();
+    // A "reach" step is done the moment the player walks into its room while it's current.
+    while (next && next.reach && test({ reach: next.reach }, f, state, world)) { next.done = true; next = first(); }
     // A step only shows once the game has handed it out (`from`): between objectives, while
     // scenes play, there's no next step rather than the last one or a peek at what's coming.
-    if (next && next.from && preAt(state, next.from) === false) return { steps, next: null, waiting: true };
+    if (next && next.from && test(next.from, f, state, world) === false) return { steps, next: null, waiting: true };
     return { steps, next };
   }
 

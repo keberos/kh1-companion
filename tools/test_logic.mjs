@@ -185,7 +185,8 @@ test("guide steps point at real rooms and read story progress", () => {
     for (const s of steps) {
       if (s.where) assert.ok(L.node(w, s.where), `${w}: step "${s.title}" points at missing room ${s.where}`);
       assert.ok(s.hint && s.title && s.nudge, `${w}: step "${s.title}" lacks a layer`);
-      const kinds = [s.p != null, s.items != null, s.dive != null, s.end != null, s.pre != null].filter(Boolean).length;
+      const kinds = [s.p != null, s.items != null, s.dive != null, s.end != null, s.pre != null, s.has != null, s.reach != null, s.all != null, s.any != null].filter(Boolean).length;
+      if (s.reach) assert.ok(L.node(w, s.reach), `${w}: step "${s.title}" waits for missing room ${s.reach}`);
       assert.equal(kinds, 1, `${w}: step "${s.title}" needs exactly one way to count as done`);
       if (s.p != null) assert.ok(Number.isInteger(s.p) && Number.isInteger(s.at), `${w}: bad progress step`);
       // The nudge is the spoiler-free layer: it must not name the event's boss or reward.
@@ -412,4 +413,27 @@ test("a spell counts only once it's learned: its level reads 1 before that", () 
   assert.equal(L.has("Progressive Fire", { ...fresh, magic_unlocked: 1 }), true);
   assert.equal(L.has("Progressive Fire:2", { ...fresh, magic_unlocked: 1 }), false, "Fira needs level 2");
   assert.equal(L.has("Progressive Fire", blank({ magic: "01010101010101" })), null, "an older bridge can't tell");
+});
+
+test("a room finishes a step only while that step is current", () => {
+  const tt = (room, p0 = 0) => { const p = new Array(16).fill(0); p[0] = p0; return blank({ world: 3, room, progress: hexOf(p) }); };
+  const green = L.nodesOf("Traverse Town").find((n) => n.id === "Green Room").rooms[0];
+  const first = L.nodesOf("Traverse Town").find((n) => n.id === "1st District").rooms[0];
+  assert.equal(L.guideFor("Traverse Town", tt(first)).next.title, "Look around town");
+  assert.equal(L.guideFor("Traverse Town", tt(green)).next.title, "Defeat the Guard Armor", "waking in the Hotel ends the first step");
+  // The Merlin step only counts once it's current: being in Merlin's House earlier doesn't skip the Waterway.
+  const merlin = L.nodesOf("Traverse Town").find((n) => n.id === "Merlin's House").rooms[0];
+  const early = tt(merlin, 0x31);
+  assert.equal(L.guideFor("Traverse Town", { ...early, trinities: 0 }).waiting, true, "no Red Trinity yet: nothing to do here");
+  assert.equal(L.guideFor("Traverse Town", { ...early, trinities: 2 }).next.title, "Meet Leon in the Secret Waterway");
+});
+
+test("key items finish steps, and later checkpoints finish everything before them", () => {
+  const wl = (over) => L.guideFor("Wonderland", blank({ world: 4, room: 0x30, progress: "00".repeat(16), inventory: "00".repeat(256), ...over }), new Set(["Wonderland#Follow the White Rabbit"]));
+  assert.equal(wl({}).next.title, "Gather evidence");
+  assert.equal(wl({ inventory: inv({ 226: 1 }) }).next.title, "Defeat the Trickmaster", "any one piece of evidence");
+  const p = new Array(16).fill(0); p[3] = 0x2E;
+  const g = wl({ progress: hexOf(p) });
+  assert.equal(g.next.title, "Find the Navi-G Piece");
+  assert.ok(g.steps.slice(0, 3).every((s) => s.done), "the boss being beaten means the evidence was gathered");
 });

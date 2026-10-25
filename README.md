@@ -178,7 +178,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | Path | What |
 |---|---|
 | `lua/kh1companion.lua` | Game bridge. Read-only (apart from removing itself on request); detects Steam vs Epic; writes `state.json`. |
-| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `chesthints.js` where each chest is, `chestneeds.js` what a chest needs, `data.js` is generated. Plain HTML, no build step. |
+| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `chesthints.js` where each chest is, `chestneeds.js` what a chest needs, `data.js` is generated. Plain HTML, no build step. |
 | `companion/theme.css`, `art/`, `fonts/` | KH1-menu look. Original SVG art only; Cinzel and Barlow Semi Condensed under the SIL OFL, bundled so the app works offline. |
 | `android/` | Android app: setup, the overlay service, and the watcher that closes it with the game. `assets/mod/` holds LuaBackend; `assets/guide/` the setup pictures. |
 | `docs/` | README banner (`banner.html` → `banner.png`) and screenshots (companion 0.9.0 betas, rendered from sample saves). |
@@ -187,9 +187,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | `tools/gen_data.py`, `tools/ap_rules.py` | Regenerate `companion/data.js` from `tools/sources/`, including each chest's requirements. |
 | `tools/build_gamenative_mod.py` | Fetches LuaBackend and writes the mod files into the app's assets. |
 | `tools/make_scenarios.py`, `tools/make_screenshots.py`, `tools/make_guide_images.py` | Sample saves; README screenshots and banner (headless Chrome); setup pictures from GameNative screenshots. |
-| `tools/test_logic.mjs`, `tools/test_bridge.py` | Node tests for decoding, maps, guide and levels plus recorded fixtures; the Lua bridge against fake memory (needs `pip install lupa`). |
-| `tools/make_story_fixtures.mjs`, `tools/test_story.mjs`, `tools/fixtures/` | Story-point fixtures: from real saves, a `state.json` just before and after every Guide step in every world (and the waits in between), checked by Node tests that walk the whole story and make sure no later save falls back to an earlier step. |
-| `tools/check_saves.mjs`, `companion/guide-checked.js` | Checks exported saves against the Guide: where each one is, which steps its story counters confirm on PC, and values the reference doesn't know. `--confirm` records confirmed steps, which the page then stops marking *unconfirmed*. |
+| `tools/test_logic.mjs`, `tools/test_bridge.py` | Node tests for decoding, maps, chests and levels plus recorded fixtures; the Lua bridge against fake memory (needs `pip install lupa`). |
 | `tools/kh1save.py` | Reads real KH1FM PC saves (`KHFM_WW.png`, or GameNative's *Export saves* ZIP): lists the slots and turns each into the bridge's `state.json`, since a save slot is the same block of memory the bridge reads. |
 | `tools/emulator_test.py`, `tools/mock_state.py` | Two-display emulator check of the overlay; a fake, changing state file for UI work. |
 
@@ -211,12 +209,6 @@ Tests:
 node --test tools/test_logic.mjs tools/test_story.mjs
 ```
 
-After changing `companion/guide.js`, regenerate the story points (from saves exported with `kh1save.py state <ZIP> mock/saves`; `--out` also writes each point as a `state.json` for the dev server):
-
-```bash
-node tools/make_story_fixtures.mjs mock/saves --out mock/story
-```
-
 The portable toolchain (JDK 17, Android SDK, Gradle, Node) lives in `C:\Users\lasco\dev-tools`. To build the APK:
 
 ```bash
@@ -233,23 +225,10 @@ Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELE
 
 **Naming:** a new beta number (`v0.9.0-beta.6`) for new features or anything that changes setup; a light revision (`v0.9.0-beta.6.1`, `.2`, ...) for fixes only, which install over the last one with nothing to redo. Either way `versionCode` goes up by one. Release notes stay short: what changed, how to update, and a link to this page. The key lives outside the repo (`C:\Users\lasco\dev-tools\keys\`); keep a backup, since a different key can't update existing installs.
 
-### Status
+### Testing so far
 
-| Piece | State |
-|---|---|
-| Bridge | Runs on the Steam build under GameNative on the Thor; edition, world/room, level/stats, chest flags and story progress confirmed live. |
-| Companion | Four tabs, tested at bottom-screen size against sample saves and real recordings, and in play on the Thor through Destiny Islands and early Traverse Town. |
-| Maps | All 14 worlds. Every path checked against the KH Wiki's KH1 walkthroughs and Archipelago's chest names (2026-10-24); Disney Castle is story scenes only, so it has no paths. |
-| Android app | Live on the Thor: overlay on the 1240×1080 bottom screen (density 369), top screen keeps focus, opens with the game from Cocoon Shell and closes when it exits, guided setup, self-removing uninstall. |
+Played on an AYN Thor (Steam build, GameNative 1.3.0) from a new game through Destiny Islands and into Traverse Town.
 
-**Confirmed live on the Thor:** EXP, the Dive choice, island errand items, world status and the story counters (Dive and Destiny Islands).
-**Not yet checked against a live save:** learned abilities, shared abilities, Trinities and the learned-spells byte. Everything that uses them stays quiet when a value is missing (nothing locked, path left to pick). The growth curve has no save byte: it's inferred from EXP readings.
-- Destiny Islands can't tell the second day from the night yet; `progress_pre[1]` is sent so a recording can calibrate it.
-- The Dalmatian count assumes one save-flag bit per puppy.
+**High confidence (seen working in play):** install, setup and uninstall; opening and closing with the game from Cocoon; the room you're in; chests opened, per room and world; EXP and level-ups; the Dive's choice; Destiny Islands' items; no frame-rate cost (camera-spin test, companion open and closed).
 
-### Roadmap
-
-- Calibrate the Destiny Islands and Dive steps from `progress_pre` once there's a recording.
-- More room gates (Traverse Town's later areas, End of the World).
-- Trinity marks (flag offsets are in the randomizer's `globals.lua`).
-- Synthesis helper.
+**Not yet seen in play:** worlds after Traverse Town (maps, chest rooms and contents come from the KH Wiki and the randomizer's data); Trinities, shared abilities and learned spells, which decide whether a chest's "Needs" line shows; the Dalmatian count (assumes one save bit per puppy).

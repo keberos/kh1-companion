@@ -15,7 +15,7 @@
   // What the player still lacks of a chest's walkthrough-confirmed needs, judged with has().
   const guideLock = (c, state) => {
     const e = (NEEDS[c.w] || {})[c.n];
-    return e && !c.got && state ? window.KH1Logic.lockOf([e.need], state) : null;
+    return e && e.need && !c.got && state ? window.KH1Logic.lockOf([e.need], state) : null;  // some entries are only a note
   };
   const L = Object.assign(Object.create(window.KH1Logic), {
     nodeAccess: SHOW.roomLocks ? window.KH1Logic.nodeAccess : () => ({ open: true }),
@@ -836,7 +836,13 @@
         `<span class="sub">Nothing is shown from the title screen: until a save loads, the game's memory is empty or left over from the last one.</span></div>`;
       return;
     }
-    ({ here: renderHere, guide: renderGuide, map: renderMap, progress: renderProgress, level: renderLevel })[view]();
+    try {
+      ({ here: renderHere, guide: renderGuide, map: renderMap, progress: renderProgress, level: renderLevel })[view]();
+    } catch (e) {
+      // One bad data entry mustn't freeze the tab on its last screen: log it and try again next update.
+      lastRendered = null;
+      console.error("render", view, e);
+    }
   }
 
   function setView(v) {

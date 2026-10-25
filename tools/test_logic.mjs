@@ -217,8 +217,9 @@ test("Dive to the Heart steps follow the room order, and leaving finishes them",
 });
 
 test("Destiny Islands errands count items, and remembered steps survive handing them over", () => {
-  // Day one unless a test says otherwise: the islands' day byte (progress_pre byte 3) is 00.
-  const di = (over) => L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress: "00".repeat(16), progress_pre: "0a560700", ...over }), over.seen);
+  // Day one, supplies not handed over, unless a test says otherwise: the islands' story counter
+  // (progress_pre byte 2) reads 01 then.
+  const di = (over) => L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress: "00".repeat(16), progress_pre: "0a560100", ...over }), over.seen);
   let g = di({ inventory: inv({ 192: 1, 193: 1 }) });
   assert.equal(g.next.title, "Gather raft supplies");
   assert.deepEqual(g.next.counts.map((c) => [c.name, c.have, c.n]), [["Log", 1, 2], ["Cloth", 1, 1], ["Rope", 0, 1]]);
@@ -228,7 +229,7 @@ test("Destiny Islands errands count items, and remembered steps survive handing 
   assert.equal(di({ inventory: inv({}) }).next.title, "Gather raft supplies");
   assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#Gather raft supplies"]) }).next.title, "Wrap up the first day");
   g = di({ inventory: inv({ 197: 1 }), progress_pre: "0a561401", seen: new Set(["Destiny Islands#Gather raft supplies"]) });
-  assert.equal(g.next.title, "Gather food and water", "day two, race done: the food list");
+  assert.equal(g.next.title, "Gather food and water", "Kairi gave the list (counter 0x14)");
   const p = new Array(16).fill(0); p[0] = 0x05;
   assert.equal(L.guideFor("Destiny Islands", blank({ world: 3, progress: hexOf(p), inventory: inv({}) })).next, null);
   assert.equal(di({ progress_pre: undefined }).next.title, "Gather raft supplies", "an old bridge can't see items or story bytes: fall back to the first unknown");
@@ -387,24 +388,23 @@ test("the growth curve narrows with every EXP reading and resets on a new game",
   assert.equal(L.levelInfo(blank({ level: 2, exp: 26 }), { seen: "Midday", seenExp: 20 }).curve, "Midday");
 });
 
-test("day one wraps up when the islands' day byte turns over, not when a day-two item turns up", () => {
-  // Read on the Thor at the start of day two, before collecting anything (2026-10-24).
-  const island = (pre) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12", progress_pre: pre,
-    inventory: "00".repeat(256) });
-  const day2 = L.guideFor("Destiny Islands", island("0a560701"), new Set(["Destiny Islands#Gather raft supplies"]));
-  assert.equal(day2.next.title, "Name the raft and race Riku", "day two opens with Riku, not the food list");
-  const day1 = L.guideFor("Destiny Islands", island("0a560700"), new Set(["Destiny Islands#Gather raft supplies"]));
-  assert.equal(day1.next.title, "Wrap up the first day");
+test("Destiny Islands follows its story counter, beat by beat", () => {
+  // progress_pre byte 2, recorded on the Thor (2026-10-24) and in the RA code notes: 04 supplies handed
+  // over, 07 called it a day, 0a met Riku, 14 Kairi's list (the race in between changes nothing),
+  // 17 food handed over, 1e the storm, 24 Riku's scene.
+  const island = (b2, b3 = 1) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12",
+    progress_pre: "0a56" + b2 + "0" + b3, inventory: "00".repeat(256) });
+  const seen = new Set(["Destiny Islands#Gather raft supplies"]);
+  const next = (b2, b3) => (L.guideFor("Destiny Islands", island(b2, b3), seen).next || {}).title;
+  assert.equal(next("04", 0), "Wrap up the first day");
+  assert.equal(next("07", 0), "Meet Riku in the Cove", "day one done");
+  assert.equal(next("0a"), "Talk to Kairi on the raft", "after meeting Riku: the race is forced, so Kairi is next");
+  assert.equal(next("14"), "Gather food and water");
+  assert.equal(L.guideFor("Destiny Islands", island("17"), seen).waiting, true, "night scenes: nothing to do");
+  assert.equal(next("1e"), "Find Riku in the storm");
+  assert.equal(next("24"), "Find Kairi");
 });
 
-test("day two: the race comes first, and the food list only once Kairi hands it out", () => {
-  // progress_pre read on the Thor (2026-10-24): 07 at day-two start, 0a on meeting Riku, 14 after the race.
-  const island = (pre, inventory = "00".repeat(256)) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12", progress_pre: pre, inventory });
-  const seen = new Set(["Destiny Islands#Gather raft supplies"]);
-  assert.equal(L.guideFor("Destiny Islands", island("0a560701"), seen).next.title, "Name the raft and race Riku");
-  assert.equal(L.guideFor("Destiny Islands", island("0a560a01"), seen).next.title, "Name the raft and race Riku");
-  assert.equal(L.guideFor("Destiny Islands", island("0a561401"), seen).next.title, "Gather food and water");
-});
 
 test("a spell counts only once it's learned: its level reads 1 before that", () => {
   // Read on the Thor in the Dive: no spells yet, levels 01 x7 (2026-10-24).
@@ -421,19 +421,19 @@ test("a room finishes a step only while that step is current", () => {
   const first = L.nodesOf("Traverse Town").find((n) => n.id === "1st District").rooms[0];
   assert.equal(L.guideFor("Traverse Town", tt(first)).next.title, "Look around town");
   assert.equal(L.guideFor("Traverse Town", tt(green)).next.title, "Defeat the Guard Armor", "waking in the Hotel ends the first step");
-  // The Merlin step only counts once it's current: being in Merlin's House earlier doesn't skip the Waterway.
-  const merlin = L.nodesOf("Traverse Town").find((n) => n.id === "Merlin's House").rooms[0];
-  const early = tt(merlin, 0x31);
-  assert.equal(L.guideFor("Traverse Town", { ...early, trinities: 0 }).waiting, true, "no Red Trinity yet: nothing to do here");
-  assert.equal(L.guideFor("Traverse Town", { ...early, trinities: 2 }).next.title, "Meet Leon in the Secret Waterway");
+  // A later story value finishes the room step without the room having been seen.
+  assert.equal(L.guideFor("Traverse Town", tt(first, 0x31)).steps[0].done, true);
+  // Back in town before the Red Trinity: nothing to do here yet.
+  assert.equal(L.guideFor("Traverse Town", { ...tt(first, 0x31), trinities: 0 }).waiting, true);
+  assert.equal(L.guideFor("Traverse Town", { ...tt(first, 0x31), trinities: 2 }).next.title, "Meet Leon in the Secret Waterway");
 });
 
 test("key items finish steps, and later checkpoints finish everything before them", () => {
-  const wl = (over) => L.guideFor("Wonderland", blank({ world: 4, room: 0x30, progress: "00".repeat(16), inventory: "00".repeat(256), ...over }), new Set(["Wonderland#Follow the White Rabbit"]));
-  assert.equal(wl({}).next.title, "Gather evidence");
-  assert.equal(wl({ inventory: inv({ 226: 1 }) }).next.title, "Defeat the Trickmaster", "any one piece of evidence");
-  const p = new Array(16).fill(0); p[3] = 0x2E;
-  const g = wl({ progress: hexOf(p) });
-  assert.equal(g.next.title, "Find the Navi-G Piece");
-  assert.ok(g.steps.slice(0, 3).every((s) => s.done), "the boss being beaten means the evidence was gathered");
+  const wl = (at, over = {}) => { const p = new Array(16).fill(0); p[3] = at;
+    return L.guideFor("Wonderland", blank({ world: 4, room: 0x30, progress: hexOf(p), inventory: "00".repeat(256), ...over })); };
+  assert.equal(wl(0x0D).next.title, "Gather evidence");
+  assert.equal(wl(0x0D, { inventory: inv({ 226: 1 }) }).next.title, "Present the evidence", "any one piece of evidence");
+  const g = wl(0x2E);
+  assert.equal(g.next.title, "Seal Wonderland's Keyhole");
+  assert.ok(g.steps.slice(0, 6).every((s) => s.done), "the boss being beaten means the evidence was gathered");
 });

@@ -1,204 +1,90 @@
 # Guide reference
 
-The objective-by-objective reference the in-app Guide (`companion/guide.js`) is built from. It's written for this
-project from the [KH Wiki's KH1 walkthroughs](https://www.khwiki.com/Walkthrough:Kingdom_Hearts) (all 14 pages, raw
-wikitext, read 2026-10-24) and checked against play on the AYN Thor. Players never see it whole; the Guide reveals
-it in spoiler-free layers.
+What the in-app Guide (`companion/guide.js`) is built on. Every story step starts and ends on a value of the game's
+own story counters, as documented in the **RetroAchievements code notes for Kingdom Hearts: Final Mix**
+(retroachievements.org/codenotes.php?g=2780, read 2026-10-25). Those notes are for the PS2 release; the counters
+hold the same values on PC (the Archipelago KH1 client's thresholds come from the same notes, and our recordings on
+the Thor match). The walkthrough detail in the hints is our own summary of the
+[KH Wiki's KH1 walkthroughs](https://www.khwiki.com/Walkthrough:Kingdom_Hearts).
 
 ## Rules
 
-- **One objective at a time, only once the game has handed it out.** A step can carry `from`, a save test for
-  when the game gives it; until then there's no next step.
-- **Nothing during scenes.** A newly unlocked objective appears only once the HUD is back (the bridge's
-  `in_field`), so it never shows while the scene that reveals it is still playing. Steps already shown stay
-  visible through menus. (The Dive is exempt: its first platform has no HUD.)
-- **Gaps are fine.** Between objectives, the Guide says there's nothing to do right now rather than show the last
-  step or peek at the next.
-- **Every step needs a save test** for "done". Without one, an objective is folded into a neighbour that has one.
+- **A step shows only once the game hands it out** (`from`), and **never during a cutscene**: a newly unlocked step
+  waits for the HUD (`in_field`). Between objectives the Guide says there's nothing to do right now.
+- **Next steps are breadcrumbs**: only what to do next, never what happens after. Detail lives in "Show me".
+- **No step without a save test.** Where the game records nothing (e.g. finishing Riku's race), there's no step:
+  the game moves you along itself.
 
-## How steps are detected
+## The counters
 
-| Test | Meaning | Source |
+Each counter only goes up. A code note "A–B event" means the counter moves from A to B when that event happens, so
+"done once the counter reaches B".
+
+| Bridge field | PS2 address (notes) | What |
 |---|---|---|
-| `p`, `at` | per-world story byte (`progress[p]`, 16 bytes at 0x2DEB264 EGS / 0x2DEA864 Steam) reached `at` | Archipelago KH1 client thresholds (gaithern/KH-1FM-AP-LUA, credited to RetroAchievements code notes); event names from Archipelago's `Locations.py` |
-| `pre` | one of the 4 bytes before those (`progress_pre`) reached a value | read on the Thor |
-| `items` / `has` | inventory counts / an item, spell, ability or Trinity in the save | Archipelago item ids (slot = id − 2641000) |
-| `reach` | the player walked into that map room **while the step was current** | the room byte |
-| `dive`, `end` | Dive room order; "only once you've moved on" | room order / world change |
+| `progress_pre[0]` | 0x3f9880 | Gummi routes |
+| `progress_pre[1]` | 0x3f9881 | Dive to the Heart |
+| `progress_pre[2]` | 0x3f9882 | Destiny Islands |
+| `progress_pre[3]` | 0x3f9883 | Disney Castle scenes (they play between the island days) |
+| `progress[0]` | 0x3f9884 | Traverse Town |
+| `progress[1]`–`[6]` | 0x3f9885–8a | Deep Jungle, Olympus, Wonderland, Agrabah, Monstro, Atlantica |
+| `progress[8]`–`[11]` | 0x3f988c–8f | Halloween Town, Neverland, Hollow Bastion, End of the World |
+| `progress[14]` | 0x3f9892 | Traverse Town's bell and Keyhole |
 
-Story byte index `p`: 0 Traverse Town, 1 Deep Jungle, 2 Olympus, 3 Wonderland, 4 Agrabah, 5 Monstro, 6 Atlantica,
-8 Halloween Town, 9 Neverland, 10 Hollow Bastion, 11 End of the World, 14 Traverse Town's extra byte;
-15 read 0x12 on Destiny Islands' second day.
+On PC (Steam) `progress` starts at 0x2DEA864 and `progress_pre` 4 bytes before it.
 
-Finished steps are remembered on the device (items get handed over, rooms are walked through) and forgotten on a
-new game.
+## Story values used
+
+**Destiny Islands** (`pre[2]`; early values recorded on the Thor): 01 day one · 04 supplies handed to Kairi ·
+07 called it a day · 0A met Riku in the Cove (the race follows, unrecorded) · 14 Kairi's food list · 17 food handed
+over · 1E the storm · 24 Riku's scene, the Keyblade. `pre[3]` moves 0→1 with the Disney Castle scene between days.
+
+**Traverse Town** (`p0`): 2B Guard Armor · 31 regrouped · 3E Leon in the Secret Waterway · 42 traded Cid the gummi
+piece for the book · 46 book delivered · 4A Riku scene · 4E Cid at his house · 5C Neverland's Navi-G to Cid ·
+64 Transform-G · 6E back after Hollow Bastion · 78 Cid on the Secret Waterway Navi-G · 8C Oathkeeper · 96 Cid
+installs it. `p14`: 0A Opposite Armor beaten · 14 Keyhole sealed.
+
+**Deep Jungle** (`p1`): 14 control after Tarzan · 17 reunited in the tent · 1A all slides · 20 slideshow · 23 the
+gorillas · 28 Tree House scene · 2B back at camp · 32/35 Heartless cleared, back in the tent · 37 talked to Jane ·
+3C/3F/42 Sabor · 44 Jane taken · 47 Jane freed · 50/53/56 Clayton · 5C waterfall cavern · 6E Keyhole, Red Trinity.
+
+**Olympus** (`p2`): 04 talked to Phil twice · 0A barrels · 0D Thunder · 10 Entry Pass · 13 signed up · 16/19
+prelims · 1C/22 Cloud · 25 Cerberus · 28 Hero's License.
+
+**Wonderland** (`p3`): 04/07 the Doorknob · 0D the court · 11 evidence presented · 21 the cage tower, Alice taken ·
+2B the Trickmaster fight starts · 2E beaten · 30 Keyhole.
+
+**Agrabah** (`p4`): 17 the Carpet freed · 1E/24 Aladdin rescued · 27 Genie at Aladdin's House · 35 Pot Centipede ·
+3C/3F the cave's guardian · 46 Maleficent · 49 Jafar · 50/53 Genie Jafar · 5A lamp · 5D escape · 64/6E scenes ·
+78 Three Wishes, Green Trinity.
+
+**Monstro** (`p5`): 14 Pinocchio · 17 Geppetto · 1A/1E Riku · 28 Pinocchio caught · 2B/2E Parasite Cage ·
+32 water rising · 3C/3F Parasite Cage II · 46 scene.
+
+**Atlantica** (`p6`): 0A Ariel joins · 14 King Triton · 1E Ariel's Grotto · 28 the shark · 32 Crystal Trident ·
+3C Triton breaks it · 42/46 the trident stolen · 49 the switch · 50/53 Ursula · 5A/5D giant Ursula · 64 Keyhole.
+
+**Halloween Town** (`p8`): 07 Jack · 0A/0F the heart, a missing ingredient · 12/1E the Graveyard, Forget-Me-Not ·
+21/28 "surprise" needed · 2B/32 Jack-in-the-Box · 35 the heart stolen · 38/3F the chase · 46 the manor · 50/53 Lock,
+Shock and Barrel · 5C/62 Oogie Boogie · 64 the manor · 6A Keyhole · 6E Pumpkinhead.
+
+**Neverland** (`p9`): 0A/14 Anti-Sora made · 1E pixie dust · 28/32/35 Anti-Sora · 38 Peter leaves · 3C/3F flying ·
+46/50/53 Hook · 56 Ars Arcanum · 5A/64 Keyhole · 6A/6E Tinker Bell, Glide. 96 the Phantom (Archipelago).
+
+**Hollow Bastion** (`p10`): 0A/14 landing · 1E Riku takes the Keyblade · 28 the princesses · 32 White Trinity
+(Riku beaten) · 46 Ansem possesses Riku · 50 Riku's new Keyblade · 5A Maleficent · 6E the dragon · 82 Sora a
+Heartless · 8C/96/A0 back as Sora · AA second landing · B9 Behemoth · BE/C3 Final Keyhole.
+
+**End of the World** (`p11`): 32 before Chernabog · 33 Superglide · 5A back on the islands · 64 Ansem's monologue ·
+66 Ansem I · 6E Donald and Goofy taken · 93 Goofy's portal · 9B the World of Chaos's face.
+
+Also in the notes and not used yet: a game-mode byte (cutscene, FMV, boss), per-chest and Trinity bit flags with
+names, the 100 Acre Wood's progress, the Olympus cups, and event flags for Wonderland's evidence and Jane's slides.
 
 ## Missables
 
-| What | When it's lost |
+| What | Lost when |
 |---|---|
-| Everything on Destiny Islands | once you leave on the night of the storm |
-| Neverland's Clock Tower chests | after the Behemoth in Hollow Bastion |
-| The Final Rest is the last save | past the final door there's no going back |
-
-(Halloween Town's manor Red Trinity is missable in the original, but Final Mix moves it, so it isn't here.)
-
-## Story order
-
-Dive → Destiny Islands → Traverse Town → Wonderland / Olympus / Deep Jungle (any order) → Traverse Town (Secret
-Waterway, Merlin, Opposite Armor) → Agrabah → Monstro → Halloween Town / Atlantica (any order) → Neverland →
-Hollow Bastion → Traverse Town (Kairi) → Hollow Bastion (Behemoth) → End of the World. The 100 Acre Wood is reached
-through Merlin's book whenever you have Torn Pages; it has no story-byte checkpoints yet, so it has no Guide steps.
-
-## Dive to the Heart
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Walk to the light; keep one weapon, give one up (sets abilities and stats) | leaving the first station | `dive` |
-| 2 | Practise swinging, beat the Shadows; examine the door, open the chest, break crate and barrel, open the door | through the door | `dive` |
-| 3 | Answer Tidus, Wakka and Selphie (sets the EXP curve) | back on the station | `dive` |
-| 4 | Beat the Shadows to reveal the save point; follow the glass path to the giant shadow | waking on the islands | `end: dive` |
-
-`progress_pre` in the Dive: `0a 04..53 00 00` (byte 1 counts up). The Dive's weapon choice reads world 0 / room 0
-with no HUD, like the title screen; `progress_pre` tells them apart.
-
-## Destiny Islands
-
-| # | Objective | Handed out | Done when | Test |
-|---|---|---|---|---|
-| 1 | Kairi's list: 2 Logs (under the bridge; on the little island), Cloth (treehouse), Rope (west platform) | start | all in the bag | `items` |
-| 2 | Bring them to Kairi and call it a day | — | day two | `pre[3] ≥ 1` (Thor) |
-| 3 | Through the Cove door: name the raft, race Riku | day two | race over / list given | `pre[2] ≥ 0x14` (Thor: 07 → 0a on meeting Riku → 14) |
-| 4 | Kairi's second list on the raft: 3 Mushrooms, 3 Fish, Seagull Egg, Drinking Water (+2 Coconuts); hidden Cove chest | race over | all in the bag | `items` |
-| 5 | Bring the food to Kairi and go home (last chance on the islands) | — | the storm | `reach` Island Remains (only reachable that night) |
-| 6 | The storm: ignore the Shadows, run to the bent Paopu tree | storm | reaching the Secret Place | `reach` Secret Place |
-| 7 | Kairi in the Secret Place; the door's fight | — | leaving for Traverse Town | `end: islands` |
-
-Optional any time: spar with Tidus, Wakka, Selphie (alone or together) and Riku; race Riku again for Pretty
-Stones. To record: when the food hand-in happens (a `progress_pre` value), to replace step 5's room test.
-
-## Traverse Town
-
-| # | Objective | Handed out | Done when | Test |
-|---|---|---|---|---|
-| 1 | Save and meet Cid (Accessory Shop), see the 2nd District, back to Cid; Leon confronts you on the way out | arrival | waking in the Hotel | `reach` Green Room |
-| 2 | Talk to Leon, open the chest, say you're ready; the biggest Heartless is in the 3rd District | — | Guard Armor beaten | `p0 ≥ 0x2B` |
-| 3 | Donald and Goofy join; Fire, Dodge Roll, Blue Trinity; off on the Gummi Ship | — | | `p0 ≥ 0x31` |
-| 4 | Red Trinity on the Alleyway bars; Leon in the Secret Waterway | has Red Trinity | Earthshine | `p0 ≥ 0x3E` |
-| 5 | Cid's book: Fire on the 3rd District's flame door, across the Mystical House to Merlin | after Leon | in Merlin's House | `reach` Merlin's House |
-| 6 | Open the 1st/3rd District door; Cid in the Small House (Riku on the way) | — | in the Small House | `reach` Small House |
-| 7 | Red Trinity on the Gizmo Shop roof; ring the bell three times; the Keyhole's guard | — | Opposite Armor beaten | `p14 ≥ 0x14` |
-| 8 | After Hollow Bastion: Cid's Navi-Gummi; Kairi and the mural in the Secret Waterway | Riku II beaten (`p10 ≥ 0x82`) | Oathkeeper | `p0 ≥ 0x8C` |
-
-## Deep Jungle
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | After the leopard, follow Tarzan down the slide to the Camp and into the tent | in the tent | `reach` Camp: Tent |
-| 2 | Jane's slides around the Camp and Tent; the slideshow | Protect-G event | `p1 ≥ 0x17` |
-| 3 | With Tarzan through the Cliff, Lagoon and Climbing Trees to the Tree House; the leopard again at the Camp | Sabor beaten | `p1 ≥ 0x42` |
-| 4 | Save the gorillas (Tree House, Cliff, Bamboo Thicket, Climbing Trees, Camp); free Jane (Blizzard the flowers); Clayton | Clayton beaten | `p1 ≥ 0x56` |
-| 5 | Climb the Waterfall Cavern to the cave at the top | Navi-G Piece | `p1 ≥ 0x5C` |
-| 6 | Seal the Keyhole | Jungle King, Red Trinity | `p1 ≥ 0x6E` |
-
-## Olympus Coliseum
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Talk to Phil, try the block, pass the barrel test | Thunder | `p2 ≥ 0x0D` |
-| 2 | Phil says no; someone hands you a pass on the way out | Entry Pass | `p2 ≥ 0x10` |
-| 3 | Win the preliminaries (losing the final is fine); the three-headed guest (Cure helps) | Cerberus beaten | `p2 ≥ 0x25` |
-| 4 | Phil and Hercules; Cloud's gift on the way out | Hero's License | `p2 ≥ 0x28` |
-
-The cups open later; the Yellow Trinity Keyhole needs the Hercules Cup.
-
-## Wonderland
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Bizarre Room: talk to the Doorknob, push the bed, drink from the blue bottle, leave where the bed was | in the Queen's Castle | `reach` Queen's Castle |
-| 2 | Evidence: Footprints (mushroom steps), Antenna (lily pad), Stench (stove, via the tree), Claw Marks (faucet → cabinet, after growing with a Potion) | any one piece | `any` of the four |
-| 3 | The trial; break the cage tower; Cheshire Cat; Tea Party Garden; light both lamps in the Bizarre Room; talk to the cat on the table | Trickmaster beaten | `p3 ≥ 0x2E` |
-| 4 | The Doorknob yawns: seal the Keyhole | Navi-G Piece | `p3 ≥ 0x30` |
-
-To verify: Archipelago files Blizzard under the Trickmaster event, while the walkthrough has the Cheshire Cat give
-it after the evidence.
-
-## Agrabah
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Clear the Plaza; Aladdin's House (Carpet, keyhole behind the drawers); Jasmine in the Alley; the Carpet to the Desert | in the Desert | `reach` Desert |
-| 2 | Rescue Aladdin; Aladdin's House, then the Palace Gates | Pot Centipede beaten | `p4 ≥ 0x35` |
-| 3 | Back through the Plaza to the cave; its guardian | at the Cave: Entrance | `reach` Cave: Entrance |
-| 4 | Relic, Silent (statue jewel), Hidden Room (pillar), Hall, Bottomless Hall, Treasure Room, Lamp Chamber | Jafar beaten | `p4 ≥ 0x49` |
-| 5 | Jafar again, over lava | Genie Jafar beaten | `p4 ≥ 0x5A` |
-| 6 | Seal the Keyhole; Carpet escape | Genie, Three Wishes, Green Trinity | `p4 ≥ 0x78` |
-
-## Monstro
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Chase Pinocchio: Chambers 1, 2, 3, 5, 6, then 4; save; the Bowels | Parasite Cage beaten | `p5 ≥ 0x2E` |
-| 2 | Chest by Geppetto (High Jump); up the ship to the Throat; the Stomach | Parasite Cage II | `p5 ≥ 0x46` |
-
-## Atlantica
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Swimming lesson; hit the clam; Undersea Valley → Calm Depths → Cave → Gorge → Triton's Palace | in Triton's Throne | `reach` Triton's Throne |
-| 2 | Ariel's Grotto; the dolphin in the Undersea Valley to the Sunken Ship; the chest past the shark | Crystal Trident | `p6 ≥ 0x32` |
-| 3 | Place it in the Grotto; palace scenes; beat the shark, press the button; Den of Tides, Tidal Abyss | Ursula beaten | `p6 ≥ 0x53` |
-| 4 | Mermaid Kick through the Calm Depths current to the open sea | Ursula II beaten | `p6 ≥ 0x5D` |
-| 5 | Ariel's Grotto with the trident | Crabclaw | `p6 ≥ 0x64` |
-
-## Halloween Town
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Guillotine Square scene; follow Jack to the lab | in the Research Lab | `reach` Research Lab |
-| 2 | Sally in the Graveyard (up the stairs, left of the square) | Forget-Me-Not | `p8 ≥ 0x1E` |
-| 3 | Lab, then the Graveyard coffin to the Boneyard; the mayor's pumpkins | Jack-in-the-Box | `has` |
-| 4 | Moonlight Hill lever, Bridge, Oogie's Manor, the Evil Playroom trio, the green door | Oogie Boogie beaten | `p8 ≥ 0x62` |
-| 5 | The manor's glowing orbs | Oogie's Manor beaten | `p8 ≥ 0x6A` |
-| 6 | The Keyhole where the manor stood | Pumpkinhead | `p8 ≥ 0x6E` |
-
-## Neverland
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | With Peter Pan: Hold → Freezer → Galley → Cabin → Captain's Cabin | Anti-Sora beaten | `p9 ≥ 0x35` |
-| 2 | Down the trapdoor, out on deck, off the plank: you can fly | Hook encounter (Cure) | `p9 ≥ 0x3F` |
-| 3 | Beat the deck Heartless until Hook comes out | Hook beaten | `p9 ≥ 0x56` |
-| 4 | Clock Tower: hit the face that's 15 minutes off | Keyhole: Tinker Bell, Glide | `p9 ≥ 0x6E` |
-| – | *Optional, late:* the Phantom (talk to Tinker Bell, Peter in the party, bring Stop) | | `p9 ≥ 0x96` |
-
-## Hollow Bastion
-
-| # | Objective | Handed out | Done when | Test |
-|---|---|---|---|---|
-| 1 | Freeze the bubbles up the Rising Falls; moving platforms to the Castle Gates | | at the Castle Gates | `reach` Castle Gates |
-| 2 | Base Level, Waterway, Dungeon (the Beast clears bars); buttons and gears open the door; Entrance Hall | | Riku beaten | `p10 ≥ 0x32` |
-| 3 | The library: shelve books by letter; the last book opens the upper hall | | Theon Vol. 6 | `has` |
-| 4 | Emblem pieces: fountain (vases), candles (Fire), statue (Red Trinity), pushed statue (chest) | | all four | `all` |
-| 5 | Lift Stop, Great Crest, High Tower (Gravity on floating platforms), Castle Chapel | | Maleficent beaten | `p10 ≥ 0x5A` |
-| 6 | Save; through the portal | | Dragon beaten | `p10 ≥ 0x6E` |
-| 7 | The new way beside the save point to the Grand Hall | | Riku II beaten | `p10 ≥ 0x82` |
-| 8 | After Traverse Town: the princesses, then the Grand Hall's Keyhole into the Dark Depths (Clock Tower chests lost after) | Kairi's gift (`p0 ≥ 0x8C`) | Behemoth beaten | `p10 ≥ 0xB9` |
-| 9 | The princesses, Aerith in the Library, Belle upstairs | | Fire upgrade | `p10 ≥ 0xC3` |
-
-## End of the World
-
-| # | Objective | Done when | Test |
-|---|---|---|---|
-| 1 | Final Dimension chests (some are fights); the far exit | in the Giant Crevasse | `reach` Giant Crevasse |
-| 2 | Down the Crevasse's platforms to the white portal | in the World Terminus | `reach` World Terminus |
-| 3 | Pillars into pieces of each world; the flame portal; the machine; the vortex | Chernabog beaten | `p11 ≥ 0x33` |
-| 4 | Volcanic Crater → hallways of lost worlds → Linked Worlds (break the emblem) → Final Rest, the last save | at the Final Rest | `reach` Final Rest |
-| 5 | Through the door: the Secret Place, then the final battle in stages | — | none (the end) |
-
-## Recording more checkpoints
-
-Play with the bridge running and log `progress_pre`, `progress`, the inventory and the room as they change, with a
-shot of the game's screen at each change (the scratch `watch_story.py` does this over adb). Match each change to
-the objective it started or finished, then add it here and to `guide.js` with a test.
+| Everything on Destiny Islands | you go home on the second night |
+| Neverland's Clock Tower chests | the Behemoth in Hollow Bastion is beaten |
+| The Final Rest is the last save | you open the final door |

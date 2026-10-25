@@ -20,7 +20,7 @@ Five tabs, all live from the save you have loaded. It never tells you anything y
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: what now, at a glance. The next story nudge, the chests in the room you're in, and which other rooms still hold chests. Tap any room or chest to see it on the map.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: what now, at a glance. An EXP bar to your next level (the game hides it in the Status menu), the next story nudge, the chests in the room you're in, and which other rooms still hold chests. Tap any room or chest to see it on the map.</td>
     <td width="50%"><img src="docs/screenshots/guide.png" alt="Guide tab"><br><b>Guide</b>: stuck? A gentle nudge first, then <i>Where?</i> for the room, then <i>Show me</i> for the full hint. No boss or reward names until you've earned them.</td>
   </tr>
   <tr>

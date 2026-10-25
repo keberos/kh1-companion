@@ -209,6 +209,7 @@
     el.innerHTML =
       `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
       `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
+      expStrip() +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
       (n ? `<div class="card"><div class="label">In ${esc(sum.room || L.labelOf(n))}</div>` +
@@ -221,6 +222,26 @@
       `</div>`;
     wireToggles(el);
     if ($("toGuide")) $("toGuide").onclick = () => { guideWorld = null; setView("guide"); };
+    if ($("toLevel")) $("toLevel").onclick = () => setView("level");
+  }
+
+  // The game shows no EXP bar outside the Status menu: level, EXP to the next one, and what it gives.
+  // Early on the growth curve can still be one of several; then the EXP left is a range.
+  function expStrip() {
+    const info = L.levelInfo(state, levelPick);
+    if (!info || info.exp == null || info.level >= 100) return "";
+    const curves = info.curve ? [info.curve] : info.curves;
+    const next = info.level + 1;
+    const left = curves.map((c) => info.cum[c][next] - info.exp);
+    const pct = curves.reduce((s, c) => {
+      const lo = info.cum[c][info.level], hi = info.cum[c][next];
+      return s + (hi > lo ? (info.exp - lo) / (hi - lo) : 0);
+    }, 0) / curves.length;
+    const lo = Math.min(...left), hi = Math.max(...left);
+    return `<div class="row here-lv" id="toLevel"><span class="lv-now">LV ${info.level}</span>` +
+      `<div class="grow"><div class="bar exp"><i style="width:${Math.max(0, Math.min(100, pct * 100))}%"></i></div>` +
+      `<div class="sub">${lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`} EXP to LV ${next}</div></div>` +
+      `<span class="rewards">${rewardChips(info, next)}</span><span class="tag more">›</span></div>`;
   }
 
   // ---------- Map ----------

@@ -14,6 +14,8 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 - **First time or Replay.** The eye at the top holds every spoiler setting. *Replay* shows room names, chest contents, what unlocks them and the full guide up front.
 - **What opens the most chests**, on Progress: for example, Glide opens 22 chests in 9 worlds. Tap one for the list.
 - **Next ability** on the Level tab, with the EXP to go.
+- **An EXP bar on Here.** KH1 only shows EXP in the Status menu; Here shows your level, a bar to the next one, the EXP left and what it gives.
+- **A new game shows up right away.** The Dive's weapon choice no longer reads as the title screen.
 
 ### What's new in beta.4
 

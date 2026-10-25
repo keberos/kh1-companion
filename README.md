@@ -75,10 +75,11 @@ These settings have nothing to do with the companion (it uses next to nothing wh
 |---|---|---|
 | **Top screen at 120 Hz** | Thor display settings | Uneven frame pacing and input lag: frames reached the screen in about 6 ms instead of about 60 ms, with far fewer hitches. The game still runs at 60. |
 | **FEXCore Preset: Performance** | GameNative → the game → ⚙ → **Edit container** → **Emulation** | The frame-rate dips when turning the camera. The game's main thread was maxing out one CPU core; this preset lightens it. If you ever see glitches, set it back to *Intermediate*. |
-| **High Performance mode** | Thor quick settings | The remaining dips: it keeps the CPU at full speed. Costs battery and heat, so *Performance* mode is the gentler choice. |
+| **High Performance mode** | Thor's Quick Settings (swipe down from the top of the screen) | The remaining dips: it keeps the CPU at full speed. Costs battery and heat, so *Performance* mode is the gentler choice. |
+| **A fan curve to match** | Quick Settings → fan → *Smart* → edit its curve | High Performance runs warmer, so adjust the fan as needed. We use High Performance with a less aggressive *Smart* curve: cool enough, and quieter than the stock settings. |
 | **Keep GameNative's FPS limiter at 60** | GameNative's in-game menu | Turning it off made pacing worse, not better. |
 
-With all four, the game spent about 4% of a two-minute camera-spinning test below 54 fps, down from 20%, and the worst dip went from 36 to 48 fps.
+With the first four, the game spent about 4% of a two-minute camera-spinning test below 54 fps, down from 20%, and the worst dip went from 36 to 48 fps.
 
 ## Uninstall
 

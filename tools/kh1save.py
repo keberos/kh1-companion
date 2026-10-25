@@ -25,8 +25,17 @@ snapshot: `state` writes one per slot, for the page to show with no game running
 GameNative's "Export saves" / "Import saves" move this file in and out of the game as a ZIP
 (manifest.json + files/<root>/KHFM_WW.png).
 
+Writing: a save is a pair of entries, "BISLPS-25198-NN" (the slot) then "-NN/system.bin" (0x400
+bytes), at entries 2n and 2n+1; the game shows NN on its load screen. `copy` puts a copy of one
+save into the next empty pair, with optional byte edits, re-XORs the entry table, fixes the sqEX
+chunk's PNG CRC (the game's own files carry a valid one), and writes a ZIP that GameNative's
+Import saves accepts (same manifest and paths as the export it came from). Saves already in the
+file are left byte for byte as they were.
+
 Usage:
   python tools/kh1save.py list  <KHFM_WW.png | GameNative saves .zip>
+  python tools/kh1save.py copy  <export .zip> <slot> <out .zip> [offset=hexbytes ...]
+      e.g. copy saves.zip 10 test.zip 1641C=d2040000   (slot 10's save as the next one, munny 1234)
   python tools/kh1save.py state <KHFM_WW.png | GameNative saves .zip> [out dir, default dev/scenarios]
       then open http://localhost:8737/?state=/dev/scenarios/save-<slot>.json (tools/devserver.py)
 """
@@ -35,6 +44,7 @@ import struct
 import sys
 import time
 import zipfile
+import zlib
 from pathlib import Path
 
 FILE_SIZE = 0x11EB09D
@@ -80,6 +90,50 @@ def slots(raw):
         at = DATA_AT + i * STRIDE
         out.append((i, name, modified, raw[at:at + length]))
     return out
+
+
+def write_entry(table, i, name, when, data_len):
+    e = bytearray(ENTRY)
+    e[:len(name)] = name.encode("ascii")
+    struct.pack_into("<6i", e, 0x40, when, 0, when, 0, data_len, 0)
+    table[i * ENTRY:(i + 1) * ENTRY] = e
+
+
+def add_save(raw, data, system, when=None):
+    """A new save in the first empty pair of entries; returns (new raw, its number NN)."""
+    raw = bytearray(raw)
+    table = entry_table(bytes(raw))
+    used = {i for i, *_ in slots(bytes(raw))}
+    pair = next(i for i in range(0, ENTRIES, 2) if i not in used and i + 1 not in used)
+    names = [n for _, n, _, _ in slots(bytes(raw)) if n.startswith("BISLPS-25198-")]
+    nn = max([int(n[-2:]) for n in names] or [0]) + 1
+    when = int(when or time.time())
+    write_entry(table, pair, f"BISLPS-25198-{nn:02d}", when, len(data))
+    write_entry(table, pair + 1, f"-{nn:02d}/system.bin", when, len(system))
+    key = bytes(table[KEY_AT:KEY_AT + 16])
+    for i in range(XOR_LEN):
+        table[i] ^= key[i & 15]
+    raw[HEADER:HEADER + ENTRIES * ENTRY] = table
+    for i, blob in ((pair, data), (pair + 1, system)):
+        at = DATA_AT + i * STRIDE
+        raw[at:at + STRIDE] = bytes(blob) + bytes(STRIDE - len(blob))
+    fix_crc(raw)
+    return bytes(raw), nn
+
+
+def fix_crc(raw):
+    """Recompute the sqEX chunk's CRC (chunk header at 0x58)."""
+    length = struct.unpack_from(">I", raw, 0x58)[0]
+    end = 0x60 + length
+    struct.pack_into(">I", raw, end, zlib.crc32(raw[0x5C:end]))
+
+
+def pack(template_zip, raw, out_zip):
+    """A GameNative saves ZIP: the template's entries, with KHFM_WW.png replaced."""
+    with zipfile.ZipFile(template_zip) as src, zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED) as dst:
+        for info in src.infolist():
+            body = raw if info.filename.endswith("KHFM_WW.png") else src.read(info.filename)
+            dst.writestr(info.filename, body)
 
 
 def summary(data):
@@ -130,6 +184,18 @@ def snapshot(data, modified):
 
 
 def main(argv):
+    if len(argv) >= 5 and argv[1] == "copy":
+        raw = load(argv[2])
+        by_index = {i: (data, nxt) for (i, _, _, data), nxt in zip(slots(raw), slots(raw)[1:])}
+        data, (_, _, _, system) = by_index[int(argv[3])]
+        data = bytearray(data)
+        for edit in argv[5:]:
+            off, val = edit.split("=")
+            data[int(off, 16):int(off, 16) + len(bytes.fromhex(val))] = bytes.fromhex(val)
+        new, nn = add_save(raw, data, system)
+        pack(argv[2], new, argv[4])
+        print(f"{argv[4]}: save {nn:02d} = slot {argv[3]} with {len(argv) - 5} edit(s); {summary(bytes(data))}")
+        return 0
     if len(argv) < 3 or argv[1] not in ("list", "state"):
         print(__doc__)
         return 2

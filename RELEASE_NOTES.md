@@ -12,7 +12,7 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 - **Optional pop-up notes** for chests opened, level-ups (with what Sora learned), puppies, Ansem's Reports, story steps, new worlds and finished worlds. Off by default; turn them on under the eye at the top.
 - **Here is your "what now" screen**: the next story nudge, this room's chests, then the other rooms that still hold chests.
 - **Five tabs.** Worlds and Collect are now one **Progress** tab, with each world's story progress and a crown on worlds you've cleared out.
-- **Tap any chest or room** to see what's in it, then **Show on map** to have it ringed on the map.
+- **Tap any chest to see exactly where it is**, for every one of the 232 (written from the KH Wiki walkthroughs), plus what's inside and what it still needs. **Show on map** rings its room. Tap a room to see its chests.
 - **First time or Replay.** The eye at the top holds every spoiler setting. *Replay* shows room names, chest contents, what unlocks them and the full guide up front.
 - **What opens the most chests**, on Progress: for example, Glide opens 22 chests in 9 worlds. Tap one for the list.
 - **Next ability** on the Level tab, with the EXP to go.

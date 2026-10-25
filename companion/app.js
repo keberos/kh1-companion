@@ -91,8 +91,8 @@
     const known = !n || roomKnown(c.w, n.id);
     const sub = [opts.showRoom && n && known ? L.labelOf(n) : null, showContents && c.i ? c.i : null,
       c.lock ? needText(c.lock) : null].filter(Boolean).join(" · ");
-    // Outside a room's own sheet, tapping a chest opens its room (and from there the map).
-    const tap = !opts.inSheet && n ? ` data-cw="${esc(c.w)}" data-cn="${esc(n.id)}"` : "";
+    // Tapping a chest opens its own sheet: exactly where it is, and from there the map.
+    const tap = ` data-cw="${esc(c.w)}" data-ck="${esc(c.n)}"`;
     return `<li${tap} class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
       `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
@@ -362,6 +362,31 @@
     if ($("showOnMap")) $("showOnMap").onclick = () => {
       mapWorld = world === sum.world ? null : world;
       mapFocus = id;
+      $("sheet").classList.remove("on");
+      setView("map");
+    };
+  }
+
+  // Exactly where a chest is (chesthints.js), what it holds and what it still needs. Tapping a chest
+  // is asking where it is, so this shows its room even if the player hasn't been there yet.
+  const CHEST_HINTS = window.KH1_CHEST_HINTS || {};
+  function openChestSheet(world, name) {
+    const c = L.chestsFor(world, sum.opened, state).find((x) => x.n === name);
+    if (!c) return;
+    const nd = c.node && L.node(world, c.node);
+    const where = (CHEST_HINTS[world] || {})[name] || (nd ? `In ${L.labelOf(nd)}.` : "Somewhere in this world.");
+    openSheet(
+      `<h2>${esc(name.replace(/ Chest$/, "") || "Chest")}</h2>` +
+      `<div class="sub">${esc([displayWorld(world), nd ? L.labelOf(nd) : null, c.got ? "opened" : null].filter(Boolean).join(" · "))}</div>` +
+      `<div class="hint">${icon("ico-pin", "chip-ico")}${esc(where)}</div>` +
+      (showContents && c.i ? `<div class="sub" style="margin-top:8px">Inside: ${esc(c.i)}</div>` : "") +
+      (c.lock ? `<div class="sub" style="margin-top:6px">${icon("ico-lock", "chip-ico")}${esc(needText(c.lock))}</div>` : "") +
+      `<div class="row" style="margin-top:10px">${nd ? `<button class="chip" id="chestOnMap">${icon("ico-chest", "chip-ico")}Show on map</button>` : ""}` +
+      `<span class="grow"></span><button class="chip" data-close>Close</button></div>`,
+    );
+    if ($("chestOnMap")) $("chestOnMap").onclick = () => {
+      mapWorld = world === sum.world ? null : world;
+      mapFocus = nd.id;
       $("sheet").classList.remove("on");
       setView("map");
     };
@@ -896,10 +921,16 @@
   }
 
   // Any chest or room row (data-cw / data-cn) opens that room, on every tab.
-  document.querySelector("main").addEventListener("click", (e) => {
-    const li = e.target.closest("[data-cn]");
-    if (li && state && !sum.title) openNodeSheet(li.dataset.cw, li.dataset.cn);
-  });
+  // Chest rows (data-ck) open the chest's sheet, room rows (data-cn) the room's, on every tab and
+  // inside sheets (a room's sheet lists its chests).
+  const openRow = (e) => {
+    if (!state || sum.title) return;
+    const chest = e.target.closest("[data-ck]"), room = e.target.closest("[data-cn]");
+    if (chest) openChestSheet(chest.dataset.cw, chest.dataset.ck);
+    else if (room) openNodeSheet(room.dataset.cw, room.dataset.cn);
+  };
+  document.querySelector("main").addEventListener("click", openRow);
+  $("sheetBody").addEventListener("click", openRow);
   $("modeBtn").onclick = () => { if (state && !sum.title) openShowSheet(); };
   // Destiny Islands errands hand their items over, so remember steps once seen done.
   // A fresh Dive (no Traverse Town progress yet) means a new game: forget them.

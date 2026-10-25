@@ -437,3 +437,14 @@ test("key items finish steps, and later checkpoints finish everything before the
   assert.equal(g.next.title, "Seal Wonderland's Keyhole");
   assert.ok(g.steps.slice(0, 6).every((s) => s.done), "the boss being beaten means the evidence was gathered");
 });
+
+test("every chest has a location hint, and every hint matches a real chest", async () => {
+  globalThis.window = globalThis.window || {};
+  await import("../companion/chesthints.js");
+  const hints = globalThis.window.KH1_CHEST_HINTS;
+  for (const [w, byName] of Object.entries(hints)) for (const n of Object.keys(byName)) {
+    assert.ok(CHESTS.some((c) => c.w === w && c.n === n), `hint for a chest that doesn't exist: ${w} / ${n}`);
+  }
+  const missing = CHESTS.filter((c) => !(hints[c.w] || {})[c.n]).map((c) => `${c.w} / ${c.n}`);
+  assert.deepEqual(missing, [], "chests without a hint");
+});

@@ -306,14 +306,20 @@
     });
     // Nothing fits (an odd save, or a read gone wrong): don't rule anything out.
     if (!curves.length) curves = CURVES;
+    // There's no save byte for the curve (the Dive answers set it), so every reading counts: a curve
+    // ruled out earlier in this playthrough stays out. EXP never goes down, so lower EXP means another game.
+    const fits = pick && (pick.fits || (pick.seen && [pick.seen]));
+    const fitsExp = pick && (pick.fits ? pick.fitsExp : pick.seenExp);
+    if (fits && exp != null && exp >= (fitsExp || 0)) {
+      const still = curves.filter((c) => fits.includes(c));
+      if (still.length) curves = still;
+    }
     if (!paths.length) paths = PATHS;
     const kept = state.dive != null ? PATHS[hexToBytes(state.dive)[0]] : null;
     const fromSave = !!kept && paths.includes(kept);
     if (fromSave) paths = [kept];
-    // A remembered curve only counts for the same playthrough: EXP never goes down.
-    const seen = pick && pick.seen && exp != null && exp >= (pick.seenExp || 0) && curves.includes(pick.seen) ? pick.seen : null;
     const choose = (fits, picked) => (fits.length === 1 ? fits[0] : fits.includes(picked) ? picked : null);
-    const curve = choose(curves, seen || (pick && pick.curve));
+    const curve = choose(curves, pick && pick.curve);
     const path = choose(paths, pick && pick.path);
     const stats = Object.fromEntries(LEVELS.stats);
     const rewards = (lv, p) => ({
@@ -322,8 +328,7 @@
     });
     return {
       level, exp, curves, paths, curve, path, cum,
-      autoCurve: exp != null && (curves.length === 1 || !!seen), autoPath: fromSave || (paths.length === 1 && known),
-      seenCurve: curves.length === 1 && exp != null ? curves[0] : null,
+      autoCurve: exp != null && curves.length === 1, autoPath: fromSave || (paths.length === 1 && known),
       toNext: curve && exp != null && level < 100 ? cum[curve][level + 1] - exp : null,
       rewards, name: (code) => LEVELS.names[code],
     };

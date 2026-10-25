@@ -362,3 +362,21 @@ for (const name of readdirSync(FIXTURES).filter((f) => f.endsWith(".jsonl"))) {
     }
   });
 }
+
+test("the growth curve narrows with every EXP reading and resets on a new game", () => {
+  // At LV 1 with 14 EXP, Dawn is out: it reaches LV 2 at 12.
+  const first = L.levelInfo(blank({ level: 1, exp: 14 }), {});
+  assert.deepEqual(first.curves, ["Midday", "Dusk"]);
+  assert.equal(first.curve, null, "two curves still fit: no exact EXP yet");
+  // LV 2 at 26 EXP fits all three on its own; remembering the earlier reading keeps Dawn out.
+  const pick = { fits: first.curves, fitsExp: 14 };
+  assert.deepEqual(L.levelInfo(blank({ level: 2, exp: 26 }), pick).curves, ["Midday", "Dusk"]);
+  // 45 EXP at LV 2 only fits Dusk (Midday would be LV 3 at 42).
+  const pinned = L.levelInfo(blank({ level: 2, exp: 45 }), pick);
+  assert.equal(pinned.curve, "Dusk");
+  assert.equal(pinned.toNext, 58 - 45);
+  // Lower EXP than remembered means another game: start over.
+  assert.deepEqual(L.levelInfo(blank({ level: 1, exp: 5 }), { fits: ["Dusk"], fitsExp: 45 }).curves, ["Dawn", "Midday", "Dusk"]);
+  // Older saves of the app's memory (one pinned curve) still count.
+  assert.equal(L.levelInfo(blank({ level: 2, exp: 26 }), { seen: "Midday", seenExp: 20 }).curve, "Midday");
+});

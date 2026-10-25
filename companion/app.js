@@ -210,9 +210,9 @@
     const elsewhere = chests.filter((c) => !c.got && (!n || c.node !== n.id));
     const reportsLeft = sum.reports.filter((r) => r.w === world && !r.got);
     el.innerHTML =
+      expStrip() +
       `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
       `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
-      expStrip() +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
       (n ? `<div class="card"><div class="label">In ${esc(sum.room || L.labelOf(n))}</div>` +
@@ -229,21 +229,18 @@
   }
 
   // The game shows no EXP bar outside the Status menu: level, EXP to the next one, and what it gives.
-  // Early on the growth curve can still be one of several; then the EXP left is a range.
+  // EXP needed depends on the growth curve, which only EXP itself reveals; until it's certain, no numbers.
   function expStrip() {
     const info = L.levelInfo(state, levelPick);
-    if (!info || info.exp == null || info.level >= 100) return "";
-    const curves = info.curve ? [info.curve] : info.curves;
+    if (!info || info.level >= 100) return "";
     const next = info.level + 1;
-    const left = curves.map((c) => info.cum[c][next] - info.exp);
-    const pct = curves.reduce((s, c) => {
-      const lo = info.cum[c][info.level], hi = info.cum[c][next];
-      return s + (hi > lo ? (info.exp - lo) / (hi - lo) : 0);
-    }, 0) / curves.length;
-    const lo = Math.min(...left), hi = Math.max(...left);
+    const known = info.curve && info.exp != null;
+    const lo = known ? info.cum[info.curve][info.level] : 0, hi = known ? info.cum[info.curve][next] : 0;
+    const pct = known && hi > lo ? Math.max(0, Math.min(100, (info.exp - lo) / (hi - lo) * 100)) : 0;
     return `<div class="row here-lv" id="toLevel"><span class="lv-now">LV ${info.level}</span>` +
-      `<div class="grow"><div class="bar exp"><i style="width:${Math.max(0, Math.min(100, pct * 100))}%"></i></div>` +
-      `<div class="sub">${lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`} EXP to LV ${next}</div></div>` +
+      `<div class="grow">${known
+        ? `<div class="bar exp"><i style="width:${pct}%"></i></div><div class="sub">${fmt(hi - info.exp)} EXP to LV ${next}</div>`
+        : `<div class="sub">EXP to LV ${next} shows once your growth is clear, after a few fights.</div>`}</div>` +
       `<span class="rewards">${rewardChips(info, next)}</span><span class="tag more">›</span></div>`;
   }
 
@@ -907,10 +904,12 @@
   }
 
   function rememberSteps() {
-    // The growth curve has no save byte: keep the last one EXP pinned down, for when it's ambiguous again.
+    // The growth curve has no save byte: remember which curves this playthrough's EXP still fits,
+    // so each reading narrows it further (levelInfo drops the memory when EXP goes down: a new game).
     const info = !sum.title && L.levelInfo(state, levelPick);
-    if (info && info.seenCurve && (levelPick.seen !== info.seenCurve || levelPick.seenExp !== info.exp)) {
-      levelPick = { ...levelPick, seen: info.seenCurve, seenExp: info.exp };
+    if (info && info.exp != null && (String(levelPick.fits) !== String(info.curves) || levelPick.fitsExp !== info.exp)) {
+      const { seen, seenExp, ...rest } = levelPick;
+      levelPick = { ...rest, fits: info.curves, fitsExp: info.exp };
       store.set("levelPick", levelPick);
     }
     const before = guideSeen.size;

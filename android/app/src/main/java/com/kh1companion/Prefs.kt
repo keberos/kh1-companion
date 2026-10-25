@@ -32,6 +32,17 @@ class Prefs(context: Context) {
         get() = sp.getLong("deployedVersion", 0)
         set(v) = sp.edit().putLong("deployedVersion", v).apply()
 
+    /** When the bridge took the mod out of the game (its uninstall.log's time), 0 if it hasn't. Kept
+     *  here because Delete files removes the log along with the rest of the folder. */
+    var removedAt: Long
+        get() = sp.getLong("removedAt", 0)
+        set(v) = sp.edit().putLong("removedAt", v).apply()
+
+    /** The user deleted Download/KH1Companion/: don't copy the files back until they set up again. */
+    var filesDeleted: Boolean
+        get() = sp.getBoolean("filesDeleted", false)
+        set(v) = sp.edit().putBoolean("filesDeleted", v).apply()
+
     companion object {
         fun defaultStatePath(): String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

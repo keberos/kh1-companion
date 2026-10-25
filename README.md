@@ -63,7 +63,7 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
 
 - **Tap the KH1 Companion icon** to open the companion (or let Cocoon open it with the game). It closes by itself as soon as the game exits.
 - **Close it any time** with the **×** at the top of the companion, or **Close** on its notification.
-- **Long-press the icon** for *Close companion* and *Settings*.
+- **Settings:** tap **×** on the companion → **Settings** (or **Settings** on its notification; on launchers with icon menus, long-press the icon).
 - **Nothing shows until a save is loaded**, so you never see leftovers from another save.
 
 ## Smoother play on the AYN Thor
@@ -85,11 +85,11 @@ With these settings (fan aside), the game spent about 4% of a two-minute camera-
 
 ## Uninstall
 
-In the app: **Settings → Advanced → Remove everything**.
+In the app's Settings (tap **×** on the companion → **Settings** (or **Settings** on its notification; on launchers with icon menus, long-press the icon)), tap **Remove everything…**. Setup pauses while you go through it; **Set up again** brings it back if you change your mind.
 
 1. **Remove from the game**, then start the game once. The mod takes itself out of the game folder and never loads again. No GameNative steps.
-2. Optional: delete the setting you added in GameNative (harmless to leave), and if you pointed the game straight at KH1, set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
-3. **Delete files**, then **Uninstall**.
+2. Optional: turn off **Enable mod loaders** in GameNative (harmless to leave), and if you pointed the game straight at KH1, set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
+3. **Delete files** (it asks first), then **Uninstall**.
 
 Your game and saves are untouched throughout.
 

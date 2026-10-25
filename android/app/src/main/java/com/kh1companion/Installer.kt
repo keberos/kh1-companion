@@ -32,10 +32,11 @@ object Installer {
     const val GAMENATIVE = "app.gamenative"
     private const val ACTION_LAUNCH_GAME = "app.gamenative.LAUNCH_GAME"
 
-    /** Copy the shipped files out, once per app version. Needs all files access. */
+    /** Copy the shipped files out, once per app version, unless the user deleted them. Needs all files access. */
     fun deploy(context: Context, force: Boolean = false): Boolean {
         if (!Environment.isExternalStorageManager()) return false
         val prefs = Prefs(context)
+        if (prefs.filesDeleted) return false
         val version = context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
         if (!force && prefs.deployedVersion == version && root.resolve("mod/DINPUT8.dll").exists()) return true
         return try {
@@ -62,14 +63,33 @@ object Installer {
     /** The bridge has written its file at some point: the mod is in the game and working. */
     fun bridgeSeen(context: Context) = File(Prefs(context).statePath).exists()
 
-    fun installed(context: Context) = bridgeSeen(context) && !removedSince(context) && !removalPending()
+    fun installed(context: Context) = bridgeSeen(context) && !removed(context) && !removalPending()
 
-    /** The bridge removed itself and hasn't written since, so a later reinstall clears it. */
-    private fun removedSince(context: Context): Boolean {
-        if (removeResult()?.first != true) return false
-        if (File(Prefs(context).statePath).lastModified() <= unlog.lastModified()) return true
+    /**
+     * The bridge took the mod out of the game and hasn't written since. Remembered in [Prefs] so it
+     * outlives Delete files; the bridge writing again (the mod added back) clears it.
+     */
+    fun removed(context: Context): Boolean {
+        val prefs = Prefs(context)
+        if (prefs.removedAt == 0L && removeResult()?.first == true) prefs.removedAt = unlog.lastModified()
+        if (prefs.removedAt == 0L) return false
+        if (File(prefs.statePath).lastModified() <= prefs.removedAt) return true
+        prefs.removedAt = 0
         unlog.delete()
         return false
+    }
+
+    /** Removing (or removed, or files deleted): setup waits until the user chooses [setUpAgain]. */
+    fun removing(context: Context) = removalPending() || removed(context) || Prefs(context).filesDeleted
+
+    /** Undo a removal: forget it and copy the files back, so setup starts over. */
+    fun setUpAgain(context: Context) {
+        val prefs = Prefs(context)
+        flag.delete()
+        unlog.delete()
+        prefs.removedAt = 0
+        prefs.filesDeleted = false
+        deploy(context, force = true)
     }
 
     fun gameNativeInstalled(context: Context) = try {
@@ -82,6 +102,7 @@ object Installer {
      * player starts the game, and the companion closes itself when the game exits.
      */
     fun launchGame(context: Context): Boolean {
+        val watching = CompanionService.running
         if (android.provider.Settings.canDrawOverlays(context)) {
             context.startForegroundService(android.content.Intent(context, CompanionService::class.java))
         }
@@ -91,12 +112,17 @@ object Installer {
             .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         val main = android.app.ActivityOptions.makeBasic().setLaunchDisplayId(android.view.Display.DEFAULT_DISPLAY)
         return try {
-            context.startActivity(game, main.toBundle()); true
+            context.startActivity(game, main.toBundle())
+            // Close the companion the moment the game exits, as when a launcher opens it (see WatchActivity).
+            if (!watching) context.startActivity(android.content.Intent(context, WatchActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            true
         } catch (e: android.content.ActivityNotFoundException) { false }
     }
 
     /** Ask the bridge to take the mod out of the game folder the next time the game starts. */
     fun requestRemoval(context: Context): Boolean {
+        Prefs(context).filesDeleted = false // the bridge script does the removal, so it has to be there
         deploy(context)
         unlog.delete()
         return try { flag.parentFile?.mkdirs(); flag.writeText("remove\n"); true } catch (e: Exception) { false }
@@ -115,7 +141,10 @@ object Installer {
 
     /** Delete everything the app put in Download/KH1Companion/ (script, mod files, state, logs). */
     fun deleteFiles(context: Context): Boolean {
-        Prefs(context).deployedVersion = 0
+        val prefs = Prefs(context)
+        removed(context) // note a finished removal before its log goes
+        prefs.deployedVersion = 0
+        prefs.filesDeleted = true
         return root.deleteRecursively()
     }
 }

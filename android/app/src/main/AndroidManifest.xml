@@ -31,7 +31,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:excludeFromRecents="true"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.Material.NoActionBar">
             <intent-filter>

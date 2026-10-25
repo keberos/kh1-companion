@@ -20,10 +20,10 @@ import android.widget.Toast
 import java.io.File
 
 /**
- * Setup and settings. First run walks through a checklist (permissions, the two GameNative steps,
- * a first launch that confirms it works, then pairing it with the game in a launcher); after that
- * the app icon opens the companion (see [handleLaunch]). Advanced has the settings and Remove
- * everything. The companion itself runs in [CompanionService].
+ * Setup and settings. First run walks through a checklist (permissions, the GameNative step, a
+ * first launch that confirms it works, then pairing it with the game in a launcher); after that
+ * the app icon opens the companion (see [handleLaunch]). Below the checklist: Close companion,
+ * Remove everything, and Advanced settings. The companion itself runs in [CompanionService].
  */
 class MainActivity : Activity() {
     private lateinit var prefs: Prefs
@@ -57,6 +57,14 @@ class MainActivity : Activity() {
             hint = "empty = bundled page; e.g. http://192.168.1.20:8737/"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
         }
+        col.addView(button("Close companion") {
+            CompanionService.stop(this)
+            Toast.makeText(this, "Companion closed", Toast.LENGTH_SHORT).show()
+        })
+        removal = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        col.addView(button("Remove everything…") { removal.visibility = if (removal.visibility == View.GONE) View.VISIBLE else View.GONE })
+        col.addView(removal)
+
         val advanced = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
         advanced.addView(text("GameNative game (Steam app id of KINGDOM HEARTS HD 1.5+2.5 ReMIX)", 14f))
         advanced.addView(gameId)
@@ -65,11 +73,8 @@ class MainActivity : Activity() {
         advanced.addView(text("Dev URL (PC dev server, run with --lan)", 14f))
         advanced.addView(devUrl)
         advanced.addView(button("Save") { save(); Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show() })
-        advanced.addView(button("Close companion") { CompanionService.stop(this) })
-        removal = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        advanced.addView(removal)
         advanced.addView(text(licenses(), 12f))
-        col.addView(button("Advanced") { advanced.visibility = if (advanced.visibility == View.GONE) View.VISIBLE else View.GONE })
+        col.addView(button("Advanced settings") { advanced.visibility = if (advanced.visibility == View.GONE) View.VISIBLE else View.GONE })
         col.addView(advanced)
         setContentView(ScrollView(this).apply { addView(col) })
     }
@@ -114,12 +119,22 @@ class MainActivity : Activity() {
             }
             else -> return false
         }
-        finish()
+        finishAndRemoveTask() // nothing to come back to: don't leave an empty entry in recents
         return true
     }
 
     private fun refresh() {
         steps.removeAllViews()
+        if (Installer.removing(this)) {
+            // Don't walk back through setup in the middle of taking everything out.
+            removal.visibility = View.VISIBLE
+            step("Setup is paused", false,
+                "The companion is being removed: the steps are under Remove everything below. Changed your mind? " +
+                    "Set up again puts the files back and starts setup over.",
+                listOf("Set up again" to { Installer.setUpAgain(this); refresh() }), mark = false)
+            refreshRemoval()
+            return
+        }
         val overlay = Settings.canDrawOverlays(this)
         val files = Environment.isExternalStorageManager()
         val gn = Installer.gameNativeInstalled(this)
@@ -147,7 +162,7 @@ class MainActivity : Activity() {
         } else {
             step("3. Add the mod in GameNative", working,
                 "Copy two files the app has ready for you into the game, and turn on one switch. All from the game's " +
-                    "gear in GameNative, about a minute.",
+                    "gear in GameNative, about a minute." + if (working) "" else " This ticks itself off in step 4, once the game connects.",
                 if (!working && files) listOf(openGameNative) else emptyList())
             if (!working && files) guide("import", listOf(
                 "In GameNative, pick KINGDOM HEARTS HD 1.5+2.5 ReMIX and tap the gear." to "gear",
@@ -195,7 +210,8 @@ class MainActivity : Activity() {
         removal.removeAllViews()
         val result = Installer.removeResult()
         val pending = Installer.removalPending()
-        val removed = result?.first == true
+        val removed = Installer.removed(this)
+        val deleted = prefs.filesDeleted
         removal.addView(text("Remove everything", 18f, bold = true))
         step("1. Take the mod out of the game", removed,
             when {
@@ -218,16 +234,15 @@ class MainActivity : Activity() {
             "In GameNative: ⚙ → Edit container → General → turn off Enable mod loaders. Harmless to leave once " +
                 "the mod is out. If you pointed the game straight at KH1 (setup step 6), you can set Executable Path back " +
                 "to KINGDOM HEARTS HD 1.5+2.5 Launcher.exe on the General tab.", emptyList(), into = removal, mark = false)
-        step("3. Delete the companion's files", false, "Removes Download/KH1Companion.",
-            listOf("Delete files" to {
+        step("3. Delete the companion's files", deleted,
+            if (deleted) "Done: Download/KH1Companion is gone."
+            else "Removes Download/KH1Companion: the bridge script, the two mod files and the game's progress file. " +
+                "Your game saves aren't touched.",
+            if (deleted) emptyList() else listOf("Delete files" to {
                 if (Installer.removalPending()) {
                     Toast.makeText(this, "Start the game once first, so the mod can remove itself", Toast.LENGTH_LONG).show()
-                } else {
-                    CompanionService.stop(this)
-                    Toast.makeText(this, if (Installer.deleteFiles(this)) "Files deleted" else "Couldn't delete everything", Toast.LENGTH_SHORT).show()
-                    refresh()
-                }
-            }), into = removal, mark = false)
+                } else confirmDelete()
+            }), into = removal)
         step("4. Uninstall this app", false, "", listOf("Uninstall" to {
             CompanionService.stop(this)
             startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$packageName")))
@@ -275,6 +290,19 @@ class MainActivity : Activity() {
         into.addView(box)
     }
 
+    private fun confirmDelete() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Delete the companion's files?")
+            .setMessage("This deletes Download/KH1Companion. Your game saves aren't touched.")
+            .setPositiveButton("Delete") { _, _ ->
+                CompanionService.stop(this)
+                if (!Installer.deleteFiles(this)) Toast.makeText(this, "Couldn't delete everything", Toast.LENGTH_SHORT).show()
+                refresh()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun startGame() {
         if (!Installer.launchGame(this)) Toast.makeText(this, "GameNative isn't installed", Toast.LENGTH_LONG).show()
     }
@@ -289,7 +317,7 @@ class MainActivity : Activity() {
 
     private fun licenses() = try {
         assets.open("mod/NOTICE.txt").bufferedReader().readText() +
-            "\nThe full license text is in Download/KH1Companion/mod/LuaBackend-LICENSE.txt."
+            "\nThe full license text is in Download/KH1Companion/mod/licenses/LuaBackend-LICENSE.txt."
     } catch (e: Exception) { "" }
 
     private fun save() {

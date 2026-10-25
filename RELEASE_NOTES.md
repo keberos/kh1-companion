@@ -87,10 +87,10 @@ You need GameNative with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed a
 
 ### Uninstalling
 
-Settings (long-press the icon → **Settings**, or tap **×** on the companion → **Settings**) → **Advanced → Remove everything**:
+Settings (tap **×** on the companion → **Settings** (or **Settings** on its notification; on launchers with icon menus, long-press the icon)) → **Remove everything…**:
 
 1. **Remove from the game**, then start the game once. The mod takes itself out of the game folder and never loads again. No GameNative steps.
-2. Optional: delete the setting you added in GameNative (harmless to leave), and set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` if you changed it.
+2. Optional: turn off **Enable mod loaders** in GameNative (harmless to leave), and set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` if you changed it.
 3. **Delete files**, then **Uninstall**.
 
 ### What's inside

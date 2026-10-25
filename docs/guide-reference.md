@@ -35,7 +35,7 @@ On PC (Steam) `progress` starts at 0x2DEA864 and `progress_pre` 4 bytes before i
 
 ## Story values used
 
-**Destiny Islands** (`pre[2]`; early values recorded on the Thor): 01 day one · 04 supplies handed to Kairi ·
+**Destiny Islands** (`pre[2]`; early values recorded on the Thor): 01 day one · 04 supplies handed to Kairi (they leave the bag, so this byte is the only sign they were gathered) ·
 07 called it a day · 0A met Riku in the Cove (the race follows, unrecorded) · 14 Kairi's food list · 17 food handed
 over · 1E the storm · 24 Riku's scene, the Keyblade. `pre[3]` moves 0→1 with the Disney Castle scene between days.
 

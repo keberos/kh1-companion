@@ -48,9 +48,14 @@ window.KH1_GUIDE = {
     { items: [["Log", 2], ["Cloth", 1], ["Rope", 1]], title: "Gather raft supplies", where: "Seashore",
       nudge: "Talk to Kairi, then find what she asks for.",
       hint: "Kairi is by the far doorway. A log on the shore under the bridge, another on the little island across it, the cloth in the treehouse, the rope on the west platform." },
-    { pre: [2, 0x07], title: "Wrap up the first day", where: "Seashore",
+    // Handing them over uses them up, so a save from after this point has no supplies in the bag:
+    // this step being done is what tells the guide they were gathered.
+    { pre: [2, 0x04], title: "Bring the supplies to Kairi", where: "Seashore",
       nudge: "Bring the supplies to Kairi.",
-      hint: "Hand them over and choose to call it a day." },
+      hint: "She's by the far doorway." },
+    { pre: [2, 0x07], title: "Wrap up the first day", where: "Seashore",
+      nudge: "Talk to Kairi again.",
+      hint: "Choose to call it a day." },
     { pre: [2, 0x0A], from: { pre: [2, 0x07] }, title: "Meet Riku in the Cove", where: "Cove",
       nudge: "Go through the doorway where Kairi stood.",
       hint: "Riku is in the Cove." },

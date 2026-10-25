@@ -192,6 +192,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | `tools/build_gamenative_mod.py` | Fetches LuaBackend and writes the mod files into the app's assets. |
 | `tools/make_scenarios.py`, `tools/make_screenshots.py`, `tools/make_guide_images.py` | Sample saves; README screenshots and banner (headless Chrome); setup pictures from GameNative screenshots. |
 | `tools/test_logic.mjs`, `tools/test_bridge.py` | Node tests for decoding, maps, guide and levels plus recorded fixtures; the Lua bridge against fake memory (needs `pip install lupa`). |
+| `tools/kh1save.py` | Reads real KH1FM PC saves (`KHFM_WW.png`, or GameNative's *Export saves* ZIP): lists the slots and turns each into the bridge's `state.json`, since a save slot is the same block of memory the bridge reads. |
 | `tools/emulator_test.py`, `tools/mock_state.py` | Two-display emulator check of the overlay; a fake, changing state file for UI work. |
 
 ### Dev environment
@@ -204,6 +205,7 @@ python tools/devserver.py --record
 - `--record` saves real changes to `recordings/`; load one in the preview to replay it.
 - `--lan` makes the server reachable from the Thor; set the app's dev URL to it and page edits show up on the real bottom screen with no rebuild.
 - Without the game: `python tools/make_scenarios.py` for fixed saves, or `python tools/mock_state.py` then `python tools/devserver.py --state mock/state.json`.
+- From a real save: in GameNative, the game → ⚙ → **Export saves**, then `python tools/kh1save.py state <the ZIP> mock` and `python tools/devserver.py --state mock/save-<slot>.json`.
 
 Tests:
 

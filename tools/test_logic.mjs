@@ -224,10 +224,12 @@ test("Destiny Islands errands count items, and remembered steps survive handing 
   assert.equal(g.next.title, "Gather raft supplies");
   assert.deepEqual(g.next.counts.map((c) => [c.name, c.have, c.n]), [["Log", 1, 2], ["Cloth", 1, 1], ["Rope", 0, 1]]);
   g = di({ inventory: inv({ 192: 2, 193: 1, 194: 1 }) });
-  assert.equal(g.next.title, "Wrap up the first day");
-  // Items handed to Kairi: gone from the bag, so only the device's memory knows step 1 was done.
+  assert.equal(g.next.title, "Bring the supplies to Kairi");
   assert.equal(di({ inventory: inv({}) }).next.title, "Gather raft supplies");
-  assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#Gather raft supplies"]) }).next.title, "Wrap up the first day");
+  assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#Gather raft supplies"]) }).next.title, "Bring the supplies to Kairi");
+  // Handed to Kairi (counter 04): gone from the bag, but the story byte says they were gathered, so a
+  // save loaded on a fresh device doesn't send the player back for them (found with a real save).
+  assert.equal(di({ inventory: inv({}), progress_pre: "0a560400" }).next.title, "Wrap up the first day");
   g = di({ inventory: inv({ 197: 1 }), progress_pre: "0a561401", seen: new Set(["Destiny Islands#Gather raft supplies"]) });
   assert.equal(g.next.title, "Gather food and water", "Kairi gave the list (counter 0x14)");
   const p = new Array(16).fill(0); p[0] = 0x05;

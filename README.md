@@ -192,6 +192,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 | `tools/build_gamenative_mod.py` | Fetches LuaBackend and writes the mod files into the app's assets. |
 | `tools/make_scenarios.py`, `tools/make_screenshots.py`, `tools/make_guide_images.py` | Sample saves; README screenshots and banner (headless Chrome); setup pictures from GameNative screenshots. |
 | `tools/test_logic.mjs`, `tools/test_bridge.py` | Node tests for decoding, maps, guide and levels plus recorded fixtures; the Lua bridge against fake memory (needs `pip install lupa`). |
+| `tools/make_story_fixtures.mjs`, `tools/test_story.mjs`, `tools/fixtures/` | Story-point fixtures: from real saves, a `state.json` just before and after every Guide step in every world (and the waits in between), checked by Node tests that walk the whole story and make sure no later save falls back to an earlier step. |
 | `tools/kh1save.py` | Reads real KH1FM PC saves (`KHFM_WW.png`, or GameNative's *Export saves* ZIP): lists the slots and turns each into the bridge's `state.json`, since a save slot is the same block of memory the bridge reads. |
 | `tools/emulator_test.py`, `tools/mock_state.py` | Two-display emulator check of the overlay; a fake, changing state file for UI work. |
 
@@ -210,7 +211,13 @@ python tools/devserver.py --record
 Tests:
 
 ```bash
-node --test tools/test_logic.mjs
+node --test tools/test_logic.mjs tools/test_story.mjs
+```
+
+After changing `companion/guide.js`, regenerate the story points (from saves exported with `kh1save.py state <ZIP> mock/saves`; `--out` also writes each point as a `state.json` for the dev server):
+
+```bash
+node tools/make_story_fixtures.mjs mock/saves --out mock/story
 ```
 
 The portable toolchain (JDK 17, Android SDK, Gradle, Node) lives in `C:\Users\lasco\dev-tools`. To build the APK:

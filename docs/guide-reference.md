@@ -81,6 +81,24 @@ Heartless · 8C/96/A0 back as Sora · AA second landing · B9 Behemoth · BE/C3 
 Also in the notes and not used yet: a game-mode byte (cutscene, FMV, boss), per-chest and Trinity bit flags with
 names, the 100 Acre Wood's progress, the Olympus cups, and event flags for Wonderland's evidence and Jane's slides.
 
+## Testing without playing
+
+`tools/make_story_fixtures.mjs` plays the story forward from real saves through these values, in game order, and
+writes a snapshot just before and just after every step (`tools/fixtures/story-points.json`); `tools/test_story.mjs`
+checks each one and that no later save sends the Guide back. What it assumes the game does around the steps (scenes
+that follow by themselves, key items leaving the bag) is listed in the generator's `AROUND` table.
+
+A device remembers finished steps, so in live play nothing goes back. A save loaded on a new device has only the
+save to go on, and two steps can show again there, since nothing in the save proves them:
+
+- **Traverse Town, Look around town**, until the Guard Armor: it's done by walking into the Green Room, and no
+  counter value before 2B is known.
+- **Hollow Bastion, Solve the library**, between the emblem door and the chapel (50): the door takes the emblem
+  pieces, and no counter marks it open. Two saves, either side of the door, would show what does.
+
+End of the World's walking steps are done by being in their room or a later one, and the final door also by `p11`
+reaching 5A (back on the islands).
+
 ## Missables
 
 | What | Lost when |

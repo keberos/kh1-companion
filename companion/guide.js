@@ -22,10 +22,11 @@
 //   pre     [i, v]: progress_pre[i] reached v
 //   items   all these inventory counts reached (Destiny Islands errands; `extra` is shown only)
 //   has     an item, spell, ability or Trinity is in the save (logic.js has())
-//   reach   the player walked into this map room while the step was current
+//   reach   the player walked into this map room (or a later reach step's) while the step was current
 //   all / any  lists of the above
 //   dive    the player is past this point of the Dive (room order), or out of it
 //   end     "dive" / "islands" / "never": only once the player has moved on
+// or      a later story value that also proves it, for evidence that doesn't last (a reach step's room)
 // from    the same kinds of test, for when the game hands the step out. Until then there's no next
 //         step. The page also holds a newly unlocked step back until the cutscene ends (in_field).
 // optional  doesn't hold up the steps after it
@@ -384,7 +385,7 @@ window.KH1_GUIDE = {
     { p: 11, at: 0x33, title: "Defeat Chernabog", rewards: ["Superglide"],
       nudge: "Take the flame portal.",
       hint: "Read the machine in the side room, then jump into the vortex." },
-    { reach: "Final Rest", title: "Reach the final door", where: "Linked Worlds",
+    { reach: "Final Rest", or: { p: 11, at: 0x5A }, title: "Reach the final door", where: "Linked Worlds",
       nudge: "Head through. Past the next save there's no turning back: finish anything else first.",
       hint: "Down the Volcanic Crater to the white portal, through the hallways of lost worlds to the Linked Worlds. Break the emblem while the Heartless keep coming." },
     { p: 11, at: 0x66, title: "Defeat Ansem", where: "Homecoming",

@@ -295,6 +295,8 @@
     const steps = ((GUIDE || {})[world] || []).map((s) => {
       // Being in a room only finishes a step that's current, so walking through early doesn't skip it.
       let done = s.reach ? false : stepDone(s, f, state, world);
+      // `or`: a later story value that proves it too, for steps whose own evidence doesn't last.
+      if (done !== true && s.or && test(s.or, f, state, world) === true) done = true;
       if (done !== true && seen && seen.has(stepKey(world, s))) done = true;
       const counts = s.items ? s.items.concat(s.extra || []).map(([name, n]) => ({ name, n, have: itemCount(state, name) })) : null;
       return { ...s, key: stepKey(world, s), done, counts };
@@ -306,8 +308,10 @@
     // The first step not known to be done, in story order; optional ones only when nothing else is left.
     const first = () => steps.find((s) => s.done !== true && !s.optional) || steps.find((s) => s.done !== true) || null;
     let next = first();
-    // A "reach" step is done the moment the player walks into its room while it's current.
-    while (next && next.reach && test({ reach: next.reach }, f, state, world)) { next.done = true; next = first(); }
+    // A "reach" step is done the moment the player walks into its room while it's current, or into
+    // the room of a later "reach" step (a save loaded further along the same path).
+    const ahead = (s) => steps.slice(steps.indexOf(s)).filter((x) => x.reach).map((x) => x.reach);
+    while (next && next.reach && ahead(next).some((r) => test({ reach: r }, f, state, world))) { next.done = true; next = first(); }
     // A step only shows once the game has handed it out (`from`): between objectives, while
     // scenes play, there's no next step rather than the last one or a peek at what's coming.
     if (next && next.from && test(next.from, f, state, world) === false) return { steps, next: null, waiting: true };

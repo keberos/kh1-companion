@@ -210,17 +210,19 @@
 
   // ---------- header ----------
 
+  // Runs every second: only touch what changed, so an idle bottom screen doesn't repaint.
+  const put = (el, key, v) => { if (el[key] !== v) el[key] = v; };
   function renderHeader() {
     const dot = $("dot");
     const age = Date.now() - lastChange;
-    dot.className = "dot" + (!state ? "" : age < STALE_MS ? " live" : " stale");
-    dot.title = !state ? "Not connected" : age < STALE_MS ? "Live" : `No update for ${Math.round(age / 1000)}s`;
-    $("modeBtn").hidden = !state || sum.title;
+    put(dot, "className", "dot" + (!state ? "" : age < STALE_MS ? " live" : " stale"));
+    put(dot, "title", !state ? "Not connected" : age < STALE_MS ? "Live" : `No update for ${Math.round(age / 1000)}s`);
+    put($("modeBtn"), "hidden", !state || !!sum.title);
     if (!state) return;
-    $("hWorld").textContent = sum.title ? "Title / menu" : sum.world ? displayWorld(sum.world) : `World ${hex2(state.world)}`;
+    put($("hWorld"), "textContent", sum.title ? "Title / menu" : sum.world ? displayWorld(sum.world) : `World ${hex2(state.world)}`);
     const n = hereNode();
-    $("hRoom").textContent = sum.title ? "" : sum.room || (n ? L.labelOf(n) : `Room ${hex2(state.room)}`);
-    $("hLevel").innerHTML = sum.title ? "" : `<b>LV</b>${state.level}`;
+    put($("hRoom"), "textContent", sum.title ? "" : sum.room || (n ? L.labelOf(n) : `Room ${hex2(state.room)}`));
+    put($("hLevel"), "innerHTML", sum.title ? "" : `<b>LV</b>${state.level}`);
   }
 
   // ---------- Here ----------

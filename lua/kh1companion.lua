@@ -170,6 +170,16 @@ local function self_uninstall(dir)
     return true
 end
 
+-- Research aids, decided once at startup so normal play pays nothing per frame (no file checks):
+-- they run only if their file is there when the game starts.
+local research_dump, research_probe = false, false
+
+local function file_exists(path)
+    local f = io.open(path, "r")
+    if f then f:close() return true end
+    return false
+end
+
 function _OnInit()
     if GAME_ID ~= 0xAF71841E or ENGINE_TYPE ~= "BACKEND" then
         ConsolePrint("kh1companion: KH1 not detected, not running")
@@ -194,12 +204,14 @@ function _OnInit()
         game_version = nil
         return
     end
+    research_dump = file_exists(out_dir .. "dump.flag")
+    research_probe = file_exists(out_dir .. "probe.txt")
     out_path = out_dir .. "state.json"
     tmp_path = out_dir .. "state.json.tmp"
     ConsolePrint("kh1companion: " .. (game_version == 2 and "Steam" or "EGS") .. " build, writing " .. out_path)
 end
 
--- Research aid, off unless dump.flag sits next to the state file: whenever the flag's text
+-- Research aid, on when dump.flag sits next to the state file at startup: whenever the flag's text
 -- changes, write 16 MB of game memory to dump-<text>.bin, for finding new values by comparing
 -- snapshots (tools/memdiff.py; tools/thor.py snap rewrites the flag on each bottom-screen tap).
 -- Read only, like the rest of the bridge.
@@ -224,7 +236,7 @@ local function dump_on_flag()
     ConsolePrint("kh1companion: wrote dump-" .. label .. ".bin")
 end
 
--- Research aid, off unless probe.txt sits next to the state file: it lists game offsets (hex, one
+-- Research aid, on when probe.txt sits next to the state file at startup: it lists game offsets (hex, one
 -- per line); their bytes go into the snapshot as "probe", so tools/thor.py watch logs how each one
 -- behaves during play. The list is re-read every few seconds.
 local probe_addrs, probe_read = {}, -1000
@@ -253,8 +265,9 @@ function _OnFrame()
     frame = frame + 1
     if frame % POLL_FRAMES ~= 0 then return end
 
-    dump_on_flag()
-    local body = snapshot() .. probe_json(frame)
+    if research_dump then dump_on_flag() end
+    local body = snapshot()
+    if research_probe then body = body .. probe_json(frame) end
     local now = os.time()
     if body ~= last_payload or now - last_write >= HEARTBEAT_SECS then
         write_snapshot(body)

@@ -1,8 +1,8 @@
 // What a chest needs before you can reach or open it, from walkthroughs only. Keyed by world, then the
 // chest's name as in KH1_CHESTS. `need`: all of these (same names as the chest data, so logic.js's
-// has() can judge them); `src`: the walkthroughs that state it outright for this chest.
-// Kept only where 2+ walkthroughs say it and none says otherwise; a chest not listed needs nothing
-// the guides agree on. Sources and disagreements: docs/chest-needs-sources.md.
+// has() can judge them), kept only where 2+ walkthroughs say it and none says otherwise; `src`: those
+// walkthroughs. `note`: what the guides say where they disagree or only one says it (never a lock);
+// its sources are `noteSrc`, or `src` when there's no `need`. Details: docs/chest-needs-sources.md.
 //   KW KH Wiki walkthrough · ES ElectroSpecter · KC KingContributor · WP winnie_the_poop & MTincher ·
 //   SS Spirit_Slash3r · CC CChan (Final Mix) · EP EmPleh, Trinity Mark FAQ (all GameFAQs) · IGN IGN wiki
 window.KH1_CHEST_NEEDS = {
@@ -15,6 +15,8 @@ window.KH1_CHEST_NEEDS = {
     "Mystical House Yellow Trinity Chest": { need: ["Yellow Trinity"], src: "ES EP" },
     "Secret Waterway Near Stairs Chest": { need: ["Red Trinity"], src: "ES KC WP" },
     "Secret Waterway White Trinity Chest": { need: ["White Trinity"], src: "KW ES SS" },
+    "1st District Accessory Shop Roof Chest": { note: "One guide: push a crate against the wall and climb onto the roof.", src: "ES" },
+    "Item Workshop Right Chest": { note: "One guide: through the Green Trinity in the Accessory Shop.", src: "KW" },
   },
   "Wonderland": {
     "Bizarre Room Green Trinity Chest": { need: ["Green Trinity"], src: "KW ES" },
@@ -22,27 +24,37 @@ window.KH1_CHEST_NEEDS = {
     "Lotus Forest Glide Chest": { need: ["Progressive Glide"], src: "KW ES" },
     "Lotus Forest Thunder Plant Chest": { need: ["Progressive Thunder"], src: "KW ES" },
     "Lotus Forest Through the Painting White Trinity Chest": { need: ["White Trinity"], src: "KW ES SS" },
-    "Tea Party Garden Above Lotus Forest Entrance 1st Chest": { need: ["Progressive Glide"], src: "ES KC WP CC" },
+    "Tea Party Garden Above Lotus Forest Entrance 1st Chest": { need: ["Progressive Glide"], src: "ES KC WP CC", note: "One guide also says High Jump.", noteSrc: "ES" },
     "Tea Party Garden Across From Bizarre Room Entrance Chest": { need: ["Progressive Glide"], src: "KW ES" },
+    "Queen's Castle Hedge Right Blue Chest": { note: "No ability needed if you come through the pot in the Bizarre Room; one guide uses High Jump instead.", src: "KC ES CC" },
+    "Tea Party Garden Bear and Clock Puzzle Chest": { note: "Reachable on foot from the Bizarre Room's exit; Glide also gets you there from the garden.", src: "KW ES" },
+    "Lotus Forest Through the Painting Thunder Plant Chest": { note: "One guide: cast Thunder on the bellflowers.", src: "KW" },
   },
   "Olympus Coliseum": {
     "Coliseum Gates Blizzaga Chest": { need: ["Progressive Blizzard:3"], src: "ES CC" },
     "Coliseum Gates Left Blue Trinity Chest": { need: ["Blue Trinity"], src: "KW ES" },
     "Coliseum Gates Right Blue Trinity Chest": { need: ["Blue Trinity"], src: "KW ES KC WP CC" },
     "Coliseum Gates White Trinity Chest": { need: ["White Trinity"], src: "KW ES SS" },
+    "Coliseum Gates Blizzara Chest": { note: "One guide: put out the torches with Blizzara.", src: "ES" },
   },
   "Deep Jungle": {
     "Camp Blue Trinity Chest": { need: ["Blue Trinity"], src: "KW ES KC WP CC" },
     "Climbing Trees Blue Trinity Chest": { need: ["Blue Trinity"], src: "KW ES KC WP CC" },
-    "Cavern of Hearts White Trinity Chest": { need: ["White Trinity"], src: "ES SS" },
+    "Cavern of Hearts White Trinity Chest": { need: ["White Trinity"], src: "ES SS", note: "One guide also says High Jump, to reach the cavern.", noteSrc: "SS" },
     "Tree House Suspended Boat Chest": { need: ["Progressive Glide"], src: "KW ES" },
+    "Hippo's Lagoon Left Chest": { note: "Glide makes it easier; it can be done with careful jumps.", src: "KW ES KC" },
+    "Hippo's Lagoon Right Chest": { note: "Glide makes it easier; without it, it's a hard jump (swing the Keyblade for extra reach).", src: "KW ES" },
   },
   "Agrabah": {
     "Cave of Wonders Entrance White Trinity Chest": { need: ["White Trinity"], src: "ES WP SS CC" },
     "Cave of Wonders Silent Chamber Blue Trinity Chest": { need: ["Blue Trinity"], src: "KW WP EP" },
-    "Palace Gates High Close to Palace Chest": { need: ["High Jump"], src: "ES KC" },
+    "Palace Gates High Close to Palace Chest": { need: ["High Jump"], src: "ES KC", note: "One guide also glides here; another gets there without it.", noteSrc: "KC ES" },
     "Palace Gates High Opposite Palace Chest": { need: ["High Jump", "Progressive Glide"], src: "ES KC WP" },
     "Storage Green Trinity Chest": { need: ["Green Trinity"], src: "KW ES" },
+    "Cave of Wonders Entrance Tall Tower Chest": { note: "Glide is the usual way; a barrel can also launch you there without it.", src: "ES KC CC WP" },
+    "Cave of Wonders Hidden Room Left Chest": { note: "Either works: the Yellow Trinity by the idol, or High Jump to the ledge across the water.", src: "EP ES" },
+    "Cave of Wonders Hidden Room Right Chest": { note: "Either works: the Yellow Trinity by the idol, or High Jump to the ledge across the water.", src: "EP ES" },
+    "Main Street High Above Palace Gates Entrance Chest": { note: "One guide: High Jump.", src: "ES" },
   },
   "Monstro": {
     "Mouth Green Trinity Top of Boat Chest": { need: ["Green Trinity", "High Jump"], src: "KW SS" },
@@ -50,15 +62,24 @@ window.KH1_CHEST_NEEDS = {
     "Mouth High Platform Near Teeth Chest": { need: ["High Jump"], src: "KC SS" },
     "Mouth Near Ship Chest": { need: ["High Jump"], src: "KC IGN" },
     "Chamber 6 White Trinity Chest": { need: ["White Trinity"], src: "KW ES SS" },
+    "Chamber 3 Platform Above Chamber 2 Entrance Chest": { note: "High Jump or Glide make it easy; without them, stand on a barrel and jump up.", src: "KC CC ES WP" },
+    "Chamber 5 Atop Barrel Chest": { note: "High Jump or Glide make it easy; without them, climb the ledges using a barrel.", src: "KC CC ES" },
+    "Chamber 6 Platform Near Chamber 5 Entrance Chest": { note: "High Jump and Glide make it easy; without them, throw a barrel onto the top step and jump from it.", src: "KC CC ES LK" },
+    "Mouth High Platform Boat Side Chest": { note: "One guide: High Jump.", src: "KC" },
   },
   "Atlantica": {
     "Triton's Palace White Trinity Chest": { need: ["White Trinity"], src: "ES SS" },
+    "Ursula's Lair Use Fire on Urchin Chest": { note: "Cast Fire on the urchin; one guide says plain attacks also break it.", src: "ES SS KW" },
   },
   "Halloween Town": {
-    "Guillotine Square Pumpkin Structure Left Chest": { need: ["Progressive Glide"], src: "ES WP" },
-    "Guillotine Square Pumpkin Structure Right Chest": { need: ["Progressive Glide"], src: "ES WP CC IGN" },
+    "Guillotine Square Pumpkin Structure Left Chest": { need: ["Progressive Glide"], src: "ES WP", note: "High Jump helps; without it, grab the small ledge and climb.", noteSrc: "WP ES" },
+    "Guillotine Square Pumpkin Structure Right Chest": { need: ["Progressive Glide"], src: "ES WP CC IGN", note: "High Jump helps; without it, grab the small ledge and climb.", noteSrc: "WP ES" },
     "Moonlight Hill White Trinity Chest": { need: ["White Trinity"], src: "ES SS" },
     "Oogie's Manor Grounds Red Trinity Chest": { need: ["Red Trinity"], src: "KW CC" },
+    "Bridge Left of Gate Chest": { note: "Glide makes it easier; you can also jump over from a ledge.", src: "KC ES" },
+    "Bridge Right of Gate Chest": { note: "Glide makes it easier; you can also jump over from a ledge.", src: "KC ES" },
+    "Oogie's Manor Lower Iron Cage Chest": { note: "Glide makes it easier; once the cage is lowered you can walk in along the wooden walkway.", src: "KC ES" },
+    "Oogie's Manor Upper Iron Cage Chest": { note: "Glide makes it easier; you can also jump to it from the roof of the mouth.", src: "KC ES" },
   },
   "Neverland": {
     "Captain's Cabin Chest": { need: ["Green Trinity"], src: "KW ES" },
@@ -66,6 +87,9 @@ window.KH1_CHEST_NEEDS = {
     "Hold Yellow Trinity Left Blue Chest": { need: ["Yellow Trinity"], src: "ES KC EP" },
     "Hold Yellow Trinity Right Blue Chest": { need: ["Yellow Trinity"], src: "ES KC EP" },
     "Pirate Ship Deck White Trinity Chest": { need: ["White Trinity"], src: "ES SS EP" },
+    "Hold Flight 1st Chest": { note: "Fly up to the beam (one guide glides there).", src: "SS WP CC IGN" },
+    "Hold Flight 2nd Chest": { note: "Fly up to the beam (one guide glides there).", src: "SS WP CC IGN" },
+    "Pirate Ship Crows Nest Chest": { note: "One guide: fly up from the deck.", src: "ES" },
   },
   "Hollow Bastion": {
     "Rising Falls High Platform Chest": { need: ["Progressive Glide"], src: "KW ES KC WP SS" },
@@ -80,5 +104,17 @@ window.KH1_CHEST_NEEDS = {
     "Lift Stop Library Node Gravity Chest": { need: ["Progressive Gravity"], src: "ES KC WP" },
     "Lift Stop Outside Library Gravity Chest": { need: ["Progressive Gravity"], src: "ES WP SS" },
     "Lift Stop Under High Tower Sliding Blocks Chest": { need: ["Progressive Glide", "Progressive Gravity"], src: "KW ES WP" },
+    "Rising Falls Floating Platform Near Bubble Chest": { note: "Glide between the platforms, or freeze the bubbles with Blizzard and jump across.", src: "ES KC SS WP KW" },
+    "Rising Falls Floating Platform Near Save Chest": { note: "Glide between the platforms, or freeze the bubbles with Blizzard and jump across.", src: "ES KC SS WP KW" },
+  },
+  "100 Acre Wood": {
+    "Bouncing Spot Left Cliff Chest": { note: "Tigger's seesaw launches you up; you can also glide over from the tree.", src: "KW KC" },
+  },
+  "End of the World": {
+    "Giant Crevasse 1st Chest": { note: "Guides glide to most chests here.", src: "KW ES SS IGN" },
+    "Giant Crevasse 2nd Chest": { note: "Guides glide to most chests here.", src: "KW ES SS IGN" },
+    "Giant Crevasse 3rd Chest": { note: "Guides glide to most chests here.", src: "KW ES SS IGN" },
+    "Giant Crevasse 4th Chest": { note: "Guides glide to most chests here.", src: "KW ES SS IGN" },
+    "Giant Crevasse 5th Chest": { note: "Guides glide to most chests here.", src: "KW ES SS IGN" },
   },
 };

@@ -147,7 +147,7 @@
   const LIST_OPTIONS = [
     ["showOpened", "Opened chests", "Also list the chests you've already opened."],
     ["showContents", "What's inside", "Show what each chest holds."],
-    ...(SHOW.chestNeeds ? [["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."]] : []),
+    ...(SHOW.chestNeeds ? [["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity, and what the guides say about tricky ones."]] : []),
     ["allNames", "Room names", "Name rooms you haven't been to yet, on the map and in lists."],
     ["toasts", "Pop-up notes", "A short note above the tabs when you open a chest, level up, find puppies or reach a new world."],
   ];
@@ -399,7 +399,7 @@
     };
   }
 
-  // Exactly where a chest is (chesthints.js), what it holds and what it still needs. Tapping a chest
+  // Exactly where a chest is (chesthints.js), what it holds, what it still needs and the guides' notes. Tapping a chest
   // is asking where it is, so this shows its room even if the player hasn't been there yet.
   const CHEST_HINTS = window.KH1_CHEST_HINTS || {};
   function openChestSheet(world, name) {
@@ -407,12 +407,15 @@
     if (!c) return;
     const nd = c.node && L.node(world, c.node);
     const where = (CHEST_HINTS[world] || {})[name] || (nd ? `In ${L.labelOf(nd)}.` : "Somewhere in this world.");
+    // What the walkthroughs say where they disagree or only one says it; names abilities, so behind showNeeds.
+    const note = SHOW.chestNeeds && showNeeds && !c.got ? ((NEEDS[world] || {})[name] || {}).note : null;
     openSheet(
       `<h2>${esc(name.replace(/ Chest$/, "") || "Chest")}</h2>` +
       `<div class="sub">${esc([displayWorld(world), nd ? L.labelOf(nd) : null, c.got ? "opened" : null].filter(Boolean).join(" · "))}</div>` +
       `<div class="hint">${icon("ico-pin", "chip-ico")}${esc(where)}</div>` +
       (showContents && c.i ? `<div class="sub" style="margin-top:8px">Inside: ${esc(c.i)}</div>` : "") +
       (c.lock ? `<div class="sub" style="margin-top:6px">${icon("ico-lock", "chip-ico")}${esc(needText(c.lock))}</div>` : "") +
+      (note ? `<div class="sub" style="margin-top:6px">${esc(note)}</div>` : "") +
       `<div class="row" style="margin-top:10px">${nd ? `<button class="chip" id="chestOnMap">${icon("ico-chest", "chip-ico")}Show on map</button>` : ""}` +
       `<span class="grow"></span><button class="chip" data-close>Close</button></div>`,
     );

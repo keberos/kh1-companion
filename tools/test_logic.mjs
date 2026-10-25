@@ -512,9 +512,15 @@ test("walkthrough chest needs name real chests, and has() can judge every need",
   const all = blank({ shared: "01030400" + "00".repeat(4), magic: "03030303030303", magic_unlocked: 0x7F, trinities: 0x1F });
   const none = blank({ shared: "00".repeat(8), magic: "01010101010101", magic_unlocked: 0, trinities: 0 });
   let n = 0;
+  let notes = 0;
   for (const [w, byName] of Object.entries(needs)) for (const [name, e] of Object.entries(byName)) {
-    n++;
     assert.ok(CHESTS.some((c) => c.w === w && c.n === name), `needs for a chest that doesn't exist: ${w} / ${name}`);
+    if (e.note) {
+      notes++;
+      assert.ok(e.note.endsWith(".") && (e.need ? e.noteSrc : e.src), `${w} / ${name}: a note needs its sources`);
+    }
+    if (!e.need) continue;
+    n++;
     assert.ok(e.need.length && e.src.split(" ").length >= 2, `${w} / ${name}: needs 2+ sources`);
     for (const a of e.need) {
       assert.equal(L.has(a, all), true, `${a} reads as learned`);
@@ -524,6 +530,7 @@ test("walkthrough chest needs name real chests, and has() can judge every need",
     assert.deepEqual(L.lockOf([e.need], none), e.need.map(L.needName));
   }
   assert.equal(n, 55);
+  assert.equal(notes, 37);
   // Only what's still missing is named.
   const gates = needs["Agrabah"]["Palace Gates High Opposite Palace Chest"].need;
   assert.deepEqual(L.lockOf([gates], blank({ shared: "01" + "00".repeat(7) })), ["Glide"]);

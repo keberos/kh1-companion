@@ -8,10 +8,14 @@ across walkthroughs (read 2026-10-25). The chest sheet names these needs only wh
 - A need is kept only when **2 or more walkthroughs state it outright for that chest** (the ability is how
   they reach or open it) and **none gives another way**. "Come back later", a need named for the room or
   path, or an ability implied by the order of play counts as unstated.
-- Where the guides are silent the chest gets nothing. Where they disagree it gets nothing and is listed below.
+- Where the guides are silent the chest gets nothing. Where they disagree, or only one guide says something, the
+  chest gets a `note` instead of a need: never a lock, just what the guides say, shown in the chest's sheet when
+  "What unlocks them" is on. Where an ability helps but a harder way works without it, the note says so.
 - The Archipelago randomizer rules (the `q` field in `data.js`) are not a source.
 
-**Result: 55 confirmed, 21 disputed, 156 unstated** (of 232 chests).
+**Result: 55 confirmed, 21 disputed, 156 unstated** (of 232 chests). 37 chests carry a note: the 21 disputed,
+five confirmed ones where a guide adds or drops an ability, seven where only one guide says something, and the
+Giant Crevasse.
 
 ## Sources
 
@@ -94,7 +98,7 @@ Mix changed some contents.
 The Lift Stop gravity chests are matched by where the guides put them (entering from the Library, top of that
 lift, past the emblem door). Every guide that describes a Lift Stop floating chest says Gravity lowers it.
 
-## Disputed (left out)
+## Disputed (noted, not a lock)
 
 | World | Chest | What the guides say |
 |---|---|---|
@@ -117,9 +121,14 @@ lift, past the emblem door). Every guide that describes a Lift Stop floating che
 Also disputed, on chests confirmed above: Glide for Palace Gates High Close to Palace (KC yes, ES no) and
 High Jump for the Guillotine Square pumpkin (WP yes, ES climbs a ledge).
 
-Confirmed by 2+ guides but not matched to a Final Mix chest, so left out: in the Giant Crevasse, the
-Haste2-G chest (KW ES SS) and the Haste-G chest (KW ES) need Glide; in Hollow Bastion's Base Level, the second
-Tornado-G chest needs Glide (ES KC WP).
+Confirmed by 2+ guides but not matched to a Final Mix chest, so not a lock: in the Giant Crevasse, the
+Haste2-G chest (KW ES SS) and the Haste-G chest (KW ES) need Glide (all five Crevasse chests note that guides
+glide to most of them); in Hollow Bastion's Base Level, the second Tornado-G chest needs Glide (ES KC WP).
+
+Only one guide (noted): Agrabah Main Street High Above Palace Gates Entrance (High Jump, ES), Coliseum Gates
+Blizzara (Blizzara on the torches, ES), Lotus Forest Through the Painting Thunder Plant (Thunder, KW), Item
+Workshop Right (Green Trinity, KW), Monstro Mouth High Platform Boat Side (High Jump, KC), Accessory Shop Roof
+(push a crate and climb, ES), Pirate Ship Crows Nest (fly up from the deck, ES).
 
 ## Compared with Archipelago's rules
 

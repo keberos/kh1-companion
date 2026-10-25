@@ -53,6 +53,9 @@ local ADDR = {
     world_status   = {0x2DEBC50, 0x2DEB250},  -- 11 bytes, TT WL OC DJ AG AT HT NL HB EotW Monstro:
                                               -- 0 hidden, 1-2 on the map, 3 visited, 4 complete (AP client)
     hud            = {0x2812E9C, 0x281249C},  -- float > 0 while Sora's HUD is up
+    -- 1 while Sora stands at a save point (found on Steam by comparing memory on and off the
+    -- Accessory Shop's, 2026-10-25, tools/memdiff.py). EGS assumed at the same distance as `world`.
+    at_save        = {0x234F740, 0x234E768},
 }
 local CHEST_BYTES  = 509
 local PUPPY_BYTES  = 13
@@ -101,6 +104,7 @@ local function snapshot()
         ',"world":', ReadByte(addr("world")),
         ',"room":', ReadByte(addr("room")),
         ',"in_field":', (ReadFloat(addr("hud")) > 0) and "true" or "false",
+        ',"at_save":', ReadByte(addr("at_save")) == 1 and "true" or "false",
         ',"level":', ReadShort(addr("sora_level")),
         ',"max_hp":', stats[1], ',"max_mp":', stats[3], ',"ap":', stats[4],
         ',"postcards":', ReadByte(addr("postcards")),
@@ -199,11 +203,37 @@ function _OnInit()
     ConsolePrint("kh1companion: " .. (game_version == 2 and "Steam" or "EGS") .. " build, writing " .. out_path)
 end
 
+-- Research aid, off unless dump.flag sits next to the state file: whenever the flag's text
+-- changes, write 16 MB of game memory to dump-<text>.bin, for finding new values by comparing
+-- snapshots (tools/memdiff.py; tools/thor.py snap rewrites the flag on each bottom-screen tap).
+-- Read only, like the rest of the bridge.
+local DUMP_FROM, DUMP_LEN, DUMP_CHUNK = 0x2000000, 0x1000000, 0x100000
+local dump_last = nil
+
+local function dump_on_flag()
+    local flag = io.open(out_dir .. "dump.flag", "r")
+    if not flag then dump_last = nil return end
+    local label = (flag:read("*l") or ""):match("^%s*([%w_-]+)")
+    flag:close()
+    if not label or label == dump_last then return end
+    dump_last = label
+    local f = io.open(out_dir .. "dump-" .. label .. ".bin", "wb")
+    if not f then return end
+    for at = DUMP_FROM, DUMP_FROM + DUMP_LEN - 1, DUMP_CHUNK do
+        local chunk = ReadString(at, DUMP_CHUNK)
+        if #chunk ~= DUMP_CHUNK then chunk = string.rep("\0", DUMP_CHUNK) end
+        f:write(chunk)
+    end
+    f:close()
+    ConsolePrint("kh1companion: wrote dump-" .. label .. ".bin")
+end
+
 function _OnFrame()
     if not game_version then return end
     frame = frame + 1
     if frame % POLL_FRAMES ~= 0 then return end
 
+    dump_on_flag()
     local body = snapshot()
     local now = os.time()
     if body ~= last_payload or now - last_write >= HEARTBEAT_SECS then

@@ -146,10 +146,27 @@ def state():
     print(sh("cat /sdcard/Download/KH1Companion/state.json"))
 
 
+def snap(count="4"):
+    """Snapshot memory on each bottom-screen tap: rewrites dump.flag (lua: dump_on_flag) to s1, s2..."""
+    flag = "/sdcard/Download/KH1Companion/dump.flag"
+    p = subprocess.Popen([ADB, "-s", SERIAL, "shell", "getevent -l /dev/input/event5"], stdout=subprocess.PIPE, text=True)
+    n = 0
+    sh(f"echo idle > {flag}")
+    print("tap the bottom screen to take each snapshot", flush=True)
+    for line in p.stdout:
+        if "BTN_TOUCH" in line and "DOWN" in line:
+            n += 1
+            sh(f"echo s{n} > {flag}")
+            print(time.strftime("%H:%M:%S"), f"snapshot s{n}", flush=True)
+            if n >= int(count):
+                break
+    p.kill()
+
+
 def watch(minutes="120"):
     """Log story-relevant changes while someone plays: one line per change, to confirm guide values."""
     import json
-    keys = ("world", "room", "in_field", "progress_pre", "progress", "world_status", "trinities", "magic_unlocked", "shared")
+    keys = ("world", "room", "in_field", "at_save", "progress_pre", "progress", "world_status", "trinities", "magic_unlocked", "shared")
     last, last_inv = {}, None
     end = time.time() + float(minutes) * 60
     while time.time() < end:
@@ -171,7 +188,7 @@ def watch(minutes="120"):
 
 
 def main(argv):
-    cmds = {"game-page": game_page, "export-saves": export_saves, "import-saves": import_saves, "watch": watch,
+    cmds = {"game-page": game_page, "export-saves": export_saves, "import-saves": import_saves, "watch": watch, "snap": snap,
             "exit-game": exit_game, "shot": shot, "state": state}
     if len(argv) < 2 or argv[1] not in cmds:
         print(__doc__)

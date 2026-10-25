@@ -58,6 +58,10 @@
   let levelAll = false;  // Level tab: full table instead of the next few levels
   let waitHelp = false;  // waiting screen: troubleshooting shown
   let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
+  // world -> map rooms where the player has stood at a save point (the bridge's at_save), so the map
+  // marks save points the data doesn't list. Kept across games: save points don't move.
+  let savesSeen = store.get("savesSeen", {});
+  const hasSave = (world, n) => !!n.save || (savesSeen[world] || []).includes(n.id);
   let allNames = store.get("allNames", false);  // show every room name, visited or not
   let toastsOn = store.get("toasts", false);     // pop-up notes for game events: opt-in, they can distract
 
@@ -296,7 +300,7 @@
         (cs.length ? `<text x="${cx(n)}" y="${y + BOX_H - 7}" class="nc">${!left ? "✓ all" : shut || !reachable ? left + " later"
           : reachable < left ? `${reachable} + ${left - reachable} later` : left + " left"}</text>` : "") +
         (shut ? `<use href="#ico-lock" x="${x + BOX_W - 13}" y="${y - 6}" width="18" height="18"/>` : "") +
-        (n.save ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
+        (hasSave(world, n) ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
         (pup ? `<use href="#ico-paw" x="${x + BOX_W - 12}" y="${y - 5}" width="16" height="16"/>` : "") +
         `</g>`;
     }).join("");
@@ -351,7 +355,7 @@
     const access = L.nodeAccess(world, nd, state);
     openSheet(
       `<h2>${esc(roomLabel(world, nd))}</h2><div class="sub">${esc(displayWorld(world))}` +
-      (roomKnown(world, nd.id) ? `${nd.save ? " · save point" : ""}${ids ? " · room " + ids : ""}` : " · you haven't been here yet") + `</div>` +
+      (roomKnown(world, nd.id) ? `${hasSave(world, nd) ? " · save point" : ""}${ids ? " · room " + ids : ""}` : " · you haven't been here yet") + `</div>` +
       (access.open ? "" : `<div class="hint">${icon("ico-lock", "chip-ico")}` +
         (access.scene ? "You can't walk in here. The story brings you here when it's time."
           : access.story ? "You can't get in here yet. It opens up later in the story." : `You can't get in here yet. Needs ${esc(access.need.join(" + "))}.`) +
@@ -951,6 +955,10 @@
     if (!n || sum.title || !sum.world) return;
     const list = visitedRooms[sum.world] || (visitedRooms[sum.world] = []);
     if (!list.includes(n.id)) { list.push(n.id); store.set("visited", visitedRooms); }
+    if (state.at_save && !hasSave(sum.world, n)) {
+      (savesSeen[sum.world] || (savesSeen[sum.world] = [])).push(n.id);
+      store.set("savesSeen", savesSeen);
+    }
   }
 
   function rememberSteps() {

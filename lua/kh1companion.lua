@@ -45,6 +45,8 @@ local ADDR = {
                                               -- (HydroSulphide/KH1FM-Memory-Map "Start choice"); +1..+5 sent
                                               -- unlabelled, to find the growth curve byte
     magic          = {0x2DEA1F2, 0x2DE97F2},  -- 7 spell levels: Fire Blizzard Thunder Cure Gravity Stop Aero
+    magic_unlocked = {0x2DE9DD4, 0x2DE93D4},  -- bit per spell, same order; the levels read 1 even for locked spells
+                                              -- (KH-1FM-AP-LUA write_magic: levels are this + 0x41E)
                                               -- (KHPCSpeedrunTools magicLevels)
     shared         = {0x2DEA2F9, 0x2DE98F9},  -- 8 shared-ability slots: 1 High Jump, 2 Mermaid Kick, 3 Glide, 4 Superglide
     trinities      = {0x2DEB97B, 0x2DEAF7B},  -- bits: Blue Red Green Yellow White
@@ -113,6 +115,7 @@ local function snapshot()
         ',"inventory":"', hex(ReadArray(addr("inventory"), 256)), '"',
         ',"dive":"', hex(ReadArray(addr("dive_choice"), 6)), '"',
         ',"magic":"', hex(ReadArray(addr("magic"), 7)), '"',
+        ',"magic_unlocked":', ReadByte(addr("magic_unlocked")),
         ',"shared":"', hex(ReadArray(addr("shared"), 8)), '"',
         ',"trinities":', ReadByte(addr("trinities")),
         ',"world_status":"', hex(ReadArray(addr("world_status"), 11)), '"',

@@ -138,8 +138,10 @@
     }
     const m = /^Progressive (\w+)$/.exec(name);
     if (m && MAGIC.includes(m[1])) {
-      const mg = bytesOf(state, "magic");
-      return mg ? mg[MAGIC.indexOf(m[1])] >= n : null;
+      // Levels read 1 even for spells not learned yet; the unlocked bits say which are learned.
+      const i = MAGIC.indexOf(m[1]), mg = bytesOf(state, "magic");
+      if (!mg || state.magic_unlocked == null) return null;
+      return (state.magic_unlocked >> i & 1) === 1 && mg[i] >= n;
     }
     const t = /^(\w+) Trinity$/.exec(name);
     if (t && TRINITY.includes(t[1])) return state.trinities == null ? null : (state.trinities >> TRINITY.indexOf(t[1]) & 1) === 1;

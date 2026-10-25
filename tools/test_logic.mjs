@@ -241,7 +241,7 @@ test("chest locks come from what the save has", () => {
   assert.equal(lock({ shared: "81" + "00".repeat(7) }), null, "equipped High Jump (0x80 | 1) counts");
   assert.equal(lock({}), null, "an old bridge can't tell, so nothing is shown as locked");
   assert.deepEqual(L.lockOf([["Progressive Glide:2"], ["Progressive Fire:2", "Blue Trinity"]],
-    blank({ shared: "83" + "00".repeat(7), magic: "01000000000000", trinities: 0 })), ["Superglide"], "the shortest missing list wins");
+    blank({ shared: "83" + "00".repeat(7), magic: "01000000000000", magic_unlocked: 1, trinities: 0 })), ["Superglide"], "the shortest missing list wins");
   assert.equal(L.needName("Progressive Glide:2"), "Superglide");
   assert.equal(L.has("Entry Pass", blank({ inventory: inv({}), progress: hexOf([0, 0, 0x28, ...new Array(13).fill(0)]) })), true,
     "story-given key items count even after they leave the bag");
@@ -403,4 +403,13 @@ test("day two: the race comes first, and the food list only once Kairi hands it 
   assert.equal(L.guideFor("Destiny Islands", island("0a560701"), seen).next.title, "Name the raft and race Riku");
   assert.equal(L.guideFor("Destiny Islands", island("0a560a01"), seen).next.title, "Name the raft and race Riku");
   assert.equal(L.guideFor("Destiny Islands", island("0a561401"), seen).next.title, "Gather food and water");
+});
+
+test("a spell counts only once it's learned: its level reads 1 before that", () => {
+  // Read on the Thor in the Dive: no spells yet, levels 01 x7 (2026-10-24).
+  const fresh = blank({ magic: "01010101010101", magic_unlocked: 0 });
+  assert.equal(L.has("Progressive Fire", fresh), false);
+  assert.equal(L.has("Progressive Fire", { ...fresh, magic_unlocked: 1 }), true);
+  assert.equal(L.has("Progressive Fire:2", { ...fresh, magic_unlocked: 1 }), false, "Fira needs level 2");
+  assert.equal(L.has("Progressive Fire", blank({ magic: "01010101010101" })), null, "an older bridge can't tell");
 });

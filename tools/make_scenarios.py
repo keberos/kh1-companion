@@ -28,6 +28,7 @@ def snapshot(world, room, level, exp, progress=(), inventory=None, abilities=(),
         "chests": flags.hex(), "reports": "0000", "puppies": "00" * 13, "cups": "00000000",
         "progress": prog.hex(), "progress_pre": "00000000", "exp": exp,
         "abilities": pad(abilities, 48).hex(), "inventory": inv.hex(), "magic": pad(magic, 7).hex(),
+        "magic_unlocked": sum(1 << i for i, v in enumerate(magic) if v),
         "shared": pad(shared, 8).hex(), "trinities": trinities, "dive": "000000000000", "world_status": pad(status, 11).hex(), "seq": 1, "t": int(time.time()),
     }
 

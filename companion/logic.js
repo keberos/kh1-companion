@@ -234,21 +234,26 @@
     const progress = hexToBytes(state.progress);
     const elsewhere = !onTitle(state) && state.world >= 2;
     const ttStarted = progress.length > 0 && progress[0] > 0;
-    const day2 = ["Seagull Egg", "Fish", "Mushroom", "Coconut", "Drinking Water"].some((i) => itemCount(state, i) > 0);
     return {
       progress,
       diveRank: state.world === 0 && !onTitle(state) ? DIVE_RANK[state.room] : null,
       diveDone: elsewhere || ttStarted || state.world === 1,
       islandsDone: elsewhere || ttStarted,
-      day2,
     };
   }
 
+  // {pre: [i, v]}: byte i of the story bytes before the main ones (progress_pre) has reached v.
+  // On the islands, byte 3 reads 01 on day two (read on the Thor, 2026-10-24).
+  const preAt = (state, [i, v]) => {
+    const b = bytesOf(state, "progress_pre");
+    return b && i < b.length ? b[i] >= v : null;
+  };
+
   function stepDone(s, f, state) {
     if (s.p != null) return s.p < f.progress.length ? f.progress[s.p] >= s.at : null;
+    if (s.pre) return f.islandsDone || preAt(state, s.pre);
     if (s.dive != null) return f.diveDone || (f.diveRank != null && f.diveRank > s.dive);
     if (s.end === "dive") return f.diveDone;
-    if (s.end === "day1") return f.day2 || f.islandsDone;
     if (s.end === "islands") return f.islandsDone;
     if (s.items) {
       if (f.islandsDone) return true;
@@ -274,8 +279,12 @@
       if (later && !steps[i].done && !steps[i].optional) steps[i].done = true;
       if (steps[i].done && !steps[i].optional) later = true;
     }
-    const pick = (done, optional) => steps.find((s) => s.done === done && !!s.optional === optional);
-    return { steps, next: pick(false, false) || pick(null, false) || pick(false, true) || pick(null, true) || null };
+    // The first step not known to be done, in story order; optional ones only when nothing else is left.
+    const next = steps.find((s) => s.done !== true && !s.optional) || steps.find((s) => s.done !== true) || null;
+    // A step only shows once the game has handed it out (`from`): between objectives, while
+    // scenes play, there's no next step rather than the last one or a peek at what's coming.
+    if (next && next.from && preAt(state, next.from) === false) return { steps, next: null, waiting: true };
+    return { steps, next };
   }
 
   // ---------- level-ups ----------

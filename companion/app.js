@@ -407,8 +407,8 @@
           const g = L.guideFor(w, state, guideSeen);
           const done = g.steps.filter((s) => s.done).length;
           return `<li data-gw="${esc(w)}"><span class="grow"><span class="name">${esc(displayWorld(w))}</span>` +
-            `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : "Story complete"}</div></span>` +
-            `<span class="tag ${g.next ? "" : "here"}">${done}/${g.steps.length}</span></li>`;
+            `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : g.waiting ? "Nothing to do right now" : "Story complete"}</div></span>` +
+            `<span class="tag ${g.next || g.waiting ? "" : "here"}">${done}/${g.steps.length}</span></li>`;
         }).join("") + (unseen ? `<li class="hidden-step"><span class="grow"><span class="name">???</span>` +
           `<div class="sub">${unseen} more world${unseen > 1 ? "s" : ""} to find</div></span></li>` : "") + `</ul></div>`;
       el.querySelectorAll("[data-gw]").forEach((li) => { li.onclick = () => { guideWorld = li.dataset.gw; render(true); }; });
@@ -423,6 +423,8 @@
       (guideWorld && guideWorld !== sum.world && L.GUIDE[sum.world] ? `<button class="chip" id="guideHere">Current world</button>` : "") +
       `<span class="grow"></span></div>` +
       (g.next ? stepCard(world, g.next, current)
+        : g.waiting ? `<div class="card"><div class="label">Next step · ${esc(displayWorld(world))}</div>` +
+          `<div class="empty small">Nothing to do right now. Your next objective shows up here once the game gives it to you.</div></div>`
         : g.steps.length ? `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><div class="empty">Story complete here.</div></div>` : "") +
       (g.steps.length ? storyList(world, g) : "");
 

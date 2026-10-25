@@ -185,7 +185,7 @@ test("guide steps point at real rooms and read story progress", () => {
     for (const s of steps) {
       if (s.where) assert.ok(L.node(w, s.where), `${w}: step "${s.title}" points at missing room ${s.where}`);
       assert.ok(s.hint && s.title && s.nudge, `${w}: step "${s.title}" lacks a layer`);
-      const kinds = [s.p != null, s.items != null, s.dive != null, s.end != null].filter(Boolean).length;
+      const kinds = [s.p != null, s.items != null, s.dive != null, s.end != null, s.pre != null].filter(Boolean).length;
       assert.equal(kinds, 1, `${w}: step "${s.title}" needs exactly one way to count as done`);
       if (s.p != null) assert.ok(Number.isInteger(s.p) && Number.isInteger(s.at), `${w}: bad progress step`);
       // The nudge is the spoiler-free layer: it must not name the event's boss or reward.
@@ -216,7 +216,8 @@ test("Dive to the Heart steps follow the room order, and leaving finishes them",
 });
 
 test("Destiny Islands errands count items, and remembered steps survive handing them over", () => {
-  const di = (over) => L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress: "00".repeat(16), ...over }), over.seen);
+  // Day one unless a test says otherwise: the islands' day byte (progress_pre byte 3) is 00.
+  const di = (over) => L.guideFor("Destiny Islands", blank({ world: 1, room: 0, progress: "00".repeat(16), progress_pre: "0a560700", ...over }), over.seen);
   let g = di({ inventory: inv({ 192: 1, 193: 1 }) });
   assert.equal(g.next.title, "Gather raft supplies");
   assert.deepEqual(g.next.counts.map((c) => [c.name, c.have, c.n]), [["Log", 1, 2], ["Cloth", 1, 1], ["Rope", 0, 1]]);
@@ -225,11 +226,11 @@ test("Destiny Islands errands count items, and remembered steps survive handing 
   // Items handed to Kairi: gone from the bag, so only the device's memory knows step 1 was done.
   assert.equal(di({ inventory: inv({}) }).next.title, "Gather raft supplies");
   assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#0"]) }).next.title, "Wrap up the first day");
-  g = di({ inventory: inv({ 197: 1 }) });
-  assert.equal(g.next.title, "Gather food and water", "any day-two item means the first day is over");
+  g = di({ inventory: inv({ 197: 1 }), progress_pre: "0a560701", seen: new Set(["Destiny Islands#0"]) });
+  assert.equal(g.next.title, "Gather food and water", "the islands' day byte says day two");
   const p = new Array(16).fill(0); p[0] = 0x05;
   assert.equal(L.guideFor("Destiny Islands", blank({ world: 3, progress: hexOf(p), inventory: inv({}) })).next, null);
-  assert.equal(di({}).next.title, "Wrap up the first day", "an old bridge can't see items: fall back to the first unknown");
+  assert.equal(di({ progress_pre: undefined }).next.title, "Gather raft supplies", "an old bridge can't see items or story bytes: fall back to the first unknown");
 });
 
 test("chest locks come from what the save has", () => {
@@ -383,4 +384,14 @@ test("the growth curve narrows with every EXP reading and resets on a new game",
   assert.deepEqual(L.levelInfo(blank({ level: 1, exp: 5 }), { fits: ["Dusk"], fitsExp: 45 }).curves, ["Dawn", "Midday", "Dusk"]);
   // Older saves of the app's memory (one pinned curve) still count.
   assert.equal(L.levelInfo(blank({ level: 2, exp: 26 }), { seen: "Midday", seenExp: 20 }).curve, "Midday");
+});
+
+test("day one wraps up when the islands' day byte turns over, not when a day-two item turns up", () => {
+  // Read on the Thor at the start of day two, before collecting anything (2026-10-24).
+  const island = (pre) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12", progress_pre: pre,
+    inventory: "00".repeat(256) });
+  const day2 = L.guideFor("Destiny Islands", island("0a560701"), new Set(["Destiny Islands#0"]));
+  assert.equal(day2.next.title, "Gather food and water");
+  const day1 = L.guideFor("Destiny Islands", island("0a560700"), new Set(["Destiny Islands#0"]));
+  assert.equal(day1.next.title, "Wrap up the first day");
 });

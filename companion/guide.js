@@ -14,7 +14,9 @@
 //           Traverse Town's extra byte.
 //   items   all these inventory counts reached (Destiny Islands errands; `extra` is shown only)
 //   dive    the player is past this point of the Dive (room order), or out of it
-//   end     "dive" / "day1" / "islands": only once the player has moved on
+//   end     "dive" / "islands": only once the player has moved on
+//   pre     [i, v]: done once story byte i before the main ones (progress_pre) reaches v
+//   from    [i, v]: same test, for when the game hands the step out; until then there's no next step
 //   optional  doesn't hold up the steps after it
 // Hints are short summaries written for this project.
 window.KH1_GUIDE = {
@@ -36,7 +38,7 @@ window.KH1_GUIDE = {
     { items: [["Log", 2], ["Cloth", 1], ["Rope", 1]], title: "Gather raft supplies", where: "Seashore",
       nudge: "Your friends are building a raft. Find what it still needs.",
       hint: "Two logs (one on the little island across the bridge, one under the bridge), a cloth and a rope. Kairi on the Seashore takes them." },
-    { end: "day1", title: "Wrap up the first day", where: "Seashore",
+    { pre: [3, 1], title: "Wrap up the first day", where: "Seashore",
       nudge: "Bring everything to Kairi, then call it a day.",
       hint: "Hand the supplies over. The day ends after a race and a talk at sunset." },
     { items: [["Mushroom", 3], ["Fish", 3], ["Seagull Egg", 1], ["Drinking Water", 1]], extra: [["Coconut", 2]],

@@ -121,9 +121,10 @@ The game is never patched. [LuaBackend](https://github.com/Sirius902/LuaBackend)
 Details the tabs rely on:
 - **Rooms:** the current room comes from the game's room byte, and every named room in every world is on a map. The header shows the game's own name for the exact room.
 - **Reachability:** chests come with what reaching them takes (from Archipelago's logic), checked against the magic, shared abilities, Trinities and key items in the save. Rooms are gated on story points.
-- **Level path and curve:** the path is the Dive choice byte; the curve is inferred from EXP at the current level and remembered per device once unambiguous.
+- **Level path and curve:** the path is the Dive choice byte; the curve has no save byte, so every EXP reading of the playthrough rules curves out until one is left (lower EXP means a new game).
 - **Discovery:** the save's world-status array says which worlds are hidden, on the Gummi map, or visited. KH1 keeps no record of visited rooms, so a room's name shows once this device has seen you there, you've opened a chest in it, or a finished story step happened there; the map's "Unhide names" chip (or Replay mode) shows them all.
-- **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there.
+- **Title screen:** world 0, room 0 with no HUD; every tab waits for a save there. The Dive's weapon choice reads the same, so the Dive's story byte (or save data changing) tells them apart.
+- **Scenes:** a newly unlocked guide step waits for the HUD (`in_field`), so it never shows while the scene that reveals it plays.
 - **Pop-up notes (optional, off by default):** each snapshot is compared with the last one (chest flags, level, puppies, reports, world status, guide steps). Loading a save, or a jump too big to be play, only resets that baseline, so nothing old is announced.
 
 ### Install, by design
@@ -138,7 +139,7 @@ Setup's last step ticks off once the bridge has written its file. The app re-cop
 
 **Uninstall:** the app leaves `mod/uninstall.flag`. On the next game start the bridge, running inside the game, renames its own `DINPUT8.dll` (a loaded DLL can't be deleted, but it can be renamed; tested on the Thor), deletes `LuaBackend.toml`, and writes `mod/uninstall.log`.
 
-**Opening and closing:** the icon sends GameNative's `app.gamenative.LAUNCH_GAME` intent (Steam app id 2552430, changeable in Settings) from an invisible activity on the top screen. When a game was started that way, GameNative finishes its screen on exit and hands back, so that activity resumes and closes the overlay; nothing has to watch for the game. If the bridge's file is fresh, the game is already running and the tap just opens the companion. From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
+**Opening and closing:** the icon only opens the companion; a launcher starts the game (Cocoon Shell's companion-app setting sends GameNative `app.gamenative.LAUNCH_GAME`, then opens this app). Alongside the overlay, an invisible `WatchActivity` hops under GameNative on the top screen and brings GameNative's existing window forward (never a second launch). When the game exits, GameNative finishes its screen, the watcher resumes and closes the overlay, within a frame or two of the exit. Backup: the bridge going quiet for a minute with the screen on (five right after the title, for the opening movie). Setup's "Start the game" still sends `LAUNCH_GAME` itself (Steam app id 2552430, changeable in Settings). From adb: `am start -n com.kh1companion/.MainActivity --ez start true`.
 
 ### Where the data comes from
 
@@ -148,7 +149,8 @@ All public, no game files needed. The vendored copies and their commits are in `
 - **Chest and report names:** [Archipelago](https://github.com/ArchipelagoMW/Archipelago) `worlds/kh1/Locations.py` (MIT). Chest location ID = `2650000 + byte*10 + bit`, so a raw flag bit maps straight to a named chest.
 - **Chest rooms and contents:** the KH1FM randomizer's documentation (MIT): 217 of 232 chests have a room; the rest are matched by name prefix.
 - **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT).
-- **Story milestones:** the Archipelago client's per-world story-progress thresholds (credited to RetroAchievements' code notes). Nudges and hints are written for this project. Destiny Islands errands use the inventory slots the Archipelago client writes raft items to.
+- **Story steps:** each world's story counter as documented in the [RetroAchievements KH1 Final Mix code notes](https://retroachievements.org/codenotes.php?g=2780) (the source of the Archipelago client's thresholds too); the values used are in `docs/guide-reference.md`. Nudges and hints are written for this project from the KH Wiki walkthroughs.
+- **Chest locations:** written for this project from the KH Wiki's KH1 walkthroughs (`companion/chesthints.js`); where a chest isn't clearly placed there, the hint says only what its Archipelago name says.
 - **What a chest needs:** Archipelago `worlds/kh1/Rules.py` (MIT), read at Beginner difficulty with randomizer options off. Anything it can't express counts as met, so a chest is never wrongly shown as locked.
 - **Level-ups:** the randomizer's battle-table docs (MIT). Ability descriptions are written for this project.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world.
@@ -158,9 +160,9 @@ All public, no game files needed. The vendored copies and their commits are in `
 | Path | What |
 |---|---|
 | `lua/kh1companion.lua` | Game bridge. Read-only (apart from removing itself on request); detects Steam vs Epic; writes `state.json`. |
-| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `data.js` is generated. Plain HTML, no build step. |
+| `companion/` | The bottom-screen page. `logic.js` is the decoding (shared with tests), `maps.js` the hand-authored world maps, `guide.js` the story steps, `chesthints.js` where each chest is, `data.js` is generated. Plain HTML, no build step. |
 | `companion/theme.css`, `art/`, `fonts/` | KH1-menu look. Original SVG art only; Cinzel and Barlow Semi Condensed under the SIL OFL, bundled so the app works offline. |
-| `android/` | Android app: setup, the overlay service, Play (launch through GameNative). `assets/mod/` holds LuaBackend; `assets/guide/` the setup pictures. |
+| `android/` | Android app: setup, the overlay service, and the watcher that closes it with the game. `assets/mod/` holds LuaBackend; `assets/guide/` the setup pictures. |
 | `docs/` | README banner (`banner.html` → `banner.png`) and screenshots (companion 0.9.0 betas, rendered from sample saves). |
 | `dev/preview.html`, `dev/scenarios/` | Two-screen preview with a live change log, and fixed sample saves (`/?state=/dev/scenarios/<name>.json&view=<tab>`). |
 | `tools/devserver.py` | Serves the page plus live, recorded or replayed state. |
@@ -206,13 +208,12 @@ Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELE
 | Piece | State |
 |---|---|
 | Bridge | Runs on the Steam build under GameNative on the Thor; edition, world/room, level/stats, chest flags and story progress confirmed live. |
-| Companion | All six tabs, tested at bottom-screen size against sample saves and real recordings. |
+| Companion | All five tabs, tested at bottom-screen size against sample saves and real recordings, and in play on the Thor through Destiny Islands. |
 | Maps | All 14 worlds. Every path checked against the KH Wiki's KH1 walkthroughs and Archipelago's chest names (2026-10-24); Disney Castle is story scenes only, so it has no paths. |
-| Android app | Live on the Thor: overlay on the 1240×1080 bottom screen (density 369), top screen keeps focus, plays and closes with the game, guided setup, self-removing uninstall. |
+| Android app | Live on the Thor: overlay on the 1240×1080 bottom screen (density 369), top screen keeps focus, opens with the game from Cocoon Shell and closes when it exits, guided setup, self-removing uninstall. |
 
-**Not yet checked against a live save:**
-- The newer reads: EXP, learned abilities, inventory, magic, shared abilities, Trinities, world status and the Dive choice byte. Everything that uses them stays quiet when a value is missing (nothing locked, path and curve left to pick).
-- The growth-curve byte: the five bytes after the Dive choice are sent to look for it.
+**Confirmed live on the Thor:** EXP, the Dive choice, island errand items, world status and the story counters (Dive and Destiny Islands).
+**Not yet checked against a live save:** learned abilities, shared abilities, Trinities and the learned-spells byte. Everything that uses them stays quiet when a value is missing (nothing locked, path left to pick). The growth curve has no save byte: it's inferred from EXP readings.
 - Destiny Islands can't tell the second day from the night yet; `progress_pre[1]` is sent so a recording can calibrate it.
 - The Dalmatian count assumes one save-flag bit per puppy.
 

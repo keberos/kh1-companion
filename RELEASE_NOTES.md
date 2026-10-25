@@ -5,19 +5,36 @@ A second-screen companion for the AYN Thor and other dual-screen Android handhel
 
 > **Beta.** Works end to end on the AYN Thor; still being tested across a full playthrough. Your game and saves are never changed.
 
-### What's new since beta.4 (not released yet)
+### What's new in beta.5
 
-- **Now called KH1 Companion, with its own icon.** It no longer starts the game: launch Kingdom Hearts from Cocoon Shell with KH1 Companion set as its companion app (both open together), or start the game and tap the icon. The companion closes by itself as soon as the game exits. *Updating:* the app shows up under its new name; if you'd pointed a launcher at it, pick it again.
+**It's now KH1 Companion, and it opens beside the game.**
+- The app has its own name and icon and no longer starts the game. On Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app and launching the game opens both; without Cocoon, start the game and tap the icon.
+- It closes the moment the game exits.
+- *Updating from an earlier beta:* the app shows up under its new name. If you'd pointed a launcher at it, pick it again; nothing else to redo.
 
-- **Optional pop-up notes** for chests opened, level-ups (with what Sora learned), puppies, Ansem's Reports, story steps, new worlds and finished worlds. Off by default; turn them on under the eye at the top.
-- **Here is your "what now" screen**: the next story nudge, this room's chests, then the other rooms that still hold chests.
-- **Five tabs.** Worlds and Collect are now one **Progress** tab, with each world's story progress and a crown on worlds you've cleared out.
-- **Tap any chest to see exactly where it is**, for every one of the 232 (written from the KH Wiki walkthroughs), plus what's inside and what it still needs. **Show on map** rings its room. Tap a room to see its chests.
-- **First time or Replay.** The eye at the top holds every spoiler setting. *Replay* shows room names, chest contents, what unlocks them and the full guide up front.
-- **What opens the most chests**, on Progress: for example, Glide opens 22 chests in 9 worlds. Tap one for the list.
-- **Next ability** on the Level tab, with the EXP to go.
-- **An EXP bar on Here.** KH1 only shows EXP in the Status menu; Here shows your level, a bar to the next one, the EXP left and what it gives.
-- **A new game shows up right away.** The Dive's weapon choice no longer reads as the title screen.
+**A guide that follows the story beat by beat.**
+- Every step runs on the game's own story counters (documented in the RetroAchievements code notes), across every world: about 100 objectives from the Dive to the final door.
+- Next steps are short breadcrumbs ("Talk to Cid."); *Show me* has the details.
+- A new objective appears only once the scene that unlocks it has finished, and while scenes play there's simply nothing to do.
+- Missable things are called out: everything on Destiny Islands, Neverland's Clock Tower chests, and the last save before the final door.
+
+**Tap any chest to see exactly where it is**, for all 232, plus what's inside and what it still needs. *Show on map* rings its room.
+
+**Five tabs:**
+- **Here** is your "what now" screen: an EXP bar (the game hides EXP in the Status menu), the next step, this room's chests, and where else to look.
+- **Progress** merges Worlds and Collect, with each world's story progress, a crown on cleared worlds, and **what opens the most chests** (e.g. Glide opens 22 in 9 worlds).
+- **Level** shows your next ability.
+
+**Other changes:**
+- **First time or Replay**, under the eye at the top: *Replay* shows room names, chest contents, what unlocks them and the full guide up front.
+- **Growth curve:** the EXP bar shows exact numbers once your growth curve is certain (usually after your first level-up), never a guess.
+- **Fixes:**
+  - A new game shows up right away (the Dive's weapon choice no longer reads as the title screen).
+  - Spells now count only once learned.
+  - The bottom screen no longer redraws constantly, which saves GPU for the game.
+- **Optional pop-up notes** for chests, level-ups, puppies and more. Off by default; turn them on under the eye.
+
+**Performance tip:** on the AYN Thor, KH1 ran noticeably smoother for us with the top screen at **120 Hz**, the Thor on **High Performance**, and the game's **FEXCore Preset** set to **Performance** (GameNative → the game → ⚙ → Edit container → Emulation).
 
 ### What's new in beta.4
 

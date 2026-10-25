@@ -48,24 +48,22 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
 ## Install
 
 1. **Download** `KH1-Companion-….apk` from the [latest release](../../releases) and open it to install.
-2. **Open "Kingdom Hearts Final Mix"**, the companion's app. A setup checklist walks you through everything, with pictures of each GameNative screen:
+2. **Open KH1 Companion.** A setup checklist walks you through everything, with pictures of each GameNative screen:
    - two Android permissions (one switch each),
    - copying two files into the game with GameNative's **Import Files** (the app has them ready),
    - adding one setting in GameNative (the app copies the text for you, so there's nothing to type),
    - starting the game once, after which setup ticks itself off.
-3. **Play.** From then on, tap the **Kingdom Hearts Final Mix** icon: the game starts on the top screen with the companion on the bottom, and both close together when you quit.
+3. **Open it with the game.** On Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app: launching the game from Cocoon then opens the companion on the bottom screen too. Without Cocoon, start the game and tap the **KH1 Companion** icon. Either way, the companion closes by itself when the game does.
 
-**Why the app is called "Kingdom Hearts Final Mix":** its icon starts the game, and launchers such as Cocoon Shell look up box art and game details by app name, so it shows up in your library like the game itself. If your launcher doesn't list it, add it there as an app.
-
-**Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion stays open until you leave the collection. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 6 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
+**Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion closes within a minute. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 7 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
 
 <p align="center"><img src="android/app/src/main/assets/guide/exe-list.png" width="640" alt="GameNative's Executable Path list with KINGDOM HEARTS FINAL MIX.exe highlighted"></p>
 
 ## Using it
 
-- **Tap the icon** to play. If the game is already running, it just opens the companion. Tap it again to close the companion.
+- **Tap the KH1 Companion icon** to open the companion (or let Cocoon open it with the game). It closes by itself as soon as the game exits.
 - **Close it any time** with the **×** at the top of the companion, or **Close** on its notification.
-- **Long-press the icon** for *Companion only*, *Close companion* and *Settings*.
+- **Long-press the icon** for *Close companion* and *Settings*.
 - **Nothing shows until a save is loaded**, so you never see leftovers from another save.
 
 ## Uninstall

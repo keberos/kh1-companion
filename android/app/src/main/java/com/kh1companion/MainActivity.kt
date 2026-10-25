@@ -23,9 +23,9 @@ import java.io.File
 
 /**
  * Setup and settings. First run walks through a checklist (permissions, the two GameNative steps,
- * a first launch that confirms it works); after that the app icon plays the game (see
- * [handleLaunch]). Advanced has the settings and Remove everything. The companion itself runs
- * in [CompanionService].
+ * a first launch that confirms it works, then pairing it with the game in a launcher); after that
+ * the app icon opens the companion (see [handleLaunch]). Advanced has the settings and Remove
+ * everything. The companion itself runs in [CompanionService].
  */
 class MainActivity : Activity() {
     private lateinit var prefs: Prefs
@@ -46,7 +46,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(pad, pad, pad, pad)
         }
-        col.addView(text("Kingdom Hearts Final Mix companion", 22f, bold = true))
+        col.addView(text("KH1 Companion", 22f, bold = true))
         col.addView(text("Shows your progress, a spoiler-free guide, maps and level-ups on the bottom screen while you play. " +
             "Version ${packageManager.getPackageInfo(packageName, 0).versionName}.", 15f))
         steps = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -91,11 +91,12 @@ class MainActivity : Activity() {
     }
 
     /**
-     * Once set up, the app icon plays the game with its companion: tap it and the companion
-     * opens and KH1 starts in GameNative (see [PlayActivity]); quitting the game closes the
-     * companion. If the game is already running, the tap just opens the companion. Tapping
-     * while the companion is open closes it. Until setup is done, the icon opens setup.
-     * Returns true when the activity finished instead of showing this screen.
+     * Once set up, the app icon opens the companion on the bottom screen; it never starts the game.
+     * That's what a launcher's companion-app setting expects (Cocoon Shell starts the game itself,
+     * then opens this), and opening it while it's already up leaves it open. It closes itself when
+     * the game exits ([WatchActivity]), or from its close button, its notification, or the icon's Close companion
+     * shortcut. Until setup is done, the icon opens setup. Returns true when the activity finished
+     * instead of showing this screen.
      */
     private fun handleLaunch(intent: Intent): Boolean {
         val ready = Settings.canDrawOverlays(this) && Environment.isExternalStorageManager()
@@ -103,25 +104,20 @@ class MainActivity : Activity() {
         val tap = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
         val setUp = ready && Installer.installed(this)
         when {
-            intent.action == ACTION_CLOSE || (tap && CompanionService.running) -> {
+            intent.action == ACTION_CLOSE -> {
                 CompanionService.stop(this)
                 Toast.makeText(this, "Companion closed", Toast.LENGTH_SHORT).show()
             }
-            tap && setUp && !gameRunning() -> startActivity(Intent(this, PlayActivity::class.java))
             (start || (tap && setUp)) && ready -> {
+                val already = CompanionService.running
                 startForegroundService(Intent(this, CompanionService::class.java))
-                Toast.makeText(this, "Companion on the bottom screen. Tap the icon again to close it.", Toast.LENGTH_SHORT).show()
+                // Watch for the game closing (see WatchActivity); once is enough.
+                if (!already) startActivity(Intent(this, WatchActivity::class.java))
             }
             else -> return false
         }
         finish()
         return true
-    }
-
-    /** The bridge rewrites the state file every 2 s while the game runs. */
-    private fun gameRunning(): Boolean {
-        val f = File(Prefs(this).statePath)
-        return f.exists() && System.currentTimeMillis() - f.lastModified() < 6_000
     }
 
     private fun refresh() {
@@ -131,13 +127,13 @@ class MainActivity : Activity() {
         val gn = Installer.gameNativeInstalled(this)
         val working = files && Installer.installed(this)
         val openGameNative = "Open GameNative" to {
-            packageManager.getLaunchIntentForPackage(PlayActivity.GAMENATIVE)?.let { startActivity(it) }
+            packageManager.getLaunchIntentForPackage(Installer.GAMENATIVE)?.let { startActivity(it) }
                 ?: Toast.makeText(this, "GameNative isn't installed", Toast.LENGTH_SHORT).show()
         }
 
         step("1. Show on the second screen", overlay,
             "Lets the companion draw on the bottom screen without taking the controller from the game. " +
-                "In the list that opens, pick Kingdom Hearts Final Mix and turn it on.",
+                "In the list that opens, pick KH1 Companion and turn it on.",
             if (!overlay) listOf("Allow" to { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))) }) else emptyList())
         step("2. Read the game's progress", files,
             "The game writes its progress to the Download folder; this lets the companion read it. Turn on All files access.",
@@ -174,11 +170,16 @@ class MainActivity : Activity() {
                 if (working) "Working: the game has talked to the companion."
                 else "Start the game here. Once its title screen shows, the companion connects and this ticks itself off. " +
                     "If it doesn't, the companion's \"Not connecting?\" help lists what to check.",
-                if (!working && overlay && files) listOf("Start the game" to { startActivity(Intent(this, PlayActivity::class.java)) }) else emptyList())
-            step("6. Optional: start straight into Kingdom Hearts Final Mix", false,
-                "Out of the box, GameNative opens the collection's menu and you pick KH1 there. Quitting KH1 drops you back " +
-                    "in that menu, and the companion stays open until you leave the collection. Point GameNative straight at " +
-                    "KH1 and the icon goes right into the game, and quitting closes the game and the companion together.",
+                if (!working && overlay && files) listOf("Start the game" to { startGame() }) else emptyList())
+            step("6. Open it with the game", false,
+                "The companion opens from its own icon and closes by itself when the game exits. To have it open with the " +
+                    "game too, in Cocoon Shell set KH1 Companion as Kingdom Hearts' companion app: launching the game " +
+                    "from Cocoon then opens both. Without Cocoon, start the game, then tap the KH1 Companion icon.",
+                emptyList(), mark = false)
+            step("7. Optional: start straight into Kingdom Hearts Final Mix", false,
+                "Out of the box, GameNative opens the collection's menu and you pick KH1 there, and quitting KH1 drops you " +
+                    "back in that menu with the companion still open. Point GameNative straight at KH1 to go right into the " +
+                    "game, and quitting closes the game and the companion together.",
                 emptyList(), mark = false)
             guide("direct", listOf(
                 "In GameNative, open KINGDOM HEARTS HD 1.5+2.5 ReMIX, tap the gear, then Edit container." to "edit-container",
@@ -188,12 +189,8 @@ class MainActivity : Activity() {
                 "Tap the save icon at the top right." to "save",
             ))
         }
-        steps.addView(text(if (working) "All set. From now on the Kingdom Hearts Final Mix icon starts the game with the companion, and quitting the game closes it."
+        steps.addView(text(if (working) "All set. The KH1 Companion icon opens the companion, and it closes by itself when the game exits."
             else "", 15f, bold = true))
-        if (working) steps.addView(button("Play now") { startActivity(Intent(this, PlayActivity::class.java)); finish() })
-        steps.addView(text("Why the app is called \"Kingdom Hearts Final Mix\": its icon starts the game, and launchers such as " +
-            "Cocoon Shell look up box art and game details by app name, so it shows up like the game itself. If your launcher " +
-            "doesn't list it, add it there as an app.", 13f))
         steps.addView(text("Black screen in the game? Set its display mode to fullscreen or borderless in the game's settings. " +
             "Windowed mode can sync from a PC through Steam Cloud and shows black under GameNative.", 13f))
         refreshRemoval()
@@ -215,7 +212,7 @@ class MainActivity : Activity() {
             },
             when {
                 removed -> emptyList()
-                pending -> listOf("Start the game once" to { startActivity(Intent(this, PlayActivity::class.java)) },
+                pending -> listOf("Start the game once" to { startGame() },
                     "Cancel" to { Installer.cancelRemoval(); refresh() })
                 else -> listOf("Remove from the game" to {
                     CompanionService.stop(this)
@@ -284,6 +281,10 @@ class MainActivity : Activity() {
         if (detail.isNotEmpty()) box.addView(text(detail, 14f))
         for ((label, run) in actions) box.addView(button(label, run))
         into.addView(box)
+    }
+
+    private fun startGame() {
+        if (!Installer.launchGame(this)) Toast.makeText(this, "GameNative isn't installed", Toast.LENGTH_LONG).show()
     }
 
     private fun copy(value: String) {

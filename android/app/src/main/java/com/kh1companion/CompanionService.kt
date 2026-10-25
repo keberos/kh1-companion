@@ -33,12 +33,21 @@ import java.io.File
  * becomes the focused window, so the controller keeps driving the game on the
  * top screen. In bundled mode the service reads state.json and pushes it into
  * the page; in dev mode the page polls the PC dev server itself.
+ *
+ * It closes itself once the game is gone. [WatchActivity] catches that the moment GameNative's game
+ * screen closes; as a backup, after it has connected, the bridge going quiet for [QUIET_MS] while the
+ * screen is on means the game exited. Right after the title screen or in the
+ * Dive it waits [QUIET_INTRO_MS] instead: the opening movie pauses the bridge for about 3.5 minutes.
  */
 class CompanionService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var windowManager: WindowManager? = null
     private var webView: WebView? = null
     private var lastPushed: String? = null
+    private var connected = false       // a fresh state arrived since this overlay opened
+    private var quietMs = 0L            // screen-on time since the bridge last wrote
+    private var lastTick = 0L
+    private var introQuiet = false      // the last state was the title or the Dive: allow for the movie
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -101,7 +110,7 @@ class CompanionService : Service() {
                         .put("ageSec", if (exists) (System.currentTimeMillis() - f.lastModified()) / 1000 else JSONObject.NULL)
                         .put("filesAccess", Environment.isExternalStorageManager())
                         .put("gameNative", try {
-                            packageManager.getPackageInfo(PlayActivity.GAMENATIVE, 0); true
+                            packageManager.getPackageInfo(Installer.GAMENATIVE, 0); true
                         } catch (e: Exception) { false })
                         .toString()
                 }
@@ -142,11 +151,33 @@ class CompanionService : Service() {
             view.loadUrl("file:///android_asset/index.html?native=1")
             handler.post(object : Runnable {
                 override fun run() {
-                    pushState(File(prefs.statePath))
+                    val file = File(prefs.statePath)
+                    pushState(file)
+                    if (gameGone(file)) {
+                        Log.i(TAG, "bridge quiet: the game has closed, closing the companion")
+                        stopSelf()
+                        return
+                    }
                     handler.postDelayed(this, POLL_MS)
                 }
             })
         }
+    }
+
+    /** True once the bridge has been quiet long enough, with the screen on, after connecting. */
+    private fun gameGone(file: File): Boolean {
+        val now = System.currentTimeMillis()
+        val dt = if (lastTick == 0L) 0L else now - lastTick
+        lastTick = now
+        if (!connected) return false
+        val fresh = now - file.lastModified() < FRESH_MS
+        val screenOn = getSystemService(android.os.PowerManager::class.java).isInteractive
+        quietMs = when {
+            fresh -> 0L
+            screenOn -> quietMs + dt
+            else -> quietMs // the Thor asleep pauses the game too
+        }
+        return quietMs > if (introQuiet) QUIET_INTRO_MS else QUIET_MS
     }
 
     private fun pushState(file: File) {
@@ -160,6 +191,10 @@ class CompanionService : Service() {
         }
         if (text == lastPushed || !text.trimStart().startsWith("{")) return
         lastPushed = text
+        connected = true
+        introQuiet = try {
+            JSONObject(text).optInt("world", -1) == 0 // title screen or the Dive (the movie comes after New Game)
+        } catch (e: Exception) { false }
         webView?.evaluateJavascript(
             "window.KH1Companion && window.KH1Companion.push(${JSONObject.quote(text)})", null,
         )
@@ -180,7 +215,7 @@ class CompanionService : Service() {
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("KH1 companion is on the bottom screen")
-            .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else "Tap Close to hide it")
+            .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else "Closes when the game does, or tap Close")
             .setContentIntent(settings)
             .addAction(Notification.Action.Builder(null, "Close", close).build())
             .addAction(Notification.Action.Builder(null, "Settings", settings).build())
@@ -203,6 +238,8 @@ class CompanionService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val POLL_MS = 250L
         private const val FRESH_MS = 6_000L
+        private const val QUIET_MS = 60_000L
+        private const val QUIET_INTRO_MS = 5 * 60_000L
         const val ACTION_STOP = "com.kh1companion.STOP"
 
         fun stop(context: Context) {

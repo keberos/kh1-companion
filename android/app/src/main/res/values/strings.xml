@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Named after the game: the icon starts it, and launchers match the name for art and metadata. -->
-    <string name="app_name">Kingdom Hearts Final Mix</string>
+    <string name="app_name">KH1 Companion</string>
     <string name="shortcut_close">Close companion</string>
     <string name="shortcut_settings">Settings</string>
-    <string name="shortcut_companion">Companion only</string>
 </resources>

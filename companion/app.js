@@ -703,7 +703,7 @@
         else verdict = "The game is writing. It should connect in a moment.";
       }
       const steps = [
-        ["Start the game", "Use the Kingdom Hearts Final Mix icon, or start it in GameNative. It connects once the game reaches its first screen."],
+        ["Start the game", "From your launcher or GameNative. It connects once the game reaches its first screen."],
         ["Mod files in the game folder", "In GameNative: KH 1.5+2.5 → ⚙ → Import Files → DINPUT8.dll and LuaBackend.toml → Game Directory."],
         ["Container setting", "⚙ → Edit container → Environment: WINEDLLOVERRIDES = dinput8=n,b;dbghelp=b"],
         ["Companion script", "Download/KH1Companion/scripts/kh1companion.lua must be on the device."],

@@ -28,6 +28,8 @@ object Installer {
     private val MOD_FILES = listOf("DINPUT8.dll", "LuaBackend.toml")
     private val LICENSE_FILES = listOf("LuaBackend-LICENSE.txt", "NOTICE.txt")
 
+    const val GAMENATIVE = "app.gamenative"
+    private const val ACTION_LAUNCH_GAME = "app.gamenative.LAUNCH_GAME"
     const val OVERRIDE_NAME = "WINEDLLOVERRIDES"
     const val OVERRIDE_VALUE = "dinput8=n,b;dbghelp=b"
 
@@ -64,8 +66,27 @@ object Installer {
     fun installed(context: Context) = bridgeSeen(context) && removeResult()?.first != true && !removalPending()
 
     fun gameNativeInstalled(context: Context) = try {
-        context.packageManager.getPackageInfo(PlayActivity.GAMENATIVE, 0); true
+        context.packageManager.getPackageInfo(GAMENATIVE, 0); true
     } catch (e: Exception) { false }
+
+    /**
+     * Start the game in GameNative on the main screen, with the companion on the bottom one. Setup
+     * uses it to check the mod works; day to day a launcher (Cocoon Shell's companion app) or the
+     * player starts the game, and the companion closes itself when the game exits.
+     */
+    fun launchGame(context: Context): Boolean {
+        if (android.provider.Settings.canDrawOverlays(context)) {
+            context.startForegroundService(android.content.Intent(context, CompanionService::class.java))
+        }
+        val prefs = Prefs(context)
+        val game = android.content.Intent(ACTION_LAUNCH_GAME).setPackage(GAMENATIVE)
+            .putExtra("app_id", prefs.gameAppId).putExtra("game_source", prefs.gameSource)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        val main = android.app.ActivityOptions.makeBasic().setLaunchDisplayId(android.view.Display.DEFAULT_DISPLAY)
+        return try {
+            context.startActivity(game, main.toBundle()); true
+        } catch (e: android.content.ActivityNotFoundException) { false }
+    }
 
     /** Ask the bridge to take the mod out of the game folder the next time the game starts. */
     fun requestRemoval(context: Context): Boolean {

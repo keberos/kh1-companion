@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- "Play KH1" hands the launch to GameNative. -->
+    <!-- Setup's "Start the game" hands the launch to GameNative. -->
     <queries>
         <package android:name="app.gamenative" />
     </queries>
@@ -38,13 +38,13 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
-        <!-- Play: companion opens with the game and closes when it exits. Started by the app
-             icon; invisible, it waits under GameNative on the top screen. -->
+        <!-- Waits unseen under GameNative on the main screen and closes the companion when the
+             game exits (GameNative's screen closes and this one comes back to the front). -->
         <activity
-            android:name=".PlayActivity"
+            android:name=".WatchActivity"
             android:exported="false"
             android:excludeFromRecents="true"
-            android:taskAffinity="com.kh1companion.play"
+            android:taskAffinity="com.kh1companion.watch"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <service

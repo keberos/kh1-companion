@@ -10,7 +10,7 @@
 //   label   short display name (defaults to id)
 //   x, y    grid cell
 //   rooms   in-game room bytes that belong to this node
-//   save    true if the wiki mentions a save point here
+//   save    true where a save point is confirmed (a source, or used in play); the list is known to be incomplete
 //   match   chest-name prefixes for chests that have no room in the data
 //   alone   true for rooms you only reach by story or cutscene (no exits drawn)
 // Edges: [a, b], a confirmed way between two rooms.
@@ -69,7 +69,7 @@ window.KH1_MAPS = {
       { id: "Alleyway", x: 2, y: 1, rooms: [0x04] },
       { id: "Small House", x: 3, y: 1, rooms: [0x03, 0x19] },
       { id: "Secret Waterway", x: 4, y: 1, rooms: [0x16] },
-      { id: "Accessory Shop", x: 0, y: 2, rooms: [0x0A] },
+      { id: "Accessory Shop", x: 0, y: 2, rooms: [0x0A], save: true },
       { id: "1st District", x: 1, y: 2, rooms: [0x00] },
       { id: "3rd District", x: 3, y: 2, rooms: [0x02, 0x18] },
       { id: "Mystical House", x: 4, y: 2, rooms: [0x08] },

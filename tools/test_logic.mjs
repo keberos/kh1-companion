@@ -225,9 +225,9 @@ test("Destiny Islands errands count items, and remembered steps survive handing 
   assert.equal(g.next.title, "Wrap up the first day");
   // Items handed to Kairi: gone from the bag, so only the device's memory knows step 1 was done.
   assert.equal(di({ inventory: inv({}) }).next.title, "Gather raft supplies");
-  assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#0"]) }).next.title, "Wrap up the first day");
-  g = di({ inventory: inv({ 197: 1 }), progress_pre: "0a560701", seen: new Set(["Destiny Islands#0"]) });
-  assert.equal(g.next.title, "Gather food and water", "the islands' day byte says day two");
+  assert.equal(di({ inventory: inv({}), seen: new Set(["Destiny Islands#Gather raft supplies"]) }).next.title, "Wrap up the first day");
+  g = di({ inventory: inv({ 197: 1 }), progress_pre: "0a561401", seen: new Set(["Destiny Islands#Gather raft supplies"]) });
+  assert.equal(g.next.title, "Gather food and water", "day two, race done: the food list");
   const p = new Array(16).fill(0); p[0] = 0x05;
   assert.equal(L.guideFor("Destiny Islands", blank({ world: 3, progress: hexOf(p), inventory: inv({}) })).next, null);
   assert.equal(di({ progress_pre: undefined }).next.title, "Gather raft supplies", "an old bridge can't see items or story bytes: fall back to the first unknown");
@@ -390,8 +390,17 @@ test("day one wraps up when the islands' day byte turns over, not when a day-two
   // Read on the Thor at the start of day two, before collecting anything (2026-10-24).
   const island = (pre) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12", progress_pre: pre,
     inventory: "00".repeat(256) });
-  const day2 = L.guideFor("Destiny Islands", island("0a560701"), new Set(["Destiny Islands#0"]));
-  assert.equal(day2.next.title, "Gather food and water");
-  const day1 = L.guideFor("Destiny Islands", island("0a560700"), new Set(["Destiny Islands#0"]));
+  const day2 = L.guideFor("Destiny Islands", island("0a560701"), new Set(["Destiny Islands#Gather raft supplies"]));
+  assert.equal(day2.next.title, "Name the raft and race Riku", "day two opens with Riku, not the food list");
+  const day1 = L.guideFor("Destiny Islands", island("0a560700"), new Set(["Destiny Islands#Gather raft supplies"]));
   assert.equal(day1.next.title, "Wrap up the first day");
+});
+
+test("day two: the race comes first, and the food list only once Kairi hands it out", () => {
+  // progress_pre read on the Thor (2026-10-24): 07 at day-two start, 0a on meeting Riku, 14 after the race.
+  const island = (pre, inventory = "00".repeat(256)) => blank({ world: 1, room: 0, progress: "00".repeat(15) + "12", progress_pre: pre, inventory });
+  const seen = new Set(["Destiny Islands#Gather raft supplies"]);
+  assert.equal(L.guideFor("Destiny Islands", island("0a560701"), seen).next.title, "Name the raft and race Riku");
+  assert.equal(L.guideFor("Destiny Islands", island("0a560a01"), seen).next.title, "Name the raft and race Riku");
+  assert.equal(L.guideFor("Destiny Islands", island("0a561401"), seen).next.title, "Gather food and water");
 });

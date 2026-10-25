@@ -266,14 +266,15 @@
 
   // `seen`: step keys this device has already seen done, for steps whose evidence leaves
   // the save (items handed over). `next` is the first step not done, optional ones last.
-  const stepKey = (world, i) => world + "#" + i;
+  // Keyed by title, not position, so inserting a step doesn't shift what a device remembers.
+  const stepKey = (world, s) => world + "#" + s.title;
   function guideFor(world, state, seen) {
     const f = storyFacts(state);
     const steps = ((GUIDE || {})[world] || []).map((s, i) => {
       let done = stepDone(s, f, state);
-      if (done !== true && seen && seen.has(stepKey(world, i))) done = true;
+      if (done !== true && seen && seen.has(stepKey(world, s))) done = true;
       const counts = s.items ? s.items.concat(s.extra || []).map(([name, n]) => ({ name, n, have: itemCount(state, name) })) : null;
-      return { ...s, key: stepKey(world, i), done, counts };
+      return { ...s, key: stepKey(world, s), done, counts };
     });
     for (let i = steps.length - 1, later = false; i >= 0; i--) {
       if (later && !steps[i].done && !steps[i].optional) steps[i].done = true;

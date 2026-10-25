@@ -41,9 +41,14 @@ window.KH1_GUIDE = {
     { pre: [3, 1], title: "Wrap up the first day", where: "Seashore",
       nudge: "Bring everything to Kairi, then call it a day.",
       hint: "Hand the supplies over. The day ends after a race and a talk at sunset." },
+    // Day two (progress_pre byte 3 = 01). Byte 2 went 07 -> 0a on meeting Riku and -> 14 by the time
+    // the race was over and Kairi had the list (read on the Thor, 2026-10-24).
+    { pre: [2, 0x14], from: [3, 1], title: "Name the raft and race Riku", where: "Cove",
+      nudge: "A new day. Someone's waiting for you through the door where Kairi stood yesterday.",
+      hint: "Riku is in the Cove: pick a name for the raft, then race him to the star and back. Win or lose, the day goes on." },
     { items: [["Mushroom", 3], ["Fish", 3], ["Seagull Egg", 1], ["Drinking Water", 1]], extra: [["Coconut", 2]],
-      title: "Gather food and water", where: "Cove",
-      nudge: "New day, new list: food and water for the trip.",
+      from: [2, 0x14], title: "Gather food and water", where: "Cove",
+      nudge: "Check in with Kairi on the raft. She has a new list: food and water for the trip.",
       hint: "Kairi is in the Cove. Mushrooms grow in the Secret Place and around the Cove, fish swim in the Seashore shallows, the seagull egg sits up high, coconuts come from the palm trees, and the Cove has fresh water." },
     { end: "islands", title: "Wrap up the second day", where: "Cove",
       nudge: "Take the food to Kairi, then head home for the night.",

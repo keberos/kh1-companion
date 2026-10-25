@@ -4,13 +4,29 @@
 (function () {
   "use strict";
 
-  const L = window.KH1Logic;
+  // Shown only once normal play can prove them right (README, "What's confirmed"). Hidden for now:
+  //   chestNeeds  what a chest still needs, and "What opens the most chests" (randomizer logic)
+  //   roomLocks   rooms marked as opening later in the story
+  //   guide       the story guide (Guide tab, next step on Here, its map ring); kept simple for now
+  //   unconfirmedGuide  guide steps not yet checked on PC (guide-checked.js), when the guide is on
+  const SHOW = { chestNeeds: false, roomLocks: false, guide: false, unconfirmedGuide: false };
+  const L = Object.assign(Object.create(window.KH1Logic), {
+    nodeAccess: SHOW.roomLocks ? window.KH1Logic.nodeAccess : () => ({ open: true }),
+    chestsFor: SHOW.chestNeeds && SHOW.roomLocks ? window.KH1Logic.chestsFor
+      : (...a) => window.KH1Logic.chestsFor(...a).map((c) => ({ ...c, lock: null })),
+    // Unconfirmed steps still count as done for what follows; they're just not shown or offered.
+    guideFor: !SHOW.guide ? () => ({ steps: [], next: null }) : SHOW.unconfirmedGuide ? window.KH1Logic.guideFor : (...a) => {
+      const g = window.KH1Logic.guideFor(...a);
+      const steps = g.steps.filter((st) => st.checked);
+      return g.next && !g.next.checked ? { steps, next: null, unconfirmed: true } : { ...g, steps };
+    },
+  });
   const params = new URLSearchParams(location.search);
   const STATE_URL = params.get("state") || "state.json";
   const POLL_MS = 250;
   const STALE_MS = 8000;  // bridge heartbeat is every 2 s; allow for emulation hiccups
-  const VIEWS = ["here", "guide", "map", "progress", "level"];
-  const OLD_VIEWS = { worlds: "progress", collect: "progress" };  // tabs merged into Progress
+  const VIEWS = ["here", ...(SHOW.guide ? ["guide"] : []), "map", "progress", "level"];
+  const OLD_VIEWS = { worlds: "progress", collect: "progress", ...(SHOW.guide ? {} : { guide: "here" }) };  // tabs merged or hidden
   const TOAST_MS = 4500;
 
   const $ = (id) => document.getElementById(id);
@@ -124,7 +140,7 @@
   const LIST_OPTIONS = [
     ["showOpened", "Opened chests", "Also list the chests you've already opened."],
     ["showContents", "What's inside", "Show what each chest holds."],
-    ["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."],
+    ...(SHOW.chestNeeds ? [["showNeeds", "What unlocks them", "For chests you can't reach yet, name the ability or item you need, like Glide or a Trinity."]] : []),
     ["allNames", "Room names", "Name rooms you haven't been to yet, on the map and in lists."],
     ["toasts", "Pop-up notes", "A short note above the tabs when you open a chest, level up, find puppies or reach a new world."],
   ];
@@ -146,7 +162,7 @@
     hintsHidden.clear();
   }
   function toggles() {
-    const n = ["showOpened", "showContents", "showNeeds"].filter((k) => optionOn[k]()).length;
+    const n = ["showOpened", "showContents", ...(SHOW.chestNeeds ? ["showNeeds"] : [])].filter((k) => optionOn[k]()).length;
     return `<button class="chip" data-options>Show${n ? ` (${n})` : ""} ▾</button>`;
   }
   function wireToggles(root) {
@@ -157,7 +173,7 @@
       `<div class="seg">${[["first", "First time"], ["replay", "Replay"]].map(([m, t]) =>
         `<button class="chip ${mode === m ? "on" : ""}" data-mode="${m}">${t}</button>`).join("")}</div>` +
       `<div class="sub">${replay()
-        ? "Replay: room names, chest contents, what unlocks them and the full guide are all shown up front."
+        ? "Replay: room names, chest contents and the full guide are all shown up front."
         : "First time: the guide hints in layers and rooms stay unnamed until you've been there. Tap Where? or Show me when you want more."}</div>` +
       `<ul class="list options">${LIST_OPTIONS.map(([k, title, desc]) =>
         `<li data-opt="${k}"><span class="grow"><span class="name">${title}</span><div class="sub">${desc}</div></span>` +
@@ -295,7 +311,9 @@
         (n.id === mapFocus ? `<rect x="${x - 5}" y="${y - 5}" width="${BOX_W + 10}" height="${BOX_H + 10}" rx="12" class="focusring"/>` : "") +
         `<rect x="${x}" y="${y}" width="${BOX_W}" height="${BOX_H}" rx="9"/>` +
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
-        (cs.length ? `<text x="${cx(n)}" y="${y + BOX_H - 7}" class="nc">${!left ? "✓ all" : shut || !reachable ? left + " later"
+        // Chest count with a chest icon, so the number reads as chests: open chest once they're all opened.
+        (cs.length ? `<use href="#${left ? "ico-chest" : "ico-chest-open"}" class="nci" x="${cx(n) - 26}" y="${y + BOX_H - 19}" width="14" height="14"/>` +
+          `<text x="${cx(n) + 6}" y="${y + BOX_H - 7}" class="nc">${!left ? "all" : shut || !reachable ? left + " later"
           : reachable < left ? `${reachable} + ${left - reachable} later` : left + " left"}</text>` : "") +
         (shut ? `<use href="#ico-lock" x="${x + BOX_W - 13}" y="${y - 6}" width="18" height="18"/>` : "") +
         (hasSave(world, n) ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
@@ -336,7 +354,7 @@
       `<span class="grow"></span><span class="map-count">${icon("ico-chest", "")}<b>${sum.worlds[world].got} of ${sum.worlds[world].total}</b> chests opened</span>` +
       `<span class="grow"></span><button class="chip ${allNames ? "on" : ""}" id="allNames">${allNames ? "Hide names" : "Unhide names"}</button></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
-      `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-save", "")}save</span>` +
+      `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-chest", "")}chests left</span><span>${icon("ico-save", "")}save points found so far</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
       (mapFocus && L.node(world, mapFocus) ? '<span><i class="lg focus"></i>the room you picked</span>' : "") +
       `</div>`;
@@ -451,7 +469,7 @@
           const g = guide(w);
           const done = g.steps.filter((s) => s.done).length;
           return `<li data-gw="${esc(w)}"><span class="grow"><span class="name">${esc(displayWorld(w))}</span>` +
-            `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : g.waiting ? "Nothing to do right now" : "Story complete"}</div></span>` +
+            `<div class="sub">${g.next ? (done ? esc(g.next.nudge) : "Not started") : g.unconfirmed ? "Guide not confirmed yet" : g.waiting ? "Nothing to do right now" : "Story complete"}</div></span>` +
             `<span class="tag ${g.next || g.waiting ? "" : "here"}">${done}/${g.steps.length}</span></li>`;
         }).join("") + (unseen ? `<li class="hidden-step"><span class="grow"><span class="name">???</span>` +
           `<div class="sub">${unseen} more world${unseen > 1 ? "s" : ""} to find</div></span></li>` : "") + `</ul></div>`;
@@ -467,6 +485,9 @@
       (guideWorld && guideWorld !== sum.world && L.GUIDE[sum.world] ? `<button class="chip" id="guideHere">Current world</button>` : "") +
       `<span class="grow"></span></div>` +
       (g.next ? stepCard(world, g.next, current)
+        : g.unconfirmed ? `<div class="card"><div class="label">Next step · ${esc(displayWorld(world))}</div>` +
+          `<div class="empty small">The guide for this part of the story isn't confirmed on PC yet, so it's hidden. ` +
+          `It turns on as play confirms it.</div></div>`
         : g.waiting ? `<div class="card"><div class="label">Next step · ${esc(displayWorld(world))}</div>` +
           `<div class="empty small">Nothing to do right now. Your next objective shows up here once the game gives it to you.</div></div>`
         : g.steps.length ? `<div class="card"><div class="label">Story · ${esc(displayWorld(world))}</div><div class="empty">Story complete here.</div></div>` : "") +
@@ -815,7 +836,10 @@
     document.querySelector("main").scrollTop = 0;
     render(true);
   }
-  document.querySelectorAll("nav button").forEach((b) => { b.onclick = () => setView(b.dataset.view); });
+  document.querySelectorAll("nav button").forEach((b) => {
+    if (!VIEWS.includes(b.dataset.view)) { b.remove(); return; }  // a hidden feature's tab
+    b.onclick = () => setView(b.dataset.view);
+  });
   setView(view);
 
   // State arrives either from the Android wrapper (window.KH1Companion.push(json))

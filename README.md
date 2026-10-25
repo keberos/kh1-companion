@@ -17,22 +17,23 @@
 
 ## What it shows
 
-Five tabs, all live from the save you have loaded. It never tells you anything you haven't reached yet unless you ask.
+Four tabs, all live from the save you have loaded, and only what the game's own data proves. Rooms you haven't been to stay "???" unless you ask.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: what now, at a glance. An EXP bar to your next level (the game hides it in the Status menu), the next story nudge, the chests in the room you're in, and which other rooms still hold chests. Tap any room or chest to see it on the map.</td>
-    <td width="50%"><img src="docs/screenshots/guide.png" alt="Guide tab"><br><b>Guide</b>: stuck? A gentle nudge first, then <i>Where?</i> for the room, then <i>Show me</i> for the full hint. No boss or reward names until you've earned them.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is.</td>
+    <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, how many chests are left in each, and which rooms or chests you can't reach yet. Rooms you haven't been to stay "???".</td>
-    <td><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: every world you've found, with chests and story so far (a crown when a world's chests are all open), what ability would open the most chests, the 99 Dalmatians, postcards and Ansem's Reports.</td>
-  </tr>
-  <tr>
+    <td><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: every world you've found with its chests (a crown when they're all open), the 99 Dalmatians, postcards and Ansem's Reports.</td>
     <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, your next ability and how much EXP until it. Tap a level for details.</td>
-    <td><b>First time or replay?</b> Tap the eye at the top. It also has optional pop-up notes for chests, level-ups and new worlds (off by default). <i>First time</i> keeps everything behind a tap; <i>Replay</i> shows room names, chest contents, what unlocks them and the full guide up front, for 100% runs and speed routes.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>First time or replay?</b> Tap the eye at the top: <i>Replay</i> shows room names and chest contents up front. It also has optional pop-up notes for chests, level-ups and new worlds (off by default).</td>
   </tr>
 </table>
+
+**Hidden for now:** the story guide, what a chest still needs to reach, and rooms that open later in the story. They came from secondhand sources (PS2 notes, randomizer logic) that real play broke, and the goal is a simple companion you can trust. Each is behind a switch at the top of `companion/app.js`.
 
 **It reads your save, so there's nothing to keep in sync.** Load any save on any device and it's up to date. Starting the companion partway through a playthrough is fine.
 
@@ -122,7 +123,7 @@ No. Everything comes from the save that's loaded right now, so playing on severa
 
 <details><summary><b>Will it spoil the story?</b></summary>
 
-Not unless you ask. The guide starts with a vague nudge; places, names and full hints are each one tap further. Worlds you haven't found show as "???", future story steps stay hidden, and rewards appear once you've earned them. On a replay, tap the eye at the top and pick **Replay** to see everything up front.
+No. Worlds and rooms you haven't found show as "???", and chest contents stay hidden until you ask. On a replay, tap the eye at the top and pick **Replay** to see everything up front.
 </details>
 
 ---
@@ -242,7 +243,7 @@ Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELE
 | Piece | State |
 |---|---|
 | Bridge | Runs on the Steam build under GameNative on the Thor; edition, world/room, level/stats, chest flags and story progress confirmed live. |
-| Companion | All five tabs, tested at bottom-screen size against sample saves and real recordings, and in play on the Thor through Destiny Islands. |
+| Companion | Four tabs, tested at bottom-screen size against sample saves and real recordings, and in play on the Thor through Destiny Islands and early Traverse Town. |
 | Maps | All 14 worlds. Every path checked against the KH Wiki's KH1 walkthroughs and Archipelago's chest names (2026-10-24); Disney Castle is story scenes only, so it has no paths. |
 | Android app | Live on the Thor: overlay on the 1240×1080 bottom screen (density 369), top screen keeps focus, opens with the game from Cocoon Shell and closes when it exits, guided setup, self-removing uninstall. |
 

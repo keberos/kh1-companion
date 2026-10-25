@@ -1,12 +1,11 @@
-**KH1 Companion 0.9.0-beta.6** is a new beta, with new features and setup changes. Fix-only revisions are numbered beta.6.1, beta.6.2 and so on.
+**KH1 Companion 0.9.0-beta.7** is a new beta: a simpler companion that shows only what the game's own data proves. Fix-only revisions will be numbered beta.7.1, beta.7.2 and so on.
 
-Download **KH1-Companion-v0.9.0-beta.6.apk** below. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
+Download **KH1-Companion-v0.9.0-beta.7.apk** below. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
 
 ### What's new
-- **Simpler setup.** There's now one GameNative step instead of two: copy the two files with **Import Files**, then turn on **Enable mod loaders** (⚙ → Edit container → General). You no longer type a setting by hand.
-- **Settings are easy to find.** **Close companion**, **Remove everything…** and **Advanced settings** are buttons under the checklist. On Cocoon, open Settings from the **×** on the companion.
-- **A cleaner uninstall.** Setup pauses while you remove the companion, **Delete files** asks first and stays deleted, and **Uninstall** works.
-- **Guide fixes.** Loading a save made after handing Kairi the raft supplies, or from late in End of the World, no longer sends you back to earlier steps. Steps not yet checked against the PC version are marked *unconfirmed*.
-- **Other fixes.** On a fresh install, the mod files now show in GameNative's file picker. Starting the game from setup closes the companion as soon as the game exits.
+- **Simpler and more reliable.** The Guide tab, what a chest still needs, and story locks on map rooms are hidden. They came from secondhand sources (PS2 notes, randomizer logic) that real play kept breaking. Here, Map, Progress and Level remain.
+- **Clearer map.** Each room's count has a chest icon, an open chest once a room is done, and save points are labelled as found so far, not every one.
+- **Two more save points:** Traverse Town's Accessory Shop and the Dive's last station.
+- **Fixes:** launching from Cocoon gives the game the controller straight away, and the bridge no longer checks for files during play. A camera-spin test showed no frame drops with the companion open or closed.
 
-**Updating from beta.5:** install over it. Your setup keeps working, so there's nothing to redo.
+**Updating from beta.6:** install over it. Nothing to redo.

@@ -79,7 +79,7 @@ These settings have nothing to do with the companion (it uses next to nothing wh
 | **A fan curve to match** | Quick Settings → fan → *Smart* → edit its curve | High Performance runs warmer, so adjust the fan as needed. We use High Performance with a less aggressive *Smart* curve: cool enough, and quieter than the stock settings. |
 | **Keep GameNative's FPS limiter at 60** | GameNative's in-game menu | Turning it off made pacing worse, not better. |
 
-With the first four, the game spent about 4% of a two-minute camera-spinning test below 54 fps, down from 20%, and the worst dip went from 36 to 48 fps.
+With 120 Hz, the Performance preset, High Performance mode and the limiter at 60, the game spent about 4% of a two-minute camera-spinning test below 54 fps, down from 20%, and the worst dip went from 36 to 48 fps.
 
 ## Uninstall
 

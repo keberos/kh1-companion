@@ -166,7 +166,7 @@ def snap(count="4"):
 def watch(minutes="120"):
     """Log story-relevant changes while someone plays: one line per change, to confirm guide values."""
     import json
-    keys = ("world", "room", "in_field", "at_save", "progress_pre", "progress", "world_status", "trinities", "magic_unlocked", "shared")
+    keys = ("world", "room", "in_field", "probe", "progress_pre", "progress", "world_status", "trinities", "magic_unlocked", "shared")
     last, last_inv = {}, None
     end = time.time() + float(minutes) * 60
     while time.time() < end:

@@ -53,9 +53,6 @@ local ADDR = {
     world_status   = {0x2DEBC50, 0x2DEB250},  -- 11 bytes, TT WL OC DJ AG AT HT NL HB EotW Monstro:
                                               -- 0 hidden, 1-2 on the map, 3 visited, 4 complete (AP client)
     hud            = {0x2812E9C, 0x281249C},  -- float > 0 while Sora's HUD is up
-    -- 1 while Sora stands at a save point (found on Steam by comparing memory on and off the
-    -- Accessory Shop's, 2026-10-25, tools/memdiff.py). EGS assumed at the same distance as `world`.
-    at_save        = {0x234F740, 0x234E768},
 }
 local CHEST_BYTES  = 509
 local PUPPY_BYTES  = 13
@@ -104,7 +101,6 @@ local function snapshot()
         ',"world":', ReadByte(addr("world")),
         ',"room":', ReadByte(addr("room")),
         ',"in_field":', (ReadFloat(addr("hud")) > 0) and "true" or "false",
-        ',"at_save":', ReadByte(addr("at_save")) == 1 and "true" or "false",
         ',"level":', ReadShort(addr("sora_level")),
         ',"max_hp":', stats[1], ',"max_mp":', stats[3], ',"ap":', stats[4],
         ',"postcards":', ReadByte(addr("postcards")),
@@ -228,13 +224,37 @@ local function dump_on_flag()
     ConsolePrint("kh1companion: wrote dump-" .. label .. ".bin")
 end
 
+-- Research aid, off unless probe.txt sits next to the state file: it lists game offsets (hex, one
+-- per line); their bytes go into the snapshot as "probe", so tools/thor.py watch logs how each one
+-- behaves during play. The list is re-read every few seconds.
+local probe_addrs, probe_read = {}, -1000
+
+local function probe_json(now_frame)
+    if now_frame - probe_read >= 300 then
+        probe_read = now_frame
+        probe_addrs = {}
+        local f = io.open(out_dir .. "probe.txt", "r")
+        if f then
+            for line in f:lines() do
+                local a = tonumber((line:match("^%s*(0x%x+)") or ""))
+                if a then probe_addrs[#probe_addrs + 1] = a end
+            end
+            f:close()
+        end
+    end
+    if #probe_addrs == 0 then return "" end
+    local parts = {}
+    for i, a in ipairs(probe_addrs) do parts[i] = string.format('"%X":%d', a, ReadByte(a)) end
+    return ',"probe":{' .. table.concat(parts, ",") .. "}"
+end
+
 function _OnFrame()
     if not game_version then return end
     frame = frame + 1
     if frame % POLL_FRAMES ~= 0 then return end
 
     dump_on_flag()
-    local body = snapshot()
+    local body = snapshot() .. probe_json(frame)
     local now = os.time()
     if body ~= last_payload or now - last_write >= HEARTBEAT_SECS then
         write_snapshot(body)

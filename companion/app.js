@@ -58,10 +58,8 @@
   let levelAll = false;  // Level tab: full table instead of the next few levels
   let waitHelp = false;  // waiting screen: troubleshooting shown
   let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
-  // world -> map rooms where the player has stood at a save point (the bridge's at_save), so the map
-  // marks save points the data doesn't list. Kept across games: save points don't move.
-  let savesSeen = store.get("savesSeen", {});
-  const hasSave = (world, n) => !!n.save || (savesSeen[world] || []).includes(n.id);
+  const hasSave = (world, n) => !!n.save;
+  try { localStorage.removeItem("kh1c:savesSeen"); } catch { /* a live save-point flag was tried and marked wrong rooms */ }
   let allNames = store.get("allNames", false);  // show every room name, visited or not
   let toastsOn = store.get("toasts", false);     // pop-up notes for game events: opt-in, they can distract
 
@@ -955,10 +953,6 @@
     if (!n || sum.title || !sum.world) return;
     const list = visitedRooms[sum.world] || (visitedRooms[sum.world] = []);
     if (!list.includes(n.id)) { list.push(n.id); store.set("visited", visitedRooms); }
-    if (state.at_save && !hasSave(sum.world, n)) {
-      (savesSeen[sum.world] || (savesSeen[sum.world] = [])).push(n.id);
-      store.set("savesSeen", savesSeen);
-    }
   }
 
   function rememberSteps() {

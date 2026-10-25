@@ -16,7 +16,7 @@ DUMP_FROM = 0x2000000
 
 
 def main(argv):
-    pairs = [a.split(":", 1) for a in argv[1:]]
+    pairs = [a.split(":", 1) for a in argv[1:] if a != "--all"]
     if len(pairs) < 3 or any(len(p) != 2 for p in pairs):
         print(__doc__)
         return 2
@@ -36,7 +36,7 @@ def main(argv):
         if all(all(b[i] == v for b in groups[l]) for l, v in zip(labels, vals)):
             hits.append((i, vals))
     print(f"{len(hits)} candidate byte(s); labels {labels}")
-    for i, vals in hits[:200]:
+    for i, vals in hits[:None if "--all" in sys.argv else 200]:
         print(f"  0x{DUMP_FROM + i:07X}  " + "  ".join(f"{l}={v:#04x}" for l, v in zip(labels, vals)))
     return 0
 

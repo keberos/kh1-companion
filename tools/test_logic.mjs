@@ -217,6 +217,16 @@ test("Dive to the Heart steps follow the room order, and leaving finishes them",
   assert.equal(L.guideFor("Awakening", blank({ world: 1, room: 0 })).next, null);
 });
 
+test("every room a real save was made in shows a save point on the map", () => {
+  // Saves can only happen at save points, so each save's room is proof (tools/kh1save.py savepoints).
+  const rooms = JSON.parse(readFileSync(path.join(ROOT, "tools/fixtures/save-rooms.json"), "utf8"));
+  for (const { world, room } of rooms) {
+    const n = L.nodeForRoom(blank({ world, room }));
+    assert.ok(n, `world ${world} room ${room} is on a map`);
+    assert.ok(n.save, `${n.id} (world ${world} room ${room}) should show a save point`);
+  }
+});
+
 test("Destiny Islands day two as recorded on the Thor: the Secret Place's 0x21 isn't the storm", () => {
   // tools/thor.py watch, 2026-10-25: the islands' counter and bag through day two, in order.
   // The device remembers every step it sees done (app.js rememberSteps), so a wrong "done" sticks.

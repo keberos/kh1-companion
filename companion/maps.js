@@ -26,7 +26,7 @@ window.KH1_MAPS = {
       { id: "Cinderella Platform", label: "Station 1", x: 1, y: 0, rooms: [0x01] },
       { id: "Alice Platform", label: "Station 2", x: 2, y: 0, rooms: [0x02], match: ["Chest"] },
       { id: "Dream Islands", x: 3, y: 0, rooms: [0x05, 0x06] },
-      { id: "Awakening", label: "Final Station", x: 4, y: 0, rooms: [0x03, 0x04] },
+      { id: "Awakening", label: "Final Station", x: 4, y: 0, rooms: [0x03, 0x04], save: true },
     ],
     edges: [["Disembark", "Cinderella Platform"], ["Cinderella Platform", "Alice Platform"],
       ["Alice Platform", "Dream Islands"], ["Dream Islands", "Awakening"]],

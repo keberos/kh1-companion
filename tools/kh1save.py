@@ -36,6 +36,8 @@ Usage:
   python tools/kh1save.py list  <KHFM_WW.png | GameNative saves .zip>
   python tools/kh1save.py copy  <export .zip> <slot> <out .zip> [offset=hexbytes ...]
       e.g. copy saves.zip 10 test.zip 1641C=d2040000   (slot 10's save as the next one, munny 1234)
+  python tools/kh1save.py savepoints <KHFM_WW.png | GameNative saves .zip>
+      the world and room of every save: each is a save point (tools/fixtures/save-rooms.json)
   python tools/kh1save.py state <KHFM_WW.png | GameNative saves .zip> [out dir, default dev/scenarios]
       then open http://localhost:8737/?state=/dev/scenarios/save-<slot>.json (tools/devserver.py)
 """
@@ -195,6 +197,11 @@ def main(argv):
         new, nn = add_save(raw, data, system)
         pack(argv[2], new, argv[4])
         print(f"{argv[4]}: save {nn:02d} = slot {argv[3]} with {len(argv) - 5} edit(s); {summary(bytes(data))}")
+        return 0
+    if len(argv) >= 3 and argv[1] == "savepoints":
+        # A save can only be made at a save point, so every slot's world and room is one.
+        rooms = sorted({(d[0x2040], struct.unpack_from("<I", d, 0x2044)[0] & 0xFF) for _, _, _, d in slots(load(argv[2])) if len(d) >= 0x16C00})
+        print(json.dumps([{"world": w, "room": r} for w, r in rooms]))
         return 0
     if len(argv) < 3 or argv[1] not in ("list", "state"):
         print(__doc__)

@@ -2,7 +2,8 @@ r"""Build the mod files that load the companion bridge into KH1 under GameNative
 
 Writes them to android/app/src/main/assets/mod/; the app copies them to the device's
 Download/KH1Companion/mod/, and setup walks the user through GameNative's Import Files
-(both files → Game Directory) and the container setting WINEDLLOVERRIDES=dinput8=n,b;dbghelp=b.
+(both files → Game Directory) and the container's General → Enable mod loaders, which makes
+GameNative add dinput8=n,b for a dinput8.dll beside the game's exe.
 (GameNative 1.3 ignores executable overrides in launch intents, so an installer can't be run
 for the user; and the game folder is GameNative's private storage.)
 

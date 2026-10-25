@@ -12,8 +12,9 @@ import java.io.File
  * DINPUT8.dll + LuaBackend.toml into mod/ for the user to import into the game folder with
  * GameNative's Import Files. It runs again after every app update, so script fixes arrive with
  * the app. The game folder itself is GameNative's private storage: no other app can write
- * there, and GameNative 1.3 ignores executable overrides in launch intents, so the import and
- * the DLL override are the two steps the user does in GameNative.
+ * there, and GameNative 1.3 ignores executable overrides in launch intents, so the user does the
+ * import, and turns on the container's "Enable mod loaders" (GameNative then loads our
+ * DINPUT8.dll itself: it adds dinput8=n,b for a dinput8.dll beside the game's exe).
  *
  * Removal needs no GameNative steps: [requestRemoval] leaves mod/uninstall.flag, and the next
  * time the game starts, the bridge (running inside the game) renames its own DLL so it never
@@ -30,8 +31,6 @@ object Installer {
 
     const val GAMENATIVE = "app.gamenative"
     private const val ACTION_LAUNCH_GAME = "app.gamenative.LAUNCH_GAME"
-    const val OVERRIDE_NAME = "WINEDLLOVERRIDES"
-    const val OVERRIDE_VALUE = "dinput8=n,b;dbghelp=b"
 
     /** Copy the shipped files out, once per app version. Needs all files access. */
     fun deploy(context: Context, force: Boolean = false): Boolean {
@@ -63,7 +62,15 @@ object Installer {
     /** The bridge has written its file at some point: the mod is in the game and working. */
     fun bridgeSeen(context: Context) = File(Prefs(context).statePath).exists()
 
-    fun installed(context: Context) = bridgeSeen(context) && removeResult()?.first != true && !removalPending()
+    fun installed(context: Context) = bridgeSeen(context) && !removedSince(context) && !removalPending()
+
+    /** The bridge removed itself and hasn't written since, so a later reinstall clears it. */
+    private fun removedSince(context: Context): Boolean {
+        if (removeResult()?.first != true) return false
+        if (File(Prefs(context).statePath).lastModified() <= unlog.lastModified()) return true
+        unlog.delete()
+        return false
+    }
 
     fun gameNativeInstalled(context: Context) = try {
         context.packageManager.getPackageInfo(GAMENATIVE, 0); true

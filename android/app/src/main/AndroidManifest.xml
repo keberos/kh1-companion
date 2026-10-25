@@ -12,6 +12,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Remove everything's Uninstall button opens Android's uninstall dialog for this app; without
+         this, Android refuses silently (seen on the Thor: "does not have REQUEST_DELETE_PACKAGES"). -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <!-- Setup's "Start the game" hands the launch to GameNative. -->
     <queries>

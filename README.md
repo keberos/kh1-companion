@@ -51,12 +51,11 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
 1. **Download** `KH1-Companion-….apk` from the [latest release](../../releases) and open it to install.
 2. **Open KH1 Companion.** A setup checklist walks you through everything, with pictures of each GameNative screen:
    - two Android permissions (one switch each),
-   - copying two files into the game with GameNative's **Import Files** (the app has them ready),
-   - adding one setting in GameNative (the app copies the text for you, so there's nothing to type),
+   - in GameNative, copying two files into the game with **Import Files** (the app has them ready) and turning on **Enable mod loaders**,
    - starting the game once, after which setup ticks itself off.
 3. **Open it with the game.** On Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app: launching the game from Cocoon then opens the companion on the bottom screen too. Without Cocoon, start the game and tap the **KH1 Companion** icon. Either way, the companion closes by itself when the game does.
 
-**Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion closes within a minute. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 7 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
+**Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion closes within a minute. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 6 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
 
 <p align="center"><img src="android/app/src/main/assets/guide/exe-list.png" width="640" alt="GameNative's Executable Path list with KINGDOM HEARTS FINAL MIX.exe highlighted"></p>
 
@@ -152,10 +151,10 @@ Details the tabs rely on:
 
 ### Install, by design
 
-The game folder is GameNative's private storage, so no other app can write there, and GameNative 1.3 ignores the `executablePath` in a launch intent's `container_config` (tested on the Thor 2026-10-24: it still runs the Steam loader), so an installer can't be run for the user. Hence the two guided GameNative steps:
+The game folder is GameNative's private storage, so no other app can write there, and GameNative 1.3 ignores the `executablePath` in a launch intent's `container_config` (tested on the Thor 2026-10-24: it still runs the Steam loader), so an installer can't be run for the user. Hence one guided GameNative step, in two parts:
 
 1. **Import Files** → `Download/KH1Companion/mod/DINPUT8.dll` and `LuaBackend.toml` → Game Directory. The app stages these (licenses go in `mod/licenses/`, so the picker shows only the two files).
-2. Container environment variable `WINEDLLOVERRIDES` = `dinput8=n,b;dbghelp=b`. It's required: without it the bridge doesn't load (tested on the Thor 2026-10-24).
+2. **Edit container → General → Enable mod loaders.** Wine's built-in `dinput8` wins over the game folder's, so the bridge needs a `dinput8=n,b` DLL override. With this switch on, GameNative adds it at launch for any `dinput8.dll` beside the game's exe (`ModDllOverrides`, GameNative 1.3.0), so nothing is typed (tested on the Thor 2026-10-25, launched from Cocoon). Setting `WINEDLLOVERRIDES=dinput8=n,b` on the Environment tab does the same, which is what earlier betas had people do. Adding the mod folder to `WINEPATH` instead does not work: the built-in still wins.
    - **Don't load LuaBackend as `dbghelp`.** Wine's imagehlp forwards to dbghelp, so a global `dbghelp=n,b` hands those calls to LuaBackend's stand-in, which lacks them, and the game aborts (`unimplemented function dbghelp.dll.ImageNtHeader`). As `dinput8` it works, because KH1 imports `DirectInput8Create`, and LuaBackend exits quietly in every other program.
 
 Setup's last step ticks off once the bridge has written its file. The app re-copies the bridge script to `Download/KH1Companion/scripts/` after every update, so script fixes ship with the APK.

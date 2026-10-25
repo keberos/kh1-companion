@@ -1,5 +1,5 @@
 """Make the setup guide's pictures from screenshots of GameNative 1.3.0 on the AYN Thor (Android 13,
-1920x1080 top screen), taken 2026-10-24. If GameNative's screens change, retake them and update
+1920x1080 top screen), taken 2026-10-24 (mod-loaders 2026-10-25). If GameNative's screens change, retake them and update
 GUIDE_SOURCE in android/app/src/main/java/com/kh1companion/MainActivity.kt, which tells users.
 
 Each picture is a crop of GameNative's own UI with what to tap outlined in gold. Crops stay on
@@ -28,9 +28,7 @@ SHOTS = {
     "pick-files":      ("picker.png",         (0, 160, 1920, 1040),   [(40, 718, 1900, 852), (40, 886, 1900, 1020)]),
     "copy":            ("import-bottom.png",  (0, 172, 1920, 1060),   [(80, 196, 350, 252), (70, 795, 545, 858), (1576, 928, 1878, 1030)]),
     "edit-container":  ("options-top.png",    (1100, 60, 1920, 560),  [(1150, 270, 1880, 385)]),
-    "environment-tab": ("env-tab.png",        (0, 0, 1920, 270),      [(1215, 165, 1484, 262)]),
-    "add-variable":    ("env-bottom.png",     (0, 660, 1920, 1040),   [(905, 886, 1015, 996)]),
-    "new-variable":    ("new-variable.png",   (590, 160, 1330, 920),  [(640, 412, 1280, 702), (1150, 765, 1265, 850)]),
+    "mod-loaders":     ("mod-loaders.png",    (0, 0, 1920, 960),      [(4, 165, 208, 262), (20, 790, 1900, 940)]),
     "save":            ("unsaved.png",        (0, 0, 1920, 150),      [(1815, 35, 1898, 115)]),
     # optional: start straight into KH1 instead of the collection's launcher
     "general-tab":     ("general.png",        (0, 0, 1920, 770),      [(4, 165, 208, 262), (34, 622, 1888, 762)]),

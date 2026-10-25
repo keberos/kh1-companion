@@ -1,8 +1,6 @@
 package com.kh1companion
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
@@ -127,7 +125,13 @@ class MainActivity : Activity() {
         val gn = Installer.gameNativeInstalled(this)
         val working = files && Installer.installed(this)
         val openGameNative = "Open GameNative" to {
-            packageManager.getLaunchIntentForPackage(Installer.GAMENATIVE)?.let { startActivity(it) }
+            // On the other screen, so these steps stay in view while you tap through GameNative.
+            val here = display?.displayId ?: android.view.Display.DEFAULT_DISPLAY
+            val other = getSystemService(android.hardware.display.DisplayManager::class.java).displays
+                .map { it.displayId }.firstOrNull { it != here }
+            val opts = other?.let { android.app.ActivityOptions.makeBasic().setLaunchDisplayId(it).toBundle() }
+            packageManager.getLaunchIntentForPackage(Installer.GAMENATIVE)
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let { startActivity(it, opts) }
                 ?: Toast.makeText(this, "GameNative isn't installed", Toast.LENGTH_SHORT).show()
         }
 
@@ -141,8 +145,9 @@ class MainActivity : Activity() {
         if (!gn) {
             step("3. GameNative", false, "Install GameNative and KINGDOM HEARTS HD 1.5+2.5 ReMIX in it first.", emptyList())
         } else {
-            step("3. Copy the mod into the game", working,
-                "In GameNative, copy two files the app has ready for you into the game's folder. About a minute.",
+            step("3. Add the mod in GameNative", working,
+                "Copy two files the app has ready for you into the game, and turn on one switch. All from the game's " +
+                    "gear in GameNative, about a minute.",
                 if (!working && files) listOf(openGameNative) else emptyList())
             if (!working && files) guide("import", listOf(
                 "In GameNative, pick KINGDOM HEARTS HD 1.5+2.5 ReMIX and tap the gear." to "gear",
@@ -151,32 +156,21 @@ class MainActivity : Activity() {
                 "Go to Download › KH1Companion › mod. Press and hold DINPUT8.dll, tap LuaBackend.toml so both are " +
                     "selected, then tap Select." to "pick-files",
                 "Leave Game Directory as the place, tick Replace existing files, and tap Copy 2 files." to "copy",
-            ))
-            step("4. Turn the mod on", working,
-                "Add one setting to the game in GameNative. The app copies the text for you, so there's nothing to type.",
-                if (!working && files) listOf(openGameNative) else emptyList())
-            if (!working && files) guide("setting", listOf(
                 "Tap the gear again, then Edit container." to "edit-container",
-                "Open the Environment tab." to "environment-tab",
-                "Scroll to the bottom and tap the + button." to "add-variable",
-                "Tap Copy name below, then press and hold the Name box in GameNative and choose Paste. Do the same with " +
-                    "Copy value for the Value box. Tap Ok." to "new-variable",
+                "On the General tab, scroll down and turn on Enable mod loaders." to "mod-loaders",
                 "Tap the save icon at the top right." to "save",
-            ), actionsAfter = 3, actions = listOf(
-                "Copy name" to { copy(Installer.OVERRIDE_NAME) },
-                "Copy value" to { copy(Installer.OVERRIDE_VALUE) },
             ))
-            step("5. Check it", working,
+            step("4. Check it", working,
                 if (working) "Working: the game has talked to the companion."
                 else "Start the game here. Once its title screen shows, the companion connects and this ticks itself off. " +
                     "If it doesn't, the companion's \"Not connecting?\" help lists what to check.",
                 if (!working && overlay && files) listOf("Start the game" to { startGame() }) else emptyList())
-            step("6. Open it with the game", false,
+            step("5. Open it with the game", false,
                 "The companion opens from its own icon and closes by itself when the game exits. To have it open with the " +
                     "game too, in Cocoon Shell set KH1 Companion as Kingdom Hearts' companion app: launching the game " +
                     "from Cocoon then opens both. Without Cocoon, start the game, then tap the KH1 Companion icon.",
                 emptyList(), mark = false)
-            step("7. Optional: start straight into Kingdom Hearts Final Mix", false,
+            step("6. Optional: start straight into Kingdom Hearts Final Mix", false,
                 "Out of the box, GameNative opens the collection's menu and you pick KH1 there, and quitting KH1 drops you " +
                     "back in that menu with the companion still open. Point GameNative straight at KH1 to go right into the " +
                     "game, and quitting closes the game and the companion together.",
@@ -221,7 +215,7 @@ class MainActivity : Activity() {
                 })
             }, into = removal)
         step("2. Optional: tidy GameNative's settings", false,
-            "In GameNative: ⚙ → Edit container → Environment → delete ${Installer.OVERRIDE_NAME}. Harmless to leave once " +
+            "In GameNative: ⚙ → Edit container → General → turn off Enable mod loaders. Harmless to leave once " +
                 "the mod is out. If you pointed the game straight at KH1 (setup step 6), you can set Executable Path back " +
                 "to KINGDOM HEARTS HD 1.5+2.5 Launcher.exe on the General tab.", emptyList(), into = removal, mark = false)
         step("3. Delete the companion's files", false, "Removes Download/KH1Companion.",
@@ -245,9 +239,8 @@ class MainActivity : Activity() {
     /** What the guide pictures show; screens may differ in other GameNative versions (tools/make_guide_images.py). */
     private val GUIDE_SOURCE = "Pictures from GameNative 1.3.0 on an AYN Thor (Android 13). Newer GameNative versions may look different."
 
-    /** "Show me how": numbered pictures of the GameNative screens, plus any buttons the steps need. */
-    private fun guide(key: String, shots: List<Pair<String, String>>, actions: List<Pair<String, () -> Unit>> = emptyList(),
-                      actionsAfter: Int = shots.lastIndex) {
+    /** "Show me how": numbered pictures of the GameNative screens. */
+    private fun guide(key: String, shots: List<Pair<String, String>>) {
         val open = key in guidesOpen
         steps.addView(button(if (open) "Hide the pictures" else "Show me how, with pictures") {
             if (!guidesOpen.remove(key)) guidesOpen.add(key)
@@ -269,7 +262,6 @@ class MainActivity : Activity() {
                     setPadding(0, pad / 4, 0, pad / 2)
                 }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
             } catch (e: Exception) { /* picture missing: the text still says it */ }
-            if (i == actionsAfter) for ((label, run) in actions) box.addView(button(label, run))
         }
         steps.addView(box)
     }
@@ -285,11 +277,6 @@ class MainActivity : Activity() {
 
     private fun startGame() {
         if (!Installer.launchGame(this)) Toast.makeText(this, "GameNative isn't installed", Toast.LENGTH_LONG).show()
-    }
-
-    private fun copy(value: String) {
-        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("KH1 companion", value))
-        Toast.makeText(this, "Copied: $value", Toast.LENGTH_SHORT).show()
     }
 
     private fun text(s: String, size: Float, bold: Boolean = false) = TextView(this).apply {

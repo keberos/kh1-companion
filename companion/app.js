@@ -730,7 +730,7 @@
       const steps = [
         ["Start the game", "From your launcher or GameNative. It connects once the game reaches its first screen."],
         ["Mod files in the game folder", "In GameNative: KH 1.5+2.5 → ⚙ → Import Files → DINPUT8.dll and LuaBackend.toml → Game Directory."],
-        ["Container setting", "⚙ → Edit container → Environment: WINEDLLOVERRIDES = dinput8=n,b;dbghelp=b"],
+        ["Mod loaders on", "⚙ → Edit container → General → Enable mod loaders, then save."],
         ["Companion script", "Download/KH1Companion/scripts/kh1companion.lua must be on the device."],
         ["File access", "This app needs \"All files access\" to read what the game writes."],
         ["Black screen in the game?", "Set the game's display mode to fullscreen or borderless. Windowed mode can sync from a PC through Steam Cloud and shows black here."],

@@ -71,19 +71,17 @@ You need GameNative with **KINGDOM HEARTS HD 1.5+2.5 ReMIX** (Steam) installed a
 2. Open **KH1 Companion**. The checklist walks you through, with pictures:
    1. **Show on the second screen**: tap Allow, pick KH1 Companion in the list, turn it on.
    2. **Read the game's progress**: tap Allow, turn on All files access.
-   3. **Copy the mod into the game**: GameNative → the game → ⚙ → **Import Files** → pick both files in `Download/KH1Companion/mod` → Game Directory → tick *Replace existing files* → Copy.
-   4. **Turn the mod on**: ⚙ → **Edit container** → **Environment** → **+** → paste the name and value the app copies for you → Ok → save.
-   5. **Check it**: start the game; setup says *All set* once the companion connects.
+   3. **Add the mod in GameNative**: the game → ⚙ → **Import Files** → pick both files in `Download/KH1Companion/mod` → Game Directory → tick *Replace existing files* → Copy. Then ⚙ → **Edit container** → **General** → turn on **Enable mod loaders** → save.
+   4. **Check it**: start the game; setup says *All set* once the companion connects.
 3. **Open it with the game**: on Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app, and launching the game from Cocoon opens both. Without Cocoon, start the game and tap the KH1 Companion icon. The companion closes by itself when the game does.
 
-**Optional: start straight into the game.** By default GameNative opens the collection's menu first, and quitting KH1 returns you there with the companion still open. For a seamless KH1 experience: GameNative → the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save (setup step 7 has pictures). To undo, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
+**Optional: start straight into the game.** By default GameNative opens the collection's menu first, and quitting KH1 returns you there with the companion still open. For a seamless KH1 experience: GameNative → the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save (setup step 6 has pictures). To undo, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.
 
 **Updating from an earlier beta:** install over it. Your setup carries over; nothing to redo.
 
 ### Using it
 
 - The KH1 Companion icon opens the companion; it closes by itself as soon as the game exits. The **×** on the companion and **Close** on its notification close it any time.
-- Long-press the icon for **Close companion** and **Settings**.
 - **Black screen in the game?** Set its display mode to fullscreen or borderless. Windowed mode can sync from a PC through Steam Cloud and shows black under GameNative.
 - **Not connecting?** Tap *Not connecting?* on the companion's waiting screen for a checklist.
 

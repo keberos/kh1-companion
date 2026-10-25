@@ -217,6 +217,29 @@ test("Dive to the Heart steps follow the room order, and leaving finishes them",
   assert.equal(L.guideFor("Awakening", blank({ world: 1, room: 0 })).next, null);
 });
 
+test("Destiny Islands day two as recorded on the Thor: the Secret Place's 0x21 isn't the storm", () => {
+  // tools/thor.py watch, 2026-10-25: the islands' counter and bag through day two, in order.
+  // The device remembers every step it sees done (app.js rememberSteps), so a wrong "done" sticks.
+  const seen = new Set();
+  const at = (pre, items) => {
+    const g = L.guideFor("Destiny Islands", blank({ world: 1, room: 2, progress: "00".repeat(15) + "12", progress_pre: "0a56" + pre, inventory: inv(items) }), seen);
+    for (const s of g.steps) if (s.done) seen.add(s.key);
+    return g.next ? g.next.title : g.waiting ? "(waiting)" : null;
+  };
+  // In the Secret Place with part of Kairi's list: the counter reads 0x21.
+  assert.equal(at("2101", { 195: 1, 197: 2, 198: 1, 199: 1 }), "Gather food and water");
+  assert.equal(at("2101", { 195: 1, 197: 3, 198: 1, 199: 1 }), "Gather food and water");
+  // Its scene ends: back to 0x14. Then Kairi takes what's in the bag so far, before the fish.
+  assert.equal(at("1401", { 195: 1, 197: 3, 198: 1, 199: 1 }), "Gather food and water");
+  assert.equal(at("1401", {}), "Gather food and water");
+  assert.equal(at("1401", { 196: 3, 198: 1 }), "Gather food and water");
+  // The rest handed over (counter 0x17), the castle (pre[3] 1 -> 4), the storm, Riku.
+  assert.equal(at("1701", { 1: 1 }), "(waiting)");
+  assert.equal(at("1704", { 1: 1 }), "(waiting)");
+  assert.equal(at("1e04", { 1: 1 }), "Find Riku in the storm");
+  assert.equal(at("2404", { 1: 1 }), "Find Kairi");
+});
+
 test("Destiny Islands errands count items, and remembered steps survive handing them over", () => {
   // Day one, supplies not handed over, unless a test says otherwise: the islands' story counter
   // (progress_pre byte 2) reads 01 then.

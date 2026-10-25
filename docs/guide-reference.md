@@ -37,7 +37,7 @@ On PC (Steam) `progress` starts at 0x2DEA864 and `progress_pre` 4 bytes before i
 
 **Destiny Islands** (`pre[2]`; early values recorded on the Thor): 01 day one · 04 supplies handed to Kairi (they leave the bag, so this byte is the only sign they were gathered) ·
 07 called it a day · 0A met Riku in the Cove (the race follows, unrecorded) · 14 Kairi's food list · 17 food handed
-over · 1E the storm · 24 Riku's scene, the Keyblade. `pre[3]` moves 0→1 with the Disney Castle scene between days.
+over · 1E the storm · 24 Riku's scene, the Keyblade. The Secret Place sets 21 while you're in it on day two and returns to 14 when its scene ends; the guide reads 21 as 14. Kairi takes Day two's food in parts, so the guide remembers the most of each item it saw (recorded on the Thor 2026-10-25 with `tools/thor.py watch`). `pre[3]` moves 0→1 with the Disney Castle scene between days.
 
 **Traverse Town** (`p0`): 2B Guard Armor · 31 regrouped · 3E Leon in the Secret Waterway · 42 traded Cid the gummi
 piece for the book · 46 book delivered · 4A Riku scene · 4E Cid at his house · 5C Neverland's Navi-G to Cid ·

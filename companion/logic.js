@@ -248,9 +248,15 @@
 
   // {pre: [i, v]}: byte i of the story bytes before the main ones (progress_pre) has reached v.
   // On the islands, byte 3 reads 01 on day two (read on the Thor, 2026-10-24).
+  // Values a story byte holds only during a side scene, read as the value it goes back to.
+  // Destiny Islands: entering the Secret Place on day two sets 0x21 until its scene ends, then the
+  // counter returns to 0x14 (recorded on the Thor, 2026-10-25); read as-is, it looked past the storm.
+  const PRE_SIDE = { 2: { 0x21: 0x14 } };
   const preAt = (state, [i, v]) => {
     const b = bytesOf(state, "progress_pre");
-    return b && i < b.length ? b[i] >= v : null;
+    if (!b || i >= b.length) return null;
+    const at = (PRE_SIDE[i] || {})[b[i]] ?? b[i];
+    return at >= v;
   };
 
   // One test, used both for "done" (the step's own fields) and for `from` (when the game hands it out):

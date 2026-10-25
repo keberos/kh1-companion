@@ -11,6 +11,7 @@ different amount each time, so menu items are found by matching small pictures o
   python tools/thor.py exit-game          Quick Menu → exit; waits for Wine to stop
   python tools/thor.py shot FILE [scale]  top-screen screenshot (default scale 0.5)
   python tools/thor.py state              the bridge's latest state.json, one line
+  python tools/thor.py watch [minutes]    log story, room, scene and item changes while someone plays
 
 Env: THOR_ADB (adb path), THOR_SERIAL (device serial).
 """
@@ -145,8 +146,32 @@ def state():
     print(sh("cat /sdcard/Download/KH1Companion/state.json"))
 
 
+def watch(minutes="120"):
+    """Log story-relevant changes while someone plays: one line per change, to confirm guide values."""
+    import json
+    keys = ("world", "room", "in_field", "progress_pre", "progress", "world_status", "trinities", "magic_unlocked", "shared")
+    last, last_inv = {}, None
+    end = time.time() + float(minutes) * 60
+    while time.time() < end:
+        try:
+            s = json.loads(sh("cat /sdcard/Download/KH1Companion/state.json"))
+        except ValueError:
+            time.sleep(1)
+            continue
+        changes = [f"{k}={s.get(k)}" for k in keys if s.get(k) != last.get(k)]
+        inv = bytes.fromhex(s.get("inventory", ""))
+        if last_inv is not None:
+            changes += [f"item{i}:{last_inv[i]}->{inv[i]}" for i in range(len(inv)) if inv[i] != last_inv[i]]
+        if changes and last:
+            print(time.strftime("%H:%M:%S"), " ".join(changes), flush=True)
+        elif not last:
+            print(time.strftime("%H:%M:%S"), "start", " ".join(f"{k}={s.get(k)}" for k in keys), flush=True)
+        last, last_inv = s, inv
+        time.sleep(1)
+
+
 def main(argv):
-    cmds = {"game-page": game_page, "export-saves": export_saves, "import-saves": import_saves,
+    cmds = {"game-page": game_page, "export-saves": export_saves, "import-saves": import_saves, "watch": watch,
             "exit-game": exit_game, "shot": shot, "state": state}
     if len(argv) < 2 or argv[1] not in cmds:
         print(__doc__)

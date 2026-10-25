@@ -51,6 +51,9 @@
   }
   let mapFocus = null;           // Map tab: room ringed after "Show on map"
   const guideSeen = new Set(store.get("guideSeen", []));  // steps seen done whose evidence can leave the save
+  // Step key -> {item: most of it seen in the bag while that step was current}. Errands hand items
+  // over in parts (Kairi takes what you have), so the bag alone would send the player back for them.
+  let itemPeak = store.get("itemPeak", {});
   let levelPick = store.get("levelPick", {});  // the player's own path / curve choice
   let levelAll = false;  // Level tab: full table instead of the next few levels
   let waitHelp = false;  // waiting screen: troubleshooting shown
@@ -396,11 +399,14 @@
 
   // Next step, revealed in layers: the nudge always; "Where?" adds the room and the map
   // marker; "Show me" names the event and gives the full hint.
+  // What the player has gathered for an errand: the bag, or the most this device saw in it.
+  const peakCount = (key, c) => c.have == null ? c : { ...c, have: Math.max(c.have, (itemPeak[key] || {})[c.name] || 0) };
   function stepCard(world, step, current) {
     const key = step.key;
     const where = step.where ? L.node(world, step.where) : null;
     const full = stepFull(key), placed = whereShown.has(key) || full;
     const counts = step.counts ? `<div class="counts">${step.counts.map((c) =>
+      peakCount(key, c)).map((c) =>
       `<span class="count ${c.have != null && c.have >= c.n ? "ok" : ""}">${esc(c.name)} ${c.have == null ? "?" : Math.min(c.have, c.n)}/${c.n}</span>`).join("")}</div>` : "";
     return `<div class="card guide-next"><div class="label">${current ? "Next step" : "Next"} · ${esc(displayWorld(world))}` +
       `${step.optional ? " · optional" : ""}${step.checked ? "" : ` · <span class="unconfirmed">unconfirmed</span>`}</div>` +
@@ -963,8 +969,16 @@
     if (state.world === 0 && !sum.title && tt === 0) {
       guideSeen.clear();
       if (revealed.size) { revealed.clear(); store.set("revealed", []); }
+      if (Object.keys(itemPeak).length) { itemPeak = {}; store.set("itemPeak", itemPeak); }
     } else if (sum.world && L.GUIDE[sum.world]) {
-      for (const s of L.guideFor(sum.world, state, guideSeen).steps) if (s.done) guideSeen.add(s.key);
+      const g = L.guideFor(sum.world, state, guideSeen);
+      for (const s of g.steps) if (s.done) guideSeen.add(s.key);
+      if (g.next && g.next.counts) {
+        const peak = itemPeak[g.next.key] || {};
+        const more = g.next.counts.filter((c) => c.have != null && c.have > (peak[c.name] || 0));
+        for (const c of more) peak[c.name] = c.have;
+        if (more.length) { itemPeak[g.next.key] = peak; store.set("itemPeak", itemPeak); }
+      }
     }
     if (guideSeen.size !== before) store.set("guideSeen", [...guideSeen]);
   }

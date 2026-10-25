@@ -9,6 +9,7 @@
   <a href="../../releases"><b>⬇ Download the latest beta</b></a> ·
   <a href="#install">Install</a> ·
   <a href="#what-it-shows">What it shows</a> ·
+  <a href="#smoother-play-on-the-ayn-thor">Performance tips</a> ·
   <a href="#questions">Questions</a>
 </p>
 
@@ -66,6 +67,19 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
 - **Long-press the icon** for *Close companion* and *Settings*.
 - **Nothing shows until a save is loaded**, so you never see leftovers from another save.
 
+## Smoother play on the AYN Thor
+
+These settings have nothing to do with the companion (it uses next to nothing while the game runs), but they made KH1 itself play noticeably better on our Thor (GameNative 1.3.0), measured frame by frame:
+
+| Setting | Where | What it fixed |
+|---|---|---|
+| **Top screen at 120 Hz** | Thor display settings | Uneven frame pacing and input lag: frames reached the screen in about 6 ms instead of about 60 ms, with far fewer hitches. The game still runs at 60. |
+| **FEXCore Preset: Performance** | GameNative → the game → ⚙ → **Edit container** → **Emulation** | The frame-rate dips when turning the camera. The game's main thread was maxing out one CPU core; this preset lightens it. If you ever see glitches, set it back to *Intermediate*. |
+| **High Performance mode** | Thor quick settings | The remaining dips: it keeps the CPU at full speed. Costs battery and heat, so *Performance* mode is the gentler choice. |
+| **Keep GameNative's FPS limiter at 60** | GameNative's in-game menu | Turning it off made pacing worse, not better. |
+
+With all four, the game spent about 4% of a two-minute camera-spinning test below 54 fps, down from 20%, and the worst dip went from 36 to 48 fps.
+
 ## Uninstall
 
 In the app: **Settings → Advanced → Remove everything**.
@@ -81,6 +95,11 @@ Your game and saves are untouched throughout.
 <details><summary><b>The game shows a black screen.</b></summary>
 
 Set the game's display mode to fullscreen or borderless in its settings. The collection's display settings sync through Steam Cloud, so windowed mode chosen on a PC carries over, and it renders black under GameNative.
+</details>
+
+<details><summary><b>The game stutters or dips when I turn the camera.</b></summary>
+
+See [Smoother play on the AYN Thor](#smoother-play-on-the-ayn-thor): 120 Hz, the FEXCore *Performance* preset and the Thor's High Performance mode fixed most of it for us.
 </details>
 
 <details><summary><b>The companion keeps saying "Waiting for Kingdom Hearts…".</b></summary>

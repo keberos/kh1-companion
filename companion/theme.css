@@ -367,3 +367,6 @@ svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; s
 .here-lv .rewards { flex-wrap: nowrap; }
 .here-lv .reward { font-size: 13px; white-space: nowrap; }
 .bar.exp > i { background: linear-gradient(180deg, #fff2bf, var(--gold) 55%, var(--gold-deep)); }
+
+/* chest lists: the blanket "some open up later" line */
+.later-note { margin: 6px 4px 2px; font-style: italic; opacity: .8; }

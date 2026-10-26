@@ -133,7 +133,10 @@
     const isHere = (c) => !!hereId && c.node === hereId;
     rows = rows.slice().sort((a, b) => (a.got - b.got) || (!!a.lock - !!b.lock) || (isHere(b) - isHere(a)) || a.n.localeCompare(b.n));
     if (!rows.length) return `<div class="empty">${chests.length ? "Every chest here is open." : "No chests here."}</div>`;
-    return `<ul class="list">${rows.map((c) => chestRow(c, { here: isHere(c), showRoom: opts.showRoom !== false })).join("")}</ul>`;
+    // Most chests' timing isn't known: say so once, rather than let an unmarked row read as "get it now".
+    const unsure = rows.some((c) => !c.got && !c.lock);
+    return `<ul class="list">${rows.map((c) => chestRow(c, { here: isHere(c), showRoom: opts.showRoom !== false })).join("")}</ul>` +
+      (unsure ? `<div class="sub later-note">Some chests only open up later in this world or on a return visit.</div>` : "");
   }
 
   function progressCard(title, got, total, extra = "") {
@@ -208,8 +211,9 @@
       const nd = id !== "null" && L.node(world, id);
       return `<li${nd ? ` data-cw="${esc(world)}" data-cn="${esc(id)}"` : ""}>${icon("ico-chest")}<span class="grow">` +
         `<span class="name">${esc(nd ? roomLabel(world, nd) : "Elsewhere")}</span>` +
-        `<div class="sub">${open(cs) === cs.length ? `${cs.length} chest${cs.length > 1 ? "s" : ""}`
-          : open(cs) ? `${open(cs)} now, ${cs.length - open(cs)} later` : `${cs.length} later`}` +
+        // Only what's known: a count, and how many need something the player lacks. Never "now":
+        // most chests' timing isn't known, so an unmarked chest isn't promised to be reachable.
+        `<div class="sub">${cs.length} chest${cs.length > 1 ? "s" : ""}${open(cs) < cs.length ? ` · ${cs.length - open(cs)} need${cs.length - open(cs) > 1 ? "" : "s"} something you don't have` : ""}` +
         `${cs.some(L.isPuppies) ? " · puppies" : ""}${nd && !L.nodeAccess(world, nd, state).open ? " · can't get in yet" : ""}</div></span>` +
         (nd ? '<span class="tag more">›</span>' : "") + `</li>`;
     }).join("");
@@ -339,8 +343,7 @@
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
         // Chest count with a chest icon, so the number reads as chests: open chest once they're all opened.
         (cs.length ? `<use href="#${left ? "ico-chest" : "ico-chest-open"}" class="nci" x="${cx(n) - 26}" y="${y + BOX_H - 19}" width="14" height="14"/>` +
-          `<text x="${cx(n) + 6}" y="${y + BOX_H - 7}" class="nc">${!left ? "all" : shut || !reachable ? left + " later"
-          : reachable < left ? `${reachable} + ${left - reachable} later` : left + " left"}</text>` : "") +
+          `<text x="${cx(n) + 6}" y="${y + BOX_H - 7}" class="nc">${!left ? "all" : left + " left"}</text>` : "") +
         (shut ? `<use href="#ico-lock" x="${x + BOX_W - 13}" y="${y - 6}" width="18" height="18"/>` : "") +
         (hasSave(world, n) ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
         (pup ? `<use href="#ico-paw" x="${x + BOX_W - 12}" y="${y - 5}" width="16" height="16"/>` : "") +
@@ -433,6 +436,7 @@
       (showContents && c.i ? `<div class="sub" style="margin-top:8px">Inside: ${esc(c.i)}</div>` : "") +
       (c.lock ? `<div class="sub" style="margin-top:6px">${icon("ico-lock", "chip-ico")}${esc(needText(c.lock))}</div>` : "") +
       (note ? `<div class="sub" style="margin-top:6px">${esc(note)}</div>` : "") +
+      (!c.got && !c.lock && !note ? `<div class="sub" style="margin-top:6px">The walkthroughs don't say what this one needs. Some chests only open up later in this world or on a return visit.</div>` : "") +
       `<div class="row" style="margin-top:10px">${nd ? `<button class="chip" id="chestOnMap">${icon("ico-chest", "chip-ico")}Show on map</button>` : ""}` +
       `<span class="grow"></span><button class="chip" data-close>Close</button></div>`,
     );

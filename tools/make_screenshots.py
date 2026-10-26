@@ -3,7 +3,7 @@
 Uses headless Chrome against the dev server (python tools/devserver.py) and the sample saves in
 dev/scenarios/ (python tools/make_scenarios.py). The bottom screen is 1240x1080 physical pixels at
 density 369, so the page lays out at 537x468 CSS pixels with a 2.31 device scale factor.
-Output: docs/screenshots/<tab>.png, then docs/banner.png from docs/banner.html (which frames the map shot).
+Output: docs/screenshots/<tab>.png and bosses.png (the boss sheet), then docs/banner.png from docs/banner.html (which frames the map shot).
 Usage:  python tools/make_screenshots.py [--port 8737] [--scenario traverse-town]
 """
 import argparse
@@ -36,6 +36,14 @@ def main():
                             "--virtual-time-budget=5000", f"--screenshot={out}", url],
                            check=True, capture_output=True)
             print(out)
+        # The boss list lives in a sheet on Here; ?sheet=bosses opens it with the next boss revealed.
+        out = OUT / "bosses.png"
+        url = f"http://localhost:{args.port}/?state=/dev/scenarios/{args.scenario}.json&view=here&sheet=bosses"
+        subprocess.run([str(chrome), "--headless=new", f"--user-data-dir={profile}", "--hide-scrollbars",
+                        "--window-size=537,468", "--force-device-scale-factor=2.3091",
+                        "--virtual-time-budget=5000", f"--screenshot={out}", url],
+                       check=True, capture_output=True)
+        print(out)
         banner = ROOT / "docs" / "banner.png"
         subprocess.run([str(chrome), "--headless=new", f"--user-data-dir={profile}", "--hide-scrollbars",
                         "--allow-file-access-from-files", "--window-size=1600,760", "--force-device-scale-factor=1",

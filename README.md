@@ -17,19 +17,53 @@
 
 ## What it shows
 
-Four tabs, all live from the save you have loaded, and only what the game's own data proves. Rooms you haven't been to stay "???" unless you ask.
+Everything comes live from the save you have loaded, and only what the game's own data or two or more walkthroughs back up. Rooms you haven't been to stay "???" unless you ask.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests; tap a chest to see where it is. Chests are tagged <i>Now</i> (the walkthroughs name what it needs and you have it) or <i>Later</i> (you don't yet); timings like "after the trial" or "later visit" show underneath. The <b>Bosses</b> tile opens the world's bosses with tips. Sections fold to one line; the battery shows beside your level.</td>
-    <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
+    <td width="50%" valign="top"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: what's around you
+      <ul>
+        <li>EXP to your next level and what you learn next</li>
+        <li>Chests in this room, and which rooms still have some</li>
+        <li><i>Now</i> or <i>Later</i> on chests the walkthroughs agree on</li>
+        <li>Tap a chest to see exactly where it is</li>
+      </ul></td>
+    <td width="50%" valign="top"><img src="docs/screenshots/bosses.png" alt="Boss list"><br><b>Bosses</b>: tap the tile on Here
+      <ul>
+        <li>The world's bosses in story order</li>
+        <li>Each stays ??? until you tap for the next one</li>
+        <li>A few tips per boss</li>
+        <li>Bosses your save shows you've beaten tick themselves</li>
+      </ul></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: every world you've found with its chests (a crown when they're all open), the 99 Dalmatians, postcards and Ansem's Reports. Open a world for its chests and bosses: each boss stays ??? until you tap for the next one, then shows a few tips; ones your save proves beaten tick themselves.</td>
-    <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, your next ability and how much EXP until it. Tap a level for details.</td>
+    <td valign="top"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: the whole world
+      <ul>
+        <li>Every room, and where you are</li>
+        <li>Chests left in each room</li>
+        <li>Save points found so far</li>
+      </ul></td>
+    <td valign="top"><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: the whole game
+      <ul>
+        <li>Every world you've found, with its chests and bosses</li>
+        <li>A crown when a world's chests are all open</li>
+        <li>99 Dalmatians, postcards and Ansem's Reports</li>
+      </ul></td>
   </tr>
   <tr>
-    <td colspan="2"><b>First time or replay?</b> Tap <b>Show / Hide</b> at the top: <i>Replay</i> shows room names and chest contents up front. It also has optional pop-up notes for chests, level-ups and new worlds (off by default).</td>
+    <td valign="top"><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: planning ahead
+      <ul>
+        <li>What Sora learns at each level for <i>your</i> Dive choices</li>
+        <li>Your next ability and the EXP until it</li>
+        <li>Tap a level for details</li>
+      </ul></td>
+    <td valign="top"><b>Show / Hide</b>: the button at the top
+      <ul>
+        <li><i>First time</i> keeps things behind a tap</li>
+        <li><i>Replay</i> shows room names and chest contents up front</li>
+        <li>Optional pop-up notes for chests, level-ups and new worlds (off by default)</li>
+      </ul>
+      <b>Also</b>: the battery beside your level, and <b>Settings</b> (the gear) for updates.</td>
   </tr>
 </table>
 

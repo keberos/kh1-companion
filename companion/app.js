@@ -992,7 +992,15 @@
     rememberBosses();
     announce();
     render();
+    // ?sheet=bosses (README screenshots): open this world's boss list with the next boss shown.
+    if (sheetParam === "bosses" && sum.world && !sum.title) {
+      sheetParam = null;
+      openBossSheet(sum.world);
+      const next = $("sheetBody").querySelector('[data-boss="story"]');
+      if (next) next.click();
+    }
   }
+  let sheetParam = params.get("sheet");
 
   // ---------- toasts: say what just happened in the game ----------
   // Compares each new snapshot with the last one. Loading a save (from the title, or a jump

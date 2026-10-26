@@ -45,11 +45,11 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(pad, pad, pad, pad)
         }
-        col.addView(text("KH1 Companion", 22f, bold = true))
-        col.addView(text("Shows your progress, a spoiler-free guide, maps and level-ups on the bottom screen while you play. " +
-            "Version ${packageManager.getPackageInfo(packageName, 0).versionName}.", 15f))
+        col.addView(text("Your progress, room maps, chests, bosses and level-ups on the bottom screen while you play.", 15f))
+        col.addView(heading("Updates"))
         update = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(update)
+        col.addView(heading("Setup"))
         steps = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(steps)
 
@@ -60,10 +60,12 @@ class MainActivity : Activity() {
             hint = "empty = bundled page; e.g. http://192.168.1.20:8737/"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
         }
+        col.addView(heading("Companion"))
         col.addView(button("Close companion") {
             CompanionService.stop(this)
             Toast.makeText(this, "Companion closed", Toast.LENGTH_SHORT).show()
         })
+        col.addView(heading("More"))
         removal = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
         col.addView(button("Remove everything…") { removal.visibility = if (removal.visibility == View.GONE) View.VISIBLE else View.GONE })
         col.addView(removal)
@@ -79,7 +81,27 @@ class MainActivity : Activity() {
         advanced.addView(text(licenses(), 12f))
         col.addView(button("Advanced settings") { advanced.visibility = if (advanced.visibility == View.GONE) View.VISIBLE else View.GONE })
         col.addView(advanced)
-        setContentView(ScrollView(this).apply { addView(col) })
+        // The top bar stays put while the page scrolls, so closing is always one tap away.
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(pad, pad / 2, pad / 2, pad / 2)
+            setBackgroundColor(0xFF1B2140.toInt())
+        }
+        val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        titles.addView(text("KH1 Companion", 22f, bold = true))
+        titles.addView(text("Version ${packageManager.getPackageInfo(packageName, 0).versionName}", 14f))
+        bar.addView(titles, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        bar.addView(Button(this).apply {
+            text = "✕"; textSize = 24f; isAllCaps = false
+            contentDescription = "Close settings"
+            minWidth = dp(56); minHeight = dp(56)
+            setOnClickListener { finish() }
+        }, LinearLayout.LayoutParams(dp(64), dp(64)))
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        root.addView(bar)
+        root.addView(ScrollView(this).apply { addView(col) }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        setContentView(root)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -100,12 +122,23 @@ class MainActivity : Activity() {
 
     private var downloading = false
 
-    /** "Update available" and its button; nothing when up to date. */
+    /** "Update available" with its button, or "Up to date" and when it last checked; always the GitHub link. */
     private fun refreshUpdate() {
         if (downloading) return
         update.removeAllViews()
-        val r = Updater.available(this) ?: return
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, pad, 0, 0) }
+        val github = button("View on GitHub") {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/keberos/kh1-companion/releases")))
+        }
+        val r = Updater.available(this)
+        if (r == null) {
+            val checked = prefs.updateCheckedAt
+            update.addView(text("✓ Up to date: version ${packageManager.getPackageInfo(packageName, 0).versionName}", 18f, bold = true))
+            update.addView(text(if (checked > 0) "Last checked " + android.text.format.DateUtils.getRelativeTimeSpanString(checked) + "."
+                else "Checks for a new release when Settings opens.", 14f))
+            update.addView(github)
+            return
+        }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         box.addView(text("Update available: ${Updater.short(r.tag)}", 18f, bold = true))
         val note = text("", 14f).apply { visibility = View.GONE }
         box.addView(note)
@@ -132,6 +165,7 @@ class MainActivity : Activity() {
             }
         })
         update.addView(box)
+        update.addView(github)
     }
 
     /**
@@ -361,8 +395,20 @@ class MainActivity : Activity() {
         if (bold) setTypeface(typeface, Typeface.BOLD)
     }
 
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    // Full-width, tall, normal-case buttons: easy to read and to hit on a handheld.
     private fun button(label: String, onClick: () -> Unit) =
-        Button(this).apply { text = label; setOnClickListener { onClick() } }
+        Button(this).apply {
+            text = label; textSize = 17f; isAllCaps = false; minHeight = dp(56)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { topMargin = dp(6) }
+            setOnClickListener { onClick() }
+        }
+
+    private fun heading(label: String) = text(label.uppercase(), 13f, bold = true).apply {
+        setTextColor(0xFFF6D77A.toInt()); letterSpacing = 0.12f; setPadding(0, pad * 3 / 2, 0, pad / 4)
+    }
 
     private fun licenses() = try {
         assets.open("mod/NOTICE.txt").bufferedReader().readText() +

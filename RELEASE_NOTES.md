@@ -1,10 +1,9 @@
-**KH1 Companion 0.9.0-beta.8.1** is a light revision of beta.8.
+**KH1 Companion 0.9.0-beta.8.2** is a light revision of beta.8.
 
-Download **KH1-Companion-v0.9.0-beta.8.1.apk** below. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
+Download **KH1-Companion-v0.9.0-beta.8.2.apk** below, or update from the app's Settings. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
 
 ### What's new
-- **Updates from the app.** A gear beside the × opens Settings, and turns gold when there's a new release. In Settings, tap **Update**, then **Update** in Android's installer. The first time, Android asks you to turn on **Allow from this source**.
-- **One Show / Hide button** in the header, on every tab.
-- **Chest tags.** **Now** or **Later** only where walkthroughs agree on what a chest needs; a chest with a later-visit note is no longer tagged **Here**.
+- **Clearer Settings.** A close button that stays at the top, your version and whether it's up to date, a link to GitHub, and bigger buttons. Once setup is done, its steps fold away.
+- **Clearer chest counts.** Rooms say "no chests" or "all open" instead of "none left".
 
-**Updating from beta.8:** install over it. Nothing to redo. Later updates can come from the app's Settings.
+**Updating from beta.8 or 8.1:** install over it. Nothing to redo.

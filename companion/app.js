@@ -179,7 +179,7 @@
   }
   function toggles() {
     const n = ["showOpened", "showContents", ...(SHOW.chestNeeds ? ["showNeeds"] : [])].filter((k) => optionOn[k]()).length;
-    return `<button class="chip" data-options>Show${n ? ` (${n})` : ""} ▾</button>`;
+    return `<button class="chip" data-options>Show / Hide${n ? ` (${n})` : ""} ▾</button>`;
   }
   function wireToggles(root) {
     root.querySelectorAll("[data-options]").forEach((b) => { b.onclick = openShowSheet; });

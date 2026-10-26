@@ -381,10 +381,10 @@ svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; s
 .card.fold:not(.open) { padding-bottom: 12px; }
 
 /* Here: this room's chests beside a bosses tile */
-.here-split { display: flex; gap: 10px; align-items: stretch; margin-bottom: 12px; }
+.here-split { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
 .here-split .card { margin-bottom: 0; }
 .here-split > .here-room { flex: 2; min-width: 0; }
-.here-split > .here-room > .card { height: 100%; box-sizing: border-box; }
-.boss-tile { flex: 1; min-width: 120px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; }
+.boss-tile { flex: 0 0 auto; padding: 10px 12px; cursor: pointer; }
 .boss-tile .label::after { display: none; }
-.boss-count { font: italic 700 18px var(--ui); color: var(--text); margin: 6px 0 2px; }
+.boss-count { font: italic 700 16px var(--ui); color: var(--text); margin: 4px 0 1px; white-space: nowrap; }
+.boss-tile .sub { white-space: nowrap; }

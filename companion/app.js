@@ -602,7 +602,7 @@
     const { story } = L.bossesFor(world, state, BOSSES);
     return `<div class="card boss-tile" id="bossBtn" role="button"><div class="label">${icon("ico-crown", "chip-ico")}Bosses</div>` +
       `<div class="boss-count">${story.filter((b) => b.beaten).length} of ${story.length} beaten</div>` +
-      `<div class="sub">Tap for the list ›</div></div>`;
+      `<div class="sub">Tips for each boss ›</div></div>`;
   }
   function openBossSheet(world) {
     openSheet(`<h2>Bosses · ${esc(displayWorld(world))}</h2>` + bossCard(world, false, true) +

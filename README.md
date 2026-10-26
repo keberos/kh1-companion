@@ -21,7 +21,7 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is. Below, the world's bosses (see Progress). A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) is marked <i>Later</i>, and one they agree opens up after an event or on a later visit says so.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests; tap a chest to see where it is. A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) says so, as does one they agree opens up after an event or on a later visit. The <b>Bosses</b> tile opens the world's bosses with tips. Sections fold to one line; the battery shows beside your level.</td>
     <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
   </tr>
   <tr>

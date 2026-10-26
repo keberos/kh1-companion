@@ -291,12 +291,14 @@
     el.innerHTML =
       expStrip() +
       `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
-      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${bossButton(world)}${toggles()}</div>` +
+      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
-      (n ? foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length),
+      `<div class="here-split">` +
+      (n ? `<div class="here-room">` + foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length),
         inRoom.some((c) => showOpened || !c.got) ? chestList(inRoom, n.id, { showRoom: false })
-          : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) : "") +
+          : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) + `</div>` : "") +
+      bossButton(world) + `</div>` +
       foldCard("elsewhere", `${n ? "Elsewhere in" : "Left in"} ${esc(displayWorld(world))}`, chestCount(elsewhere.length),
         (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
         (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
@@ -598,8 +600,9 @@
   function bossButton(world) {
     if (!BOSSES[world]) return "";
     const { story } = L.bossesFor(world, state, BOSSES);
-    return `<button class="chip boss-btn" id="bossBtn" aria-label="Bosses">${icon("ico-crown", "chip-ico")}` +
-      `${story.filter((b) => b.beaten).length}/${story.length}</button>`;
+    return `<div class="card boss-tile" id="bossBtn" role="button"><div class="label">${icon("ico-crown", "chip-ico")}Bosses</div>` +
+      `<div class="boss-count">${story.filter((b) => b.beaten).length} of ${story.length} beaten</div>` +
+      `<div class="sub">Tap for the list ›</div></div>`;
   }
   function openBossSheet(world) {
     openSheet(`<h2>Bosses · ${esc(displayWorld(world))}</h2>` + bossCard(world, false, true) +

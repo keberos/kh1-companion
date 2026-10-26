@@ -110,7 +110,8 @@
 
   // ---------- shared pieces ----------
 
-  const chestCount = (k) => (k ? `${k} chest${k === 1 ? "" : "s"}` : "none left");
+  // Chests still closed, or why there are none: the room never had any, or they're all open.
+  const chestCount = (k, all) => (k ? `${k} chest${k === 1 ? "" : "s"}` : all === 0 ? "no chests" : "all open");
   const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach it yet");
   // When the walkthroughs get a chest (chestneeds.js `when`). Never "now", and never when a return visit opens up.
   const whenOf = (c) => (SHOW.chestNeeds && !c.got && ((NEEDS[c.w] || {})[c.n] || {}).when) || null;
@@ -294,7 +295,7 @@
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
       `<div class="here-split">` +
-      (n ? `<div class="here-room">` + foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length),
+      (n ? `<div class="here-room">` + foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length, inRoom.length),
         inRoom.some((c) => showOpened || !c.got) ? chestList(inRoom, n.id, { showRoom: false })
           : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) + `</div>` : "") +
       bossButton(world) + `</div>` +
@@ -363,7 +364,7 @@
         lines.map((t, i) => `<text x="${cx(n)}" y="${cy(n) + (i - (lines.length - 1) / 2) * 14 + (cs.length ? -5 : 4)}" class="nl">${esc(t)}</text>`).join("") +
         // Chest count with a chest icon, so the number reads as chests: open chest once they're all opened.
         (cs.length ? `<use href="#${left ? "ico-chest" : "ico-chest-open"}" class="nci" x="${cx(n) - 26}" y="${y + BOX_H - 19}" width="14" height="14"/>` +
-          `<text x="${cx(n) + 6}" y="${y + BOX_H - 7}" class="nc">${!left ? "all" : left + " left"}</text>` : "") +
+          `<text x="${cx(n) + 6}" y="${y + BOX_H - 7}" class="nc">${!left ? "all open" : left + " left"}</text>` : "") +
         (shut ? `<use href="#ico-lock" x="${x + BOX_W - 13}" y="${y - 6}" width="18" height="18"/>` : "") +
         (hasSave(world, n) ? `<use href="#ico-save" x="${x - 6}" y="${y - 6}" width="18" height="18"/>` : "") +
         (pup ? `<use href="#ico-paw" x="${x + BOX_W - 12}" y="${y - 5}" width="16" height="16"/>` : "") +

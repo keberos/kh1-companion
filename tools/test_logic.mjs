@@ -2,7 +2,7 @@
 // Run:  node --test tools/test_logic.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import vm from "node:vm";
 import path from "node:path";
@@ -573,4 +573,133 @@ test("the chest sheet takes needs from the walkthroughs, never the randomizer lo
   assert.match(src, /const SHOW = \{ chestNeeds: true, roomLocks: false,/);
   assert.match(src, /lock: SHOW\.roomLocks && c\.lock && c\.lock\[0\] === "story" \? c\.lock : SHOW\.chestNeeds \? guideLock\(c, state\) : null/);
   assert.match(readFileSync(path.join(ROOT, "companion/index.html"), "utf8"), /<script src="chestneeds.js"><\/script>\s*<script src="logic.js">/);
+});
+
+// ---------- bosses (companion/bosses.js, docs/bosses-sources.md) ----------
+const bossSandbox = { window: {} };
+vm.runInNewContext(readFileSync(path.join(ROOT, "companion/bosses.js"), "utf8"), bossSandbox);
+const BOSSES = JSON.parse(JSON.stringify(bossSandbox.window.KH1_BOSSES));
+const STORY = JSON.parse(readFileSync(path.join(ROOT, "tools/fixtures/story-points.json"), "utf8"));
+const storyState = (p) => {
+  const inv = new Array(256).fill(0);
+  for (const [i, n] of Object.entries(p.state.inventory || {})) inv[i] = n;
+  return { ...STORY.base, ...p.state, inventory: Buffer.from(inv).toString("hex") };
+};
+const beatenNames = (world, state) => {
+  const b = L.bossesFor(world, state, BOSSES);
+  return [...b.story, ...b.optional].filter((x) => x.beaten).map((x) => x.name);
+};
+
+test("every world's bosses are listed with a visit, and every tip has 2+ walkthroughs", () => {
+  const KEYS = new Set(["KW", "GG", "IGN", "TR", "FD", "ES", "KC", "SS", "CC", "WP"]);
+  const full = blank({ magic: "01".repeat(7), magic_unlocked: 0, trinities: 0, shared: "00".repeat(8), abilities: "00".repeat(48) });
+  const evidence = (ev, where) => {
+    if (!ev) return;
+    const keys = Object.keys(ev).sort().join(",");
+    assert.ok(["any", "at,p", "has", "report", "end"].includes(keys), `${where}: unknown evidence ${keys}`);
+    if (ev.any) ev.any.forEach((x) => evidence(x, where));
+    if (ev.has) assert.notEqual(L.has(ev.has, full), null, `${where}: has() can't judge ${ev.has}`);
+    if (ev.report) assert.ok(REPORTS.some((r) => r.n.endsWith(`Report ${ev.report}`)), `${where}: report ${ev.report}`);
+    if (ev.p != null) assert.ok(ev.p <= 14 && ev.at > 0 && ev.at <= 0xFF, where);
+  };
+  let story = 0, optional = 0;
+  for (const [w, { story: s = [], optional: o = [] }] of Object.entries(BOSSES)) {
+    assert.ok(MAPS[w], `${w} is a mapped world`);
+    for (const b of [...s, ...o]) {
+      const where = `${w} / ${b.name}`;
+      assert.match(b.visit, /^[^.]{3,30}$/, where);
+      assert.ok(b.src.split(" ").every((k) => KEYS.has(k)), where);
+      for (const [text, src] of b.tips) {
+        assert.match(text, /^[^.]{5,70}$/, `${where}: short tip`);
+        const keys = src.split(" ");
+        assert.ok(keys.length >= 2 && new Set(keys).size === keys.length && keys.every((k) => KEYS.has(k)), `${where}: "${text}" needs 2+ sources`);
+      }
+      assert.ok(b.tips.length <= 3, where);
+      evidence(b.beaten, where);
+    }
+    story += s.length; optional += o.length;
+  }
+  assert.equal(story, 35);
+  assert.equal(optional, 9);
+  assert.deepEqual(BOSSES["Traverse Town"].story.map((b) => b.name), ["Leon", "Guard Armor", "Opposite Armor"]);
+});
+
+test("nothing counts as beaten on a blank save", () => {
+  for (const w of Object.keys(BOSSES)) assert.deepEqual(beatenNames(w, blank({ world: 0, room: 2 })), [], w);
+});
+
+test("story points: a boss is never ticked before its fight, and is once the save proves it", () => {
+  // Fixture step -> boss. Some ticks wait for later evidence: the Archipelago client counts Genie Jafar
+  // only from 0x5A; Lock, Shock and Barrel have no signal of their own; nothing is saved after Ansem;
+  // the islands' Darkside counts once Traverse Town starts.
+  const STEP = {
+    "Face what waits at the end": "Darkside", "Find Riku in the storm": "Darkside",
+    "Defeat the Guard Armor": "Guard Armor", "Defeat the Opposite Armor": "Opposite Armor", "Defeat the Trickmaster": "Trickmaster",
+    "Defeat Cerberus": "Cerberus", "Defeat Sabor": "Sabor, again", "Defeat Clayton": "Clayton", "Defeat the Pot Centipede": "Pot Centipede",
+    "Defeat Jafar": "Jafar", "Defeat Genie Jafar": "Genie Jafar", "Defeat the Parasite Cage": "Parasite Cage",
+    "Defeat the Parasite Cage again": "Parasite Cage, again", "Defeat Ursula": "Ursula", "Defeat giant Ursula": "Giant Ursula",
+    "Defeat Lock, Shock and Barrel": "Lock, Shock and Barrel", "Defeat Oogie Boogie": "Oogie Boogie", "Defeat Oogie's Manor": "Oogie's Manor",
+    "Defeat your shadow": "Anti-Sora", "Defeat Captain Hook": "Captain Hook", "Defeat Riku": "Riku", "Defeat Maleficent": "Maleficent",
+    "Defeat Dragon Maleficent": "Dragon Maleficent", "Defeat Riku again": "Riku, again", "Defeat the Behemoth": "Behemoth",
+    "Defeat the Phantom": "Phantom", "Defeat Chernabog": "Chernabog", "Defeat Ansem": "Ansem",
+  };
+  const LATE = new Set(["Destiny Islands/Darkside", "Agrabah/Genie Jafar", "Halloween Town/Lock, Shock and Barrel", "End of the World/Ansem"]);
+  let checked = 0;
+  for (const p of STORY.points) {
+    const name = STEP[p.step];
+    if (!name) continue;
+    const b = L.bossesFor(p.world, storyState(p), BOSSES);
+    const list = [...b.story, ...b.optional];
+    const i = list.findIndex((x) => x.name === name);
+    assert.ok(i >= 0, `${p.id}: ${name} is listed in ${p.world}`);
+    const where = `${p.id} ${name}`;
+    if (p.phase === "after") assert.equal(list[i].beaten, !LATE.has(`${p.world}/${name}`), where);
+    else {
+      assert.equal(list[i].beaten, false, where);
+      // Nor anything after it in the story.
+      const s = b.story.findIndex((x) => x.name === name);
+      if (s >= 0) assert.ok(b.story.slice(s).every((x) => !x.beaten), where);
+    }
+    checked++;
+  }
+  assert.equal(checked, 58);
+  // Every boss with a signal of its own ticks on some fixture, except those only real play reaches.
+  const ticked = new Set(STORY.points.flatMap((p) => beatenNames(p.world, storyState(p)).map((n) => p.world + "/" + n)));
+  for (const [w, { story = [] }] of Object.entries(BOSSES))
+    for (const x of story) if (x.beaten && !LATE.has(`${w}/${x.name}`)) assert.ok(ticked.has(`${w}/${x.name}`), `${w}/${x.name} never ticks`);
+});
+
+test("rewards prove a boss beaten, and a beaten story boss covers the ones before it", () => {
+  const s = (over) => blank({ magic: "01".repeat(7), magic_unlocked: 0, trinities: 0, progress: "00".repeat(15), ...over });
+  const rep = (n) => { const r = REPORTS.find((x) => x.n.endsWith(`Report ${n}`)); return setBits([[r.B, r.b]], 2); };
+  assert.deepEqual(beatenNames("Olympus Coliseum", s({ reports: rep(12) })), ["Sephiroth"]);
+  assert.deepEqual(beatenNames("Hollow Bastion", s({ reports: rep(5) })), ["Riku", "Maleficent"]);
+  assert.deepEqual(beatenNames("Hollow Bastion", s({ trinities: 0x10 })), ["Riku"]);  // White Trinity
+  assert.deepEqual(beatenNames("Traverse Town", s({ trinities: 0x01 })), ["Leon", "Guard Armor"]);  // Blue Trinity
+  assert.deepEqual(beatenNames("Monstro", s({ magic_unlocked: 1 << 5 })), ["Parasite Cage", "Parasite Cage, again"]);  // Stop
+  assert.deepEqual(beatenNames("Agrabah", s({ reports: rep(11) })), ["Kurt Zisa"]);
+  // A spell's level reads 1 before it's learned: that alone proves nothing.
+  assert.deepEqual(beatenNames("Traverse Town", s({})), []);
+  // The Archipelago client's thresholds: just below doesn't count.
+  const prog = (i, v) => { const a = new Uint8Array(15); a[i] = v; return Buffer.from(a).toString("hex"); };
+  assert.deepEqual(beatenNames("Hollow Bastion", s({ progress: prog(10, 0x81) })), ["Riku", "Maleficent", "Dragon Maleficent"]);
+  assert.deepEqual(beatenNames("Hollow Bastion", s({ progress: prog(10, 0x82) })), ["Riku", "Maleficent", "Dragon Maleficent", "Riku, again"]);
+  assert.deepEqual(beatenNames("Traverse Town", s({ progress: prog(14, 0x14) })), ["Leon", "Guard Armor", "Opposite Armor"]);
+});
+
+test("real saves: the Dive's Darkside is behind every save on the islands, and nothing else is", { skip: !existsSync(path.join(ROOT, "mock/saves")) }, () => {
+  const files = readdirSync(path.join(ROOT, "mock/saves")).filter((f) => f.endsWith(".json"));
+  assert.ok(files.length);
+  for (const f of files) {
+    const st = JSON.parse(readFileSync(path.join(ROOT, "mock/saves", f), "utf8"));
+    const all = Object.keys(BOSSES).flatMap((w) => beatenNames(w, st).map((n) => w + "/" + n));
+    assert.deepEqual(all, st.world === 1 ? ["Awakening/Darkside"] : [], f);
+  }
+});
+
+test("the page loads the boss list and resets reveals on a new game", () => {
+  const html = readFileSync(path.join(ROOT, "companion/index.html"), "utf8");
+  assert.match(html, /<script src="bosses.js"><\/script>[\s\S]*<script src="logic.js">/);
+  const src = readFileSync(path.join(ROOT, "companion/app.js"), "utf8");
+  assert.match(src, /rememberSteps\(\);\s*rememberRooms\(\);\s*rememberBosses\(\);/);
 });

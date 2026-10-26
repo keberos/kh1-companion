@@ -216,6 +216,8 @@ ol.help b { font: 600 15px var(--ui); color: var(--text); }
 ul.list li.locked .name { color: var(--sub); }
 ul.list li.locked > svg { opacity: .45; }
 ul.list li.hidden-step .name { color: var(--muted); letter-spacing: .2em; }
+.boss-tip { color: var(--text); font: 600 14px/1.3 var(--ui); margin-top: 3px; }
+.boss-tip::before { content: "\203A\00a0"; color: var(--sub); }
 .tag.pup svg { width: 15px; height: 15px; }
 
 .empty { color: var(--muted); text-align: center; padding: 22px 8px; font: italic 600 16px var(--ui); }
@@ -314,8 +316,8 @@ svg.map .node rect.goalring { fill: none !important; stroke: var(--gold) !import
 .unconfirmed-note { margin-top: 8px; color: var(--muted); font-style: italic; }
 .tag.more { color: var(--sub); font-size: 14px; }
 .empty.small { padding: 10px 8px; font-size: 14px; }
-ul.list li[data-cn], ul.list li[data-unlock] { cursor: pointer; }
-ul.list li[data-cn]:active, ul.list li[data-unlock]:active, .next-mini:active, .next-ab:active { filter: brightness(1.25); }
+ul.list li[data-cn], ul.list li[data-unlock], ul.list li[data-boss] { cursor: pointer; }
+ul.list li[data-cn]:active, ul.list li[data-unlock]:active, ul.list li[data-boss]:active, .next-mini:active, .next-ab:active { filter: brightness(1.25); }
 
 /* header: what-to-show button */
 #modeBtn { display: grid; place-items: center; }

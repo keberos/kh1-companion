@@ -385,6 +385,28 @@
   }
 
   // Everything the page shows, derived from one snapshot.
+  // ---------- bosses ----------
+  // A boss is beaten only on save evidence (see bosses.js); a story boss beaten puts every story boss
+  // before it in that world behind you too. Nothing ever marks the current or next fight.
+  const reportGot = (state, n) => {
+    const r = REPORTS.find((x) => new RegExp(`Report ${n}$`).test(x.n));
+    return !!r && state.reports != null && bit(hexToBytes(state.reports), r.B, r.b);
+  };
+  function bossBeaten(ev, state, f, world) {
+    if (!ev) return false;
+    if (ev.report != null) return reportGot(state, ev.report);
+    if (ev.any) return ev.any.some((x) => bossBeaten(x, state, f, world));
+    return test(ev, f, state, world) === true;
+  }
+  function bossesFor(world, state, bosses) {
+    const b = (bosses || {})[world] || {};
+    const f = storyFacts(state);
+    const story = (b.story || []).map((x) => ({ ...x, beaten: bossBeaten(x.beaten, state, f, world) }));
+    const last = story.map((x) => x.beaten).lastIndexOf(true);
+    story.forEach((x, i) => { if (i < last) x.beaten = true; });
+    return { story, optional: (b.optional || []).map((x) => ({ ...x, beaten: bossBeaten(x.beaten, state, f, world) })) };
+  }
+
   function summarize(state) {
     const opened = hexToBytes(state.chests);
     const rep = hexToBytes(state.reports);
@@ -420,6 +442,6 @@
   return {
     WORLDS, MAPS, ROOM_NAMES, hexToBytes, bit, popcount, worldName, roomName, onTitle, trackedWorlds, isPuppies,
     GUIDE, CHECKED: CHECKED || {}, LEVELS, PATHS, CURVES, nodesOf, node, labelOf, nodeForChest, nodeForRoom, chestsFor, guideFor, summarize,
-    has, needName, lockOf, nodeAccess, levelInfo, itemCount, knownRooms,
+    has, needName, lockOf, nodeAccess, levelInfo, itemCount, knownRooms, bossesFor,
   };
 });

@@ -288,8 +288,9 @@
       (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
       (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
         `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "") +
-      `</div>`;
+      `</div>` + bossCard(world);
     wireToggles(el);
+    wireBosses(el, world);
     if ($("toGuide")) $("toGuide").onclick = () => { guideWorld = null; setView("guide"); };
     if ($("toLevel")) $("toLevel").onclick = () => setView("level");
   }
@@ -555,6 +556,52 @@
     if ($("guideHere")) $("guideHere").onclick = () => { guideWorld = null; render(true); };
   }
 
+  // ---------- Bosses ----------
+  // A world's bosses stay "???" until tapped: the story list one at a time in story order, optional ones in
+  // any order. Ones the save proves beaten (bosses.js) show themselves with a tick. Reveals are per device.
+  const BOSSES = window.KH1_BOSSES || {};
+  let bossShown = store.get("bossShown", {});  // world -> { story: how many shown, optional: [names] }
+  function bossCard(world) {
+    if (!BOSSES[world]) return "";
+    const { story, optional } = L.bossesFor(world, state, BOSSES);
+    const seen = bossShown[world] || {};
+    const shown = replay() ? story.length : Math.max(seen.story || 0, story.map((b) => b.beaten).lastIndexOf(true) + 1);
+    const row = (b) => `<li class="${b.beaten ? "got" : ""}">${icon(b.beaten ? "ico-check" : "ico-star")}<span class="grow">` +
+      `<span class="name">${esc(b.name)}</span><div class="sub">${esc(b.visit)}${b.beaten ? " · beaten" : ""}</div>` +
+      (b.beaten ? "" : b.tips.map(([t]) => `<div class="boss-tip">${esc(t)}</div>`).join("")) + `</span></li>`;
+    const hidden = (tap, what) => `<li class="hidden-step"${tap ? ` data-boss="${esc(tap)}"` : ""}>${icon("ico-eye")}` +
+      `<span class="grow"><span class="name">???</span>${what ? `<div class="sub">${what}</div>` : ""}</span></li>`;
+    const done = story.filter((b) => b.beaten).length;
+    return `<div class="card"><div class="label">Bosses · ${done} of ${story.length} beaten</div><ul class="list">` +
+      story.map((b, i) => (i < shown ? row(b) : hidden(i === shown ? "story" : null, i === shown ? "Tap to see the next boss" : ""))).join("") +
+      `</ul>` + (optional.length ? `<div class="label" style="margin-top:10px">Optional</div><ul class="list">` +
+        optional.map((b) => (replay() || b.beaten || (seen.optional || []).includes(b.name) ? row(b) : hidden("opt:" + b.name, "Tap to see"))).join("") +
+        `</ul>` : "") + `</div>`;
+  }
+  function wireBosses(el, world) {
+    el.querySelectorAll("[data-boss]").forEach((li) => {
+      li.onclick = () => {
+        const seen = bossShown[world] || (bossShown[world] = {});
+        const tap = li.dataset.boss;
+        if (tap === "story") {
+          const story = L.bossesFor(world, state, BOSSES).story;
+          seen.story = Math.max(seen.story || 0, story.map((b) => b.beaten).lastIndexOf(true) + 1) + 1;
+        } else seen.optional = [...(seen.optional || []), tap.slice(4)];
+        store.set("bossShown", bossShown);
+        render(true);
+      };
+    });
+  }
+  // Reveals belong to one playthrough: the Dive with no town progress yet is a new game. The Dive's own
+  // boss is fought there, so it's kept then and dropped on the title screen instead.
+  function rememberBosses() {
+    const tt = L.hexToBytes(state.progress)[0] || 0;
+    const drop = sum.title ? (w) => w === "Awakening" : state.world === 0 && tt === 0 ? (w) => w !== "Awakening" : null;
+    if (!drop || !Object.keys(bossShown).some(drop)) return;
+    bossShown = Object.fromEntries(Object.entries(bossShown).filter(([w]) => !drop(w)));
+    store.set("bossShown", bossShown);
+  }
+
   // ---------- Progress (worlds + collectibles) ----------
 
   function renderProgress() {
@@ -564,7 +611,9 @@
       el.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="chip" id="back">‹ All</button>` +
         `<button class="chip" id="toMap">Map</button><span class="grow"></span>${toggles()}</div>` +
         progressCard(displayWorld(worldDetail) + " chests", w.got, w.total) +
-        `<div class="card">${chestList(L.chestsFor(worldDetail, sum.opened, state), null)}</div>`;
+        `<div class="card">${chestList(L.chestsFor(worldDetail, sum.opened, state), null)}</div>` +
+        bossCard(worldDetail);
+      wireBosses(el, worldDetail);
       $("back").onclick = () => { worldDetail = null; render(true); };
       $("toMap").onclick = () => { mapWorld = worldDetail === sum.world ? null : worldDetail; worldDetail = null; setView("map"); };
       wireToggles(el);
@@ -910,6 +959,7 @@
     sum = L.summarize(state);
     rememberSteps();
     rememberRooms();
+    rememberBosses();
     announce();
     render();
   }

@@ -110,6 +110,7 @@
 
   // ---------- shared pieces ----------
 
+  const chestCount = (k) => (k ? `${k} chest${k === 1 ? "" : "s"}` : "none left");
   const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach it yet");
   // When the walkthroughs get a chest (chestneeds.js `when`). Never "now", and never when a return visit opens up.
   const whenOf = (c) => (SHOW.chestNeeds && !c.got && ((NEEDS[c.w] || {})[c.n] || {}).when) || null;
@@ -260,6 +261,18 @@
 
   // ---------- Here ----------
 
+  // Here's cards fold to their header (with a count) so the screen stays short; open/closed is remembered.
+  let folds = store.get("folds", { room: true, elsewhere: false, bosses: false });
+  function foldCard(key, label, summary, body) {
+    const open = !!folds[key];
+    return `<div class="card fold${open ? " open" : ""}"><div class="label fold-head" data-fold="${key}">` +
+      `<span>${label}${summary ? ` · ${summary}` : ""}</span><span class="fold-arrow">${open ? "▾" : "▸"}</span></div>${open ? body : ""}</div>`;
+  }
+  function wireFolds(el) {
+    el.querySelectorAll("[data-fold]").forEach((h) => {
+      h.onclick = () => { folds = { ...folds, [h.dataset.fold]: !folds[h.dataset.fold] }; store.set("folds", folds); render(true); };
+    });
+  }
   function renderHere() {
     const el = $("v-here");
     const world = sum.world;
@@ -281,15 +294,16 @@
       `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
-      (n ? `<div class="card"><div class="label">In ${esc(sum.room || L.labelOf(n))}</div>` +
-        (inRoom.some((c) => showOpened || !c.got) ? chestList(inRoom, n.id, { showRoom: false })
-          : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) + `</div>` : "") +
-      `<div class="card"><div class="label">${n ? "Elsewhere in" : "Left in"} ${esc(displayWorld(world))} · ${elsewhere.length} chest${elsewhere.length === 1 ? "" : "s"}</div>` +
-      (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
-      (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
-        `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "") +
-      `</div>` + bossCard(world);
+      (n ? foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length),
+        inRoom.some((c) => showOpened || !c.got) ? chestList(inRoom, n.id, { showRoom: false })
+          : `<div class="empty small">${inRoom.length ? "Every chest in this room is open." : "No chests in this room."}</div>`) : "") +
+      foldCard("elsewhere", `${n ? "Elsewhere in" : "Left in"} ${esc(displayWorld(world))}`, chestCount(elsewhere.length),
+        (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
+        (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
+          `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "")) +
+      bossCard(world, true);
     wireToggles(el);
+    wireFolds(el);
     wireBosses(el, world);
     if ($("toGuide")) $("toGuide").onclick = () => { guideWorld = null; setView("guide"); };
     if ($("toLevel")) $("toLevel").onclick = () => setView("level");
@@ -561,7 +575,7 @@
   // any order. Ones the save proves beaten (bosses.js) show themselves with a tick. Reveals are per device.
   const BOSSES = window.KH1_BOSSES || {};
   let bossShown = store.get("bossShown", {});  // world -> { story: how many shown, optional: [names] }
-  function bossCard(world) {
+  function bossCard(world, fold) {
     if (!BOSSES[world]) return "";
     const { story, optional } = L.bossesFor(world, state, BOSSES);
     const seen = bossShown[world] || {};
@@ -572,11 +586,13 @@
     const hidden = (tap, what) => `<li class="hidden-step"${tap ? ` data-boss="${esc(tap)}"` : ""}>${icon("ico-eye")}` +
       `<span class="grow"><span class="name">???</span>${what ? `<div class="sub">${what}</div>` : ""}</span></li>`;
     const done = story.filter((b) => b.beaten).length;
-    return `<div class="card"><div class="label">Bosses · ${done} of ${story.length} beaten</div><ul class="list">` +
+    const body = `<ul class="list">` +
       story.map((b, i) => (i < shown ? row(b) : hidden(i === shown ? "story" : null, i === shown ? "Tap to see the next boss" : ""))).join("") +
       `</ul>` + (optional.length ? `<div class="label" style="margin-top:10px">Optional</div><ul class="list">` +
         optional.map((b) => (replay() || b.beaten || (seen.optional || []).includes(b.name) ? row(b) : hidden("opt:" + b.name, "Tap to see"))).join("") +
-        `</ul>` : "") + `</div>`;
+        `</ul>` : "");
+    const summary = `${done} of ${story.length} beaten`;
+    return fold ? foldCard("bosses", "Bosses", summary, body) : `<div class="card"><div class="label">Bosses · ${summary}</div>${body}</div>`;
   }
   function wireBosses(el, world) {
     el.querySelectorAll("[data-boss]").forEach((li) => {

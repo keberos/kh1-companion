@@ -372,3 +372,10 @@ svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; s
 
 /* chest lists: the blanket "some open up later" line */
 .later-note { margin: 6px 4px 2px; font-style: italic; opacity: .8; }
+
+/* Here: foldable cards (header shows the count; tap to open) */
+.fold-head { cursor: pointer; }
+.fold-head::after { display: none; }
+.fold-head > span:first-child { flex: 1; }
+.fold-arrow { color: var(--sub); font-size: 14px; letter-spacing: 0; }
+.card.fold:not(.open) { padding-bottom: 12px; }

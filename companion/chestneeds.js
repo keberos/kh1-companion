@@ -31,7 +31,7 @@ window.KH1_CHEST_NEEDS = {
     "Lotus Forest Through the Painting White Trinity Chest": { need: ["White Trinity"], src: "KW ES SS", when: { return: true, src: "KW GG ES" } },
     "Tea Party Garden Above Lotus Forest Entrance 1st Chest": { need: ["Progressive Glide"], src: "ES KC WP CC", note: "One guide also says High Jump.", noteSrc: "ES", when: { return: true, src: "ES GG KW TR" } },
     "Tea Party Garden Across From Bizarre Room Entrance Chest": { need: ["Progressive Glide"], src: "KW ES", when: { return: true, src: "ES GG KW TR" } },
-    "Queen's Castle Hedge Right Blue Chest": { note: "No ability needed if you come through the pot in the Bizarre Room; one guide uses High Jump instead.", src: "KC ES CC", when: { later: "the trial", src: "FD ES" } },
+    "Queen's Castle Hedge Right Blue Chest": { note: "No ability needed: go through the doorway in the area behind the Lotus Forest's boulder.", src: "FD GG TR", when: { later: "the trial", src: "FD ES" } },
     "Tea Party Garden Bear and Clock Puzzle Chest": { note: "Reachable on foot from the Bizarre Room's exit; Glide also gets you there from the garden.", src: "KW ES", when: { later: "the trial", src: "FD TR KW" } },
     "Lotus Forest Through the Painting Thunder Plant Chest": { note: "One guide: cast Thunder on the bellflowers.", src: "KW", when: { later: "the trial", src: "FD KW" } },
     "Rabbit Hole Defeat Heartless 2 Chest": { when: { later: "the trial", src: "FD ES GG" } },

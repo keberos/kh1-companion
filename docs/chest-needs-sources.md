@@ -102,7 +102,7 @@ lift, past the emblem door). Every guide that describes a Lift Stop floating che
 
 | World | Chest | What the guides say |
 |---|---|---|
-| Wonderland | Queen's Castle Hedge Right Blue (Dalmatians 58–60) | KC: High Jump. ES, CC: through the pot in the Bizarre Room, no ability. |
+| Wonderland | Queen's Castle Hedge Right Blue (Final Mix's Dalmatians chest) | FD, GG, TR: through the doorway behind the Lotus Forest's boulder, no ability. KC's High Jump and ES and CC's pot route are for the original 58–60 chest, which Final Mix made a Meteor-G. Which red hedge chest that is isn't settled, so it carries no note. |
 | Wonderland | Tea Party Garden Bear and Clock Puzzle (balcony) | KW: Glide. ES: from the Bizarre Room exit, no ability. |
 | Deep Jungle | Hippo's Lagoon Left, Right | KW: jump and glide. ES (both) and KC (Left): by jumping; ES: Glide only makes it easier. |
 | Agrabah | Cave of Wonders Entrance Tall Tower (Dalmatians 49–51) | ES, KC, CC: Glide. WP: a barrel launches you there. |

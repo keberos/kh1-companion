@@ -291,7 +291,7 @@
     el.innerHTML =
       expStrip() +
       `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
-      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
+      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${bossButton(world)}${toggles()}</div>` +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
       (n ? foldCard("room", `In ${esc(sum.room || L.labelOf(n))}`, chestCount(inRoom.filter((c) => !c.got).length),
@@ -300,11 +300,10 @@
       foldCard("elsewhere", `${n ? "Elsewhere in" : "Left in"} ${esc(displayWorld(world))}`, chestCount(elsewhere.length),
         (elsewhere.length ? `<ul class="list">${roomRows(world, elsewhere, n && n.id)}</ul>` : `<div class="empty small">Nothing left anywhere else here.</div>`) +
         (reportsLeft.length ? `<div class="label" style="margin-top:10px">Ansem's Reports here</div><ul class="list">${reportsLeft.map((r) =>
-          `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : "")) +
-      bossCard(world, true);
+          `<li>${icon("ico-report-missing")}<span class="grow"><span class="name">Report ${r.num}</span><div class="sub">${esc(reportHow(r))}</div></span></li>`).join("")}</ul>` : ""));
     wireToggles(el);
     wireFolds(el);
-    wireBosses(el, world);
+    if ($("bossBtn")) $("bossBtn").onclick = () => openBossSheet(world);
     if ($("toGuide")) $("toGuide").onclick = () => { guideWorld = null; setView("guide"); };
     if ($("toLevel")) $("toLevel").onclick = () => setView("level");
   }
@@ -575,7 +574,7 @@
   // any order. Ones the save proves beaten (bosses.js) show themselves with a tick. Reveals are per device.
   const BOSSES = window.KH1_BOSSES || {};
   let bossShown = store.get("bossShown", {});  // world -> { story: how many shown, optional: [names] }
-  function bossCard(world, fold) {
+  function bossCard(world, fold, bare) {
     if (!BOSSES[world]) return "";
     const { story, optional } = L.bossesFor(world, state, BOSSES);
     const seen = bossShown[world] || {};
@@ -592,7 +591,20 @@
         optional.map((b) => (replay() || b.beaten || (seen.optional || []).includes(b.name) ? row(b) : hidden("opt:" + b.name, "Tap to see"))).join("") +
         `</ul>` : "");
     const summary = `${done} of ${story.length} beaten`;
+    if (bare) return `<div class="sub">${summary}</div>` + body;
     return fold ? foldCard("bosses", "Bosses", summary, body) : `<div class="card"><div class="label">Bosses · ${summary}</div>${body}</div>`;
+  }
+  // Here's compact way in: a crown with "beaten of total", opening the list in a sheet.
+  function bossButton(world) {
+    if (!BOSSES[world]) return "";
+    const { story } = L.bossesFor(world, state, BOSSES);
+    return `<button class="chip boss-btn" id="bossBtn" aria-label="Bosses">${icon("ico-crown", "chip-ico")}` +
+      `${story.filter((b) => b.beaten).length}/${story.length}</button>`;
+  }
+  function openBossSheet(world) {
+    openSheet(`<h2>Bosses · ${esc(displayWorld(world))}</h2>` + bossCard(world, false, true) +
+      `<div class="row" style="margin-top:10px"><span class="grow"></span><button class="chip" data-close>Close</button></div>`);
+    wireBosses($("sheetBody"), world);
   }
   function wireBosses(el, world) {
     el.querySelectorAll("[data-boss]").forEach((li) => {
@@ -604,7 +616,7 @@
           seen.story = Math.max(seen.story || 0, story.map((b) => b.beaten).lastIndexOf(true) + 1) + 1;
         } else seen.optional = [...(seen.optional || []), tap.slice(4)];
         store.set("bossShown", bossShown);
-        render(true);
+        if ($("sheet").classList.contains("on")) openBossSheet(world); else render(true);
       };
     });
   }

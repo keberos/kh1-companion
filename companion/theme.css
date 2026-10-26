@@ -379,3 +379,6 @@ svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; s
 .fold-head > span:first-child { flex: 1; }
 .fold-arrow { color: var(--sub); font-size: 14px; letter-spacing: 0; }
 .card.fold:not(.open) { padding-bottom: 12px; }
+
+/* Here: the bosses button beside Show */
+.boss-btn { margin-right: 8px; white-space: nowrap; }

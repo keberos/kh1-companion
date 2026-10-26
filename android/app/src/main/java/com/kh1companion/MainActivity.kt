@@ -179,6 +179,14 @@ class MainActivity : Activity() {
         val files = Environment.isExternalStorageManager()
         val gn = Installer.gameNativeInstalled(this)
         val working = files && Installer.installed(this)
+        // Once it's working, the finished checklist folds to one line so the rest of Settings is in view.
+        if (overlay && working && !setupOpen) {
+            step("Set up and working", true, "The KH1 Companion icon opens the companion, and it closes by itself when the game exits.",
+                listOf("Show setup steps" to { setupOpen = true; refresh() }))
+            refreshRemoval()
+            return
+        }
+        if (overlay && working) steps.addView(button("Hide setup steps") { setupOpen = false; refresh() })
         val openGameNative = "Open GameNative" to {
             // On the other screen, so these steps stay in view while you tap through GameNative.
             val here = display?.displayId ?: android.view.Display.DEFAULT_DISPLAY
@@ -289,6 +297,7 @@ class MainActivity : Activity() {
         }), into = removal, mark = false)
     }
 
+    private var setupOpen = false
     private val guidesOpen = mutableSetOf<String>()
 
     /** What the guide pictures show; screens may differ in other GameNative versions (tools/make_guide_images.py). */

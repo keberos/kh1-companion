@@ -1148,6 +1148,8 @@
   if (window.KH1Native) {
     const sheet = $("closeSheet");
     $("closeBtn").hidden = false;
+    $("gearBtn").hidden = false; // lit gold by the app when an update is waiting
+    $("gearBtn").onclick = () => window.KH1Native.openSettings();
     $("closeBtn").onclick = () => { sheet.hidden = false; };
     $("closeNo").onclick = () => { sheet.hidden = true; };
     sheet.onclick = (e) => { if (e.target === sheet) sheet.hidden = true; };

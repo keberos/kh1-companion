@@ -214,13 +214,11 @@ class CompanionService : Service() {
         )
     }
 
-    /** A newer release: one line in the close sheet (seen only when it's opened) and the notification. */
+    /** A newer release: the header's Settings gear turns gold, and the notification says so. */
     private fun showUpdateNote() {
-        val r = Updater.available(this) ?: return
-        val line = JSONObject.quote("Update available: ${Updater.short(r.tag)}. Tap Settings to install it.")
-        webView?.evaluateJavascript("(function(){var c=document.querySelector('#closeSheet .card');" +
-            "if(!c||document.getElementById('updNote'))return;var p=document.createElement('p');p.id='updNote';" +
-            "p.textContent=$line;c.insertBefore(p,c.querySelector('.confirm-row'));})()", null)
+        Updater.available(this) ?: return
+        webView?.evaluateJavascript("(function(){var g=document.getElementById('gearBtn');" +
+            "if(g){g.classList.add('update');g.setAttribute('aria-label','Settings: update available');}})()", null)
         getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification())
     }
 

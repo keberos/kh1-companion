@@ -323,6 +323,11 @@ ul.list li[data-cn]:active, ul.list li[data-unlock]:active, ul.list li[data-boss
 /* header: what-to-show button */
 #modeBtn { display: grid; place-items: center; }
 #modeBtn .ico { width: 20px; height: 20px; color: var(--sub); }
+/* header: Settings gear (Android app only); gold, steady, when an update is waiting */
+#gearBtn { display: grid; place-items: center; }
+#gearBtn .ico { width: 20px; height: 20px; color: var(--sub); }
+#gearBtn.update { border-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
+#gearBtn.update .ico { color: var(--gold); }
 
 /* ---------- "What to show" sheet ---------- */
 .seg { display: flex; gap: 8px; margin: 12px 0 8px; }

@@ -54,7 +54,7 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
    - starting the game once, after which setup ticks itself off.
 3. **Open it with the game.** On Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app: launching the game from Cocoon then opens the companion on the bottom screen too. Without Cocoon, start the game and tap the **KH1 Companion** icon. Either way, the companion closes by itself when the game does.
 
-**Updating:** when there's a new release, Settings shows **Update available** with an **Update** button; tap it, then **Update** in Android's installer. The first time, Android asks you to turn on **Allow from this source** first.
+**Updating:** when there's a new release, the companion's gear turns gold and Settings shows **Update available** with an **Update** button; tap it, then **Update** in Android's installer. The first time, Android asks you to turn on **Allow from this source** first.
 
 **Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion closes within a minute. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 6 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
 
@@ -64,7 +64,7 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
 
 - **Tap the KH1 Companion icon** to open the companion (or let Cocoon open it with the game). It closes by itself as soon as the game exits.
 - **Close it any time** with the **×** at the top of the companion, or **Close** on its notification.
-- **Settings:** tap **×** on the companion → **Settings** (or **Settings** on its notification; on launchers with icon menus, long-press the icon).
+- **Settings:** tap the **gear** at the top of the companion (or **Settings** on its notification; on launchers with icon menus, long-press the icon).
 - **Nothing shows until a save is loaded**, so you never see leftovers from another save.
 
 ## Smoother play on the AYN Thor
@@ -86,7 +86,7 @@ With these settings (fan aside), the game spent about 4% of a two-minute camera-
 
 ## Uninstall
 
-In the app's Settings (tap **×** on the companion → **Settings** (or **Settings** on its notification; on launchers with icon menus, long-press the icon)), tap **Remove everything…**. Setup pauses while you go through it; **Set up again** brings it back if you change your mind.
+In the app's Settings (the **gear** at the top of the companion), tap **Remove everything…**. Setup pauses while you go through it; **Set up again** brings it back if you change your mind.
 
 1. **Remove from the game**, then start the game once. The mod takes itself out of the game folder and never loads again. No GameNative steps.
 2. Optional: turn off **Enable mod loaders** in GameNative (harmless to leave), and if you pointed the game straight at KH1, set Executable Path back to `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe`.

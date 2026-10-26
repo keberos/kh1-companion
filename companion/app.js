@@ -219,7 +219,24 @@
 
   // Runs every second: only touch what changed, so an idle bottom screen doesn't repaint.
   const put = (el, key, v) => { if (el[key] !== v) el[key] = v; };
+  // The handheld's battery, from the Android app (absent in a browser). Read every 30 s.
+  let battAt = 0;
+  function renderBattery() {
+    const el = $("hBatt");
+    if (!window.KH1Native || !window.KH1Native.battery || Date.now() - battAt < 30000) return;
+    battAt = Date.now();
+    let b;
+    try { b = JSON.parse(window.KH1Native.battery()); } catch { return; }
+    if (b.pct == null || b.pct < 0) return;
+    const w = Math.max(1, Math.round(b.pct / 100 * 15));
+    put(el, "innerHTML", `<svg viewBox="0 0 22 12"><rect class="shell" x="0.7" y="0.7" width="18" height="10.6" rx="2"/>` +
+      `<rect class="fill" x="19.5" y="3.8" width="2" height="4.4" rx="0.8"/><rect class="fill" x="2.2" y="2.2" width="${w}" height="7.6" rx="1"/></svg>${b.pct}%`);
+    put(el, "className", "batt" + (b.charging ? " charging" : b.pct <= 20 ? " low" : ""));
+    put(el, "title", b.charging ? "Charging" : "Battery");
+    put(el, "hidden", false);
+  }
   function renderHeader() {
+    renderBattery();
     const dot = $("dot");
     const age = Date.now() - lastChange;
     put(dot, "className", "dot" + (!state ? "" : age < STALE_MS ? " live" : " stale"));

@@ -81,6 +81,13 @@ header::after {  /* ornamental rule: silver line with a gold diamond */
 .where .room { font: italic 600 14px/1.2 var(--ui); color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .02em; }
 .lvl { font: italic 700 18px var(--ui); color: var(--text); letter-spacing: .04em; text-shadow: 0 0 6px rgba(80,160,255,.8), 0 1px 0 #000; }
 .lvl b { font-size: 13px; color: var(--sub); margin-right: 3px; }
+/* header: the handheld's battery, beside the level */
+.batt { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; font: italic 600 13px var(--ui); color: var(--sub); }
+.batt svg { width: 22px; height: 12px; }
+.batt .shell { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.batt .fill { fill: currentColor; }
+.batt.low { color: #ff7a7a; }
+.batt.charging { color: var(--hp-top); }
 
 /* status orb: a tiny save-point glow */
 .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: radial-gradient(circle at 40% 35%, #fff, var(--warn) 55%, #7a2a12); box-shadow: 0 0 6px var(--warn); }

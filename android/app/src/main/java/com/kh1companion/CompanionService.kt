@@ -99,6 +99,16 @@ class CompanionService : Service() {
                 @JavascriptInterface
                 fun openSettings() { handler.post { this@CompanionService.openSettings() } }
 
+                /** The header's battery: {"pct": 0-100, "charging": bool}. */
+                @JavascriptInterface
+                fun battery(): String {
+                    val bm = getSystemService(android.os.BatteryManager::class.java)
+                    return JSONObject()
+                        .put("pct", bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY))
+                        .put("charging", bm.isCharging)
+                        .toString()
+                }
+
                 /** For the page's "Not connecting?" help: what the app can see of the bridge's file. */
                 @JavascriptInterface
                 fun status(): String {

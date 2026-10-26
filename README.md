@@ -21,7 +21,7 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests; tap a chest to see where it is. A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) says so, as does one they agree opens up after an event or on a later visit. The <b>Bosses</b> tile opens the world's bosses with tips. Sections fold to one line; the battery shows beside your level.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests; tap a chest to see where it is. Chests are tagged <i>Now</i> (the walkthroughs name what it needs and you have it) or <i>Later</i> (you don't yet); timings like "after the trial" or "later visit" show underneath. The <b>Bosses</b> tile opens the world's bosses with tips. Sections fold to one line; the battery shows beside your level.</td>
     <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
   </tr>
   <tr>
@@ -29,7 +29,7 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
     <td><img src="docs/screenshots/level.png" alt="Level tab"><br><b>Level</b>: what Sora learns at each level for <i>your</i> Dive choices, your next ability and how much EXP until it. Tap a level for details.</td>
   </tr>
   <tr>
-    <td colspan="2"><b>First time or replay?</b> Tap the eye at the top: <i>Replay</i> shows room names and chest contents up front. It also has optional pop-up notes for chests, level-ups and new worlds (off by default).</td>
+    <td colspan="2"><b>First time or replay?</b> Tap <b>Show / Hide</b> at the top: <i>Replay</i> shows room names and chest contents up front. It also has optional pop-up notes for chests, level-ups and new worlds (off by default).</td>
   </tr>
 </table>
 
@@ -123,7 +123,7 @@ No. Everything comes from the save that's loaded right now, so playing on severa
 
 <details><summary><b>Will it spoil the story?</b></summary>
 
-No. Worlds and rooms you haven't found show as "???", and chest contents stay hidden until you ask. On a replay, tap the eye at the top and pick **Replay** to see everything up front.
+No. Worlds and rooms you haven't found show as "???", and chest contents stay hidden until you ask. On a replay, tap **Show / Hide** at the top and pick **Replay** to see everything up front.
 </details>
 
 ---

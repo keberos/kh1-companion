@@ -127,11 +127,14 @@
       c.lock ? needText(c.lock) : null, whenOf(c) ? whenShort(whenOf(c)) : null].filter(Boolean).join(" · ");
     // Tapping a chest opens its own sheet: exactly where it is, and from there the map.
     const tap = ` data-cw="${esc(c.w)}" data-ck="${esc(c.n)}"`;
+    // Now: 2+ walkthroughs name what it needs and the player has it. Later: the player lacks it.
+    // Anything else (nothing known, or a timing the companion can't check) gets no tag.
+    const st = c.got ? "" : c.lock ? "later" : ((NEEDS[c.w] || {})[c.n] || {}).need && !whenOf(c) ? "now" : "";
     return `<li${tap} class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
       `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
       (L.isPuppies(c) ? `<span class="tag pup">${icon("ico-paw", "")}Pups</span>` : "") +
-      (c.lock ? '<span class="tag later">Later</span>' : opts.here ? '<span class="tag here">Here</span>' : "") + `</li>`;
+      (st === "later" ? '<span class="tag later">Later</span>' : st === "now" ? '<span class="tag now">Now</span>' : "") + `</li>`;
   }
 
   function chestList(chests, hereId, opts = {}) {
@@ -176,10 +179,6 @@
     setOption("showNeeds", on); setOption("allNames", on);
     if (on) setOption("showContents", true);
     hintsHidden.clear();
-  }
-  function toggles() {
-    const n = ["showOpened", "showContents", ...(SHOW.chestNeeds ? ["showNeeds"] : [])].filter((k) => optionOn[k]()).length;
-    return `<button class="chip" data-options>Show / Hide${n ? ` (${n})` : ""} ▾</button>`;
   }
   function wireToggles(root) {
     root.querySelectorAll("[data-options]").forEach((b) => { b.onclick = openShowSheet; });
@@ -291,7 +290,7 @@
     el.innerHTML =
       expStrip() +
       `<div class="row here-top"><span class="map-count">${icon("ico-chest", "")}<b>${got} of ${total}</b></span>` +
-      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div>${toggles()}</div>` +
+      `<div class="bar grow ${got === total && total ? "done" : ""}"><i style="width:${total ? got / total * 100 : 0}%"></i></div></div>` +
       (next ? `<div class="card next-mini" id="toGuide"><div class="label">Next step${next.optional ? " · optional" : ""}</div>` +
         `<div class="row"><div class="step-nudge grow">${esc(stepFull(next.key) ? next.title : next.nudge)}</div><span class="tag more">Guide ›</span></div></div>` : "") +
       `<div class="here-split">` +
@@ -640,7 +639,7 @@
     if (worldDetail) {
       const w = sum.worlds[worldDetail];
       el.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="chip" id="back">‹ All</button>` +
-        `<button class="chip" id="toMap">Map</button><span class="grow"></span>${toggles()}</div>` +
+        `<button class="chip" id="toMap">Map</button><span class="grow"></span></div>` +
         progressCard(displayWorld(worldDetail) + " chests", w.got, w.total) +
         `<div class="card">${chestList(L.chestsFor(worldDetail, sum.opened, state), null)}</div>` +
         bossCard(worldDetail);

@@ -565,7 +565,10 @@ test("chest timings come from 2+ walkthroughs, and the page never says \"now\"",
   assert.match(src, /const whenShort = \(w\) => \(w\.return \? "Later visit" : "After " \+ w\.later\)/);
   // The blanket line stays only for chests nothing is known about.
   assert.match(src, /const unsure = rows\.some\(\(c\) => !c\.got && !c\.lock && !whenOf\(c\)\)/);
-  assert.doesNotMatch(src, /"Now"|>Now</);
+  // "Now" only with positive evidence: a walkthrough-confirmed need the player has, and no timing to wait on.
+  assert.match(src, /const st = c\.got \? "" : c\.lock \? "later" : \(\(NEEDS\[c\.w\] \|\| \{\}\)\[c\.n\] \|\| \{\}\)\.need && !whenOf\(c\) \? "now" : "";/);
+  // A later or uncertain chest is never tagged "Here".
+  assert.doesNotMatch(src, /tag here">Here</);
 });
 
 test("the chest sheet takes needs from the walkthroughs, never the randomizer logic", () => {

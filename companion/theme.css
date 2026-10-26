@@ -203,7 +203,8 @@ li.here {
 .tag { flex: none; font: italic 700 12px var(--ui); letter-spacing: .08em; text-transform: uppercase; }
 .tag.here { color: var(--here); text-shadow: 0 0 6px rgba(111,227,255,.6); }
 .tag.pup { color: var(--gold); display: inline-flex; align-items: center; gap: 3px; }
-.tag.later { color: var(--muted); }
+.tag.later { color: #f0b860; }
+.tag.now { color: var(--hp-top); text-shadow: 0 0 6px rgba(120,230,140,.5); }
 .big-ico { width: 44px; height: 44px; margin-bottom: 6px; }
 .waiting { text-align: center; padding: 26px 12px 16px; display: grid; justify-items: center; gap: 8px; }
 .wait-title { font: 700 18px var(--title); letter-spacing: .06em; color: var(--gold); }
@@ -388,3 +389,6 @@ svg.map .node rect.focusring { fill: none !important; stroke: #fff !important; s
 .boss-tile .label::after { display: none; }
 .boss-count { font: italic 700 16px var(--ui); color: var(--text); margin: 4px 0 1px; white-space: nowrap; }
 .boss-tile .sub { white-space: nowrap; }
+
+/* header: the one Show / Hide control */
+.show-btn { padding: 6px 12px; font-size: 14px; white-space: nowrap; }

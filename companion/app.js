@@ -111,6 +111,11 @@
   // ---------- shared pieces ----------
 
   const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach it yet");
+  // When the walkthroughs get a chest (chestneeds.js `when`). Never "now", and never when a return visit opens up.
+  const whenOf = (c) => (SHOW.chestNeeds && !c.got && ((NEEDS[c.w] || {})[c.n] || {}).when) || null;
+  const whenShort = (w) => (w.return ? "Later visit" : "After " + w.later);
+  const whenText = (w) => (w.return ? "The walkthroughs get this one on a later visit to this world."
+    : `The walkthroughs say this one opens up after ${w.later}.`);
   // Reports named after a boss fight would spoil it: say how, not who.
   const reportHow = (r) => r.n.replace(/ Ansem's Report \d+$/, "").replace(/^Defeat .+$/, "After a boss fight");
 
@@ -118,7 +123,7 @@
     const n = c.node && L.node(c.w, c.node);
     const known = !n || roomKnown(c.w, n.id);
     const sub = [opts.showRoom && n && known ? L.labelOf(n) : null, showContents && c.i ? c.i : null,
-      c.lock ? needText(c.lock) : null].filter(Boolean).join(" · ");
+      c.lock ? needText(c.lock) : null, whenOf(c) ? whenShort(whenOf(c)) : null].filter(Boolean).join(" · ");
     // Tapping a chest opens its own sheet: exactly where it is, and from there the map.
     const tap = ` data-cw="${esc(c.w)}" data-ck="${esc(c.n)}"`;
     return `<li${tap} class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
@@ -134,7 +139,7 @@
     rows = rows.slice().sort((a, b) => (a.got - b.got) || (!!a.lock - !!b.lock) || (isHere(b) - isHere(a)) || a.n.localeCompare(b.n));
     if (!rows.length) return `<div class="empty">${chests.length ? "Every chest here is open." : "No chests here."}</div>`;
     // Most chests' timing isn't known: say so once, rather than let an unmarked row read as "get it now".
-    const unsure = rows.some((c) => !c.got && !c.lock);
+    const unsure = rows.some((c) => !c.got && !c.lock && !whenOf(c));
     return `<ul class="list">${rows.map((c) => chestRow(c, { here: isHere(c), showRoom: opts.showRoom !== false })).join("")}</ul>` +
       (unsure ? `<div class="sub later-note">Some chests only open up later in this world or on a return visit.</div>` : "");
   }
@@ -436,7 +441,9 @@
       (showContents && c.i ? `<div class="sub" style="margin-top:8px">Inside: ${esc(c.i)}</div>` : "") +
       (c.lock ? `<div class="sub" style="margin-top:6px">${icon("ico-lock", "chip-ico")}${esc(needText(c.lock))}</div>` : "") +
       (note ? `<div class="sub" style="margin-top:6px">${esc(note)}</div>` : "") +
-      (!c.got && !c.lock && !note ? `<div class="sub" style="margin-top:6px">The walkthroughs don't say what this one needs. Some chests only open up later in this world or on a return visit.</div>` : "") +
+      (!c.got && !c.lock && !note ? `<div class="sub" style="margin-top:6px">The walkthroughs don't say what this one needs.${
+        whenOf(c) ? "" : " Some chests only open up later in this world or on a return visit."}</div>` : "") +
+      (whenOf(c) ? `<div class="sub" style="margin-top:6px">${esc(whenText(whenOf(c)))}</div>` : "") +
       `<div class="row" style="margin-top:10px">${nd ? `<button class="chip" id="chestOnMap">${icon("ico-chest", "chip-ico")}Show on map</button>` : ""}` +
       `<span class="grow"></span><button class="chip" data-close>Close</button></div>`,
     );

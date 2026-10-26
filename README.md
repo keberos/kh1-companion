@@ -21,7 +21,7 @@ Four tabs, all live from the save you have loaded, and only what the game's own 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is. A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) is marked <i>Later</i>.</td>
+    <td width="50%"><img src="docs/screenshots/here.png" alt="Here tab"><br><b>Here</b>: an EXP bar to your next level (the game hides it in the Status menu), the chests in the room you're in, and which other rooms still hold chests. Tap a chest to see where it is. A chest the walkthroughs agree needs something you don't have yet (Glide, a Trinity, a spell) is marked <i>Later</i>, and one they agree opens up after an event or on a later visit says so.</td>
     <td width="50%"><img src="docs/screenshots/map.png" alt="Map tab"><br><b>Map</b>: every room in the world, where you are, and how many chests are left in each. The save points shown are the ones found so far, not every one.</td>
   </tr>
   <tr>
@@ -170,6 +170,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 - **Room and world names by byte:** [Dekirai/MultiPresence](https://github.com/Dekirai/MultiPresence) `Models/KH1/Rooms.cs` and `Worlds.cs` (MIT).
 - **Chest locations:** written for this project from the KH Wiki's KH1 walkthroughs (`companion/chesthints.js`); where a chest isn't clearly placed there, the hint says only what its Archipelago name says.
 - **What a chest needs:** cross-checked across eight walkthroughs (the KH Wiki, six GameFAQs guides, IGN) and kept only where two or more state it and none says otherwise: 55 chests (`companion/chestneeds.js`). Where guides disagree or only one says something, the chest's sheet shows a note instead, including when an ability only makes a chest easier. Sources and disagreements: [docs/chest-needs-sources.md](docs/chest-needs-sources.md).
+- **When a chest opens up:** the same eight plus the Kingdom Hearts Wiki on Fandom, GamerGuides and TrueTrophies (both Final Mix). Where two or more agree and none gets it sooner, the chest says *After* an event in that world (19 chests) or *Later visit* (49). Same rules, same document.
 - **Level-ups:** the randomizer's battle-table docs (MIT). Ability descriptions are written for this project.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world.
 

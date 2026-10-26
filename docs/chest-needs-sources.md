@@ -148,3 +148,122 @@ The randomizer logic agrees with the guides on 35 of the 55 confirmed chests. Wh
   push a crate over and climb), Geppetto's House and Deep Jungle Tree House Rooftop (High Jump), Olympus
   Coliseum Blizzara chest and Item Workshop Right (only one guide each), and the Monstro, Halloween Town and
   Giant Crevasse chests listed above.
+
+## When a chest opens up
+
+`when` in `companion/chestneeds.js` (read 2026-10-25). A chest row says *After <event>* or *Later visit*, and
+its sheet gives the sentence. Chests with nothing recorded keep the line "Some chests only open up later in
+this world or on a return visit". The page never says a chest is available now, and never says when a return
+visit becomes possible.
+
+### Rule
+
+- **later**: 2+ walkthroughs say outright that the chest, or the only way to it, opens after an event on the
+  first visit ("after the first bossfight", "the boulder has moved, giving access to...", "Availability: after
+  defeating the Cards and Tower"). The order a guide happens to collect things in doesn't count.
+- **return**: 2+ walkthroughs put the chest on a later trip to the world (a "When you return" / "World Revisit"
+  / "Collectibles" section, "come back after...", "available after <event in another world>"), and none
+  gets it on the first visit.
+- A guide that gets the chest earlier than that cancels it. So do return claims that rest only on Thunder,
+  Blizzard or the Red Trinity in Wonderland, Olympus Coliseum or Deep Jungle: those three worlds can be
+  played in any order, so you may already have the spell.
+- Events are named by what happens, not who: "the first boss fight here", "the fight in the Evil Playroom".
+
+**Result: 19 later, 49 return, 164 nothing recorded** (of 232 chests).
+
+### Sources added for timing
+
+| Key | Walkthrough |
+|---|---|
+| FD | Kingdom Hearts Wiki (Fandom): "Kingdom Hearts item locations" and the per-world walkthroughs. Notes per chest, e.g. "Only available after presenting the evidence" |
+| GG | GamerGuides, Kingdom Hearts Final Mix (HD 1.5 ReMIX) walkthrough, including its World Revisit pages |
+| TR | TrueTrophies, Kingdom Hearts Final Mix walkthrough, including each world's Collectibles section |
+
+The eight sources above were reread for timing too. ES's Dalmatian and Trinity tables give an "Availability"
+per chest. KW has "When you Return" / "Second Visit" sections, and CC's Dalmatian list has "come back after"
+notes. GG, TR and FD are written for Final Mix, so they settle which chest is which where Final Mix moved
+contents.
+
+### Later in the visit
+
+| World | Chest | After | Sources |
+|---|---|---|---|
+| Wonderland | Rabbit Hole Defeat Heartless 2 | the trial | FD ES GG |
+| Wonderland | Queen's Castle Hedge Left Red, Right Red | the trial | FD ES KW TR |
+| Wonderland | Queen's Castle Hedge Right Blue | the trial | FD ES |
+| Wonderland | Bizarre Room Lamp | the trial | KW FD |
+| Wonderland | Tea Party Garden Bear and Clock Puzzle | the trial | FD TR KW |
+| Wonderland | Lotus Forest Thunder Plant | the trial | FD ES |
+| Wonderland | Lotus Forest Through the Painting Thunder Plant | the trial | FD KW |
+| Monstro | Mouth Boat Deck, Near Ship, High Platform Boat Side, Near Teeth, Across from Boat | the first boss fight here | FD TR (+ ES KW, ES CC) |
+| Atlantica | Ursula's Lair Use Fire on Urchin | the first fight in Ursula's Lair | FD KW GG ES SS |
+| Halloween Town | Oogie's Manor Hollow | the fight in the Evil Playroom | FD TR |
+| Halloween Town | Oogie's Manor Lower Iron Cage | the fight in the Evil Playroom | FD TR ES |
+| Neverland | Captain's Cabin | the fight in the Captain's Cabin | FD ES |
+| Neverland | Clock Tower | the fight on the ship's deck | ES KW |
+| 100 Acre Wood | Bouncing Spot Under Giant Pot | Tigger's Giant Pot | FD KW |
+
+The hedge chests: GG, TR and FD agree that Final Mix's hedge chests hold Dalmatians (reached from the area
+behind the boulder), a Meteor-G (through the pot) and a Thundara-G (through the latch on the ceiling of the
+Bizarre Room). All three routes open after the trial. Which red chest is the pot one and which is the latch
+one isn't settled, so both red chests list the sources for both. KW collects one of them on its return
+visit, which doesn't conflict: that is after the trial too.
+
+### Return visit
+
+| World | Chests | Sources |
+|---|---|---|
+| Traverse Town | 1st District Candle Puzzle | ES GG TR KW FD |
+| Traverse Town | Alleyway Behind Crates; Secret Waterway Near Stairs | KW GG TR ES |
+| Traverse Town | Geppetto's House | ES GG KW TR FD |
+| Traverse Town | Item Workshop Left, Right | KW GG ES TR |
+| Traverse Town | Mystical House Glide | ES GG KW TR CC |
+| Traverse Town | Mystical House Yellow Trinity | GG TR ES |
+| Traverse Town | Secret Waterway White Trinity | KW GG TR ES |
+| Wonderland | Rabbit Hole Defeat Heartless 3 | FD ES |
+| Wonderland | Rabbit Hole Green Trinity; Bizarre Room Green Trinity | KW ES GG TR |
+| Wonderland | Lotus Forest Glide; Tea Party Garden Above Lotus Forest Entrance 1st, 2nd; Across From Bizarre Room Entrance | ES GG KW TR |
+| Wonderland | Lotus Forest Through the Painting White Trinity | KW GG ES |
+| Olympus Coliseum | Coliseum Gates Blizzara | ES GG TR |
+| Olympus Coliseum | Coliseum Gates Blizzaga | ES TR |
+| Olympus Coliseum | Coliseum Gates White Trinity | KW GG ES |
+| Deep Jungle | Cavern of Hearts White Trinity | KW GG ES |
+| Agrabah | Storage Green Trinity | ES TR IGN |
+| Agrabah | Cave of Wonders Entrance White Trinity | GG TR ES |
+| Agrabah | Cave of Wonders Entrance Tall Tower; Hidden Room Left, Right | ES GG TR |
+| Agrabah | Palace Gates High Close to Palace, High Opposite Palace; Main Street High Above Palace Gates Entrance | ES GG |
+| Monstro | Chamber 6 White Trinity | KW GG TR ES |
+| Atlantica | Triton's Palace White Trinity | KW GG ES |
+| Halloween Town | Cemetery Behind Grave, Between Graves, By Cat Shape, By Striped Grave | FD KW TR GG ES |
+| Halloween Town | Guillotine Square Pumpkin Structure Left, Right | ES GG |
+| Halloween Town | Moonlight Hill White Trinity | GG ES |
+| Neverland | Hold Flight 1st, 2nd; Hold Yellow Trinity Green, Left Blue, Right Blue | ES GG TR |
+| Neverland | Pirate Ship Crows Nest | ES GG TR KW |
+| Neverland | Pirate Ship Deck White Trinity | GG TR ES |
+| Hollow Bastion | Grand Hall Left of Gate | KW GG ES CC FD |
+| Hollow Bastion | Grand Hall Oblivion, Steps Right Side | KW GG FD |
+| Hollow Bastion | Rising Falls Under Water 2nd | GG FD |
+
+### Disagreements and single sources (nothing recorded)
+
+- Rabbit Hole Defeat Heartless 1: FD only. It says the chest is there only *before* the trial, so it can be
+  missed.
+- Traverse Town Blue Trinity Balcony, 2nd District Boots and Shoes Awning, Gizmo Shop Facade and the three
+  Alleyway chests: KW gets them on later visits, but GG, TR and ES get them on the first.
+- Traverse Town 2nd District Rooftop (ladder after the Guard Armor), Green Room Table (after the fight with
+  Leon), Agrabah Alley (after meeting Jafar there), Palace Gates Low (after the Pot Centipede), Hollow Bastion
+  Entrance Hall Left of Emblem Door, Neverland Cabin (after the Captain's Cabin fight): FD only.
+- Wonderland Lotus Forest Thunder Plant chests: KW, ES and TR get them on a return visit because they need
+  Thunder, which you may already have. They are recorded as *after the trial*, which every guide agrees with.
+- Deep Jungle Tree House Suspended Boat: ES, GG and KW come back with Glide, but FD reaches it on the first
+  visit with mid-air attacks.
+- Agrabah Plaza Top Corner: TR puts it on a return visit; FD and KW get it on the first.
+- Monstro chambers (Chamber 2 Platform, Chamber 5 Platform and Atop Barrel, Chamber 6 platforms, Chamber 3
+  ledges): KW and TR put them on a return visit; GG, ES and FD reach them on the first with barrels.
+  Mouth Green Trinity Top of Boat: TR puts it on a return visit; KW gets it right after the first boss.
+- Halloween Town Guillotine Square High Tower: ES and GG come back for it; TR got it on the first visit.
+  Oogie's Manor Upper Iron Cage: TR gets it after the Evil Playroom fight; FD, GG and ES get it before. Oogie's
+  Manor Grounds Red Trinity: TR on a return; ES on the first.
+- Hollow Bastion Rising Falls White Trinity: KW and GG on the second visit; ES says it's available after the
+  first fight with Riku, on the first visit. Lift Stop Library Node After High Tower Switch: GG on the second
+  visit; FD on the first.

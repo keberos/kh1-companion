@@ -538,6 +538,36 @@ test("walkthrough chest needs name real chests, and has() can judge every need",
     blank({ magic: "01020101010101", magic_unlocked: 2 })), ["Blizzaga"]);
 });
 
+test("chest timings come from 2+ walkthroughs, and the page never says \"now\"", async () => {
+  globalThis.window = globalThis.window || {};
+  await import("../companion/chestneeds.js");
+  const needs = globalThis.window.KH1_CHEST_NEEDS;
+  const KEYS = new Set("KW ES KC WP SS CC EP LK IGN FD GG TR".split(" "));
+  let later = 0, ret = 0;
+  for (const [w, byName] of Object.entries(needs)) for (const [name, e] of Object.entries(byName)) {
+    if (!e.when) continue;
+    const t = e.when;
+    assert.ok(CHESTS.some((c) => c.w === w && c.n === name), `timing for a chest that doesn't exist: ${w} / ${name}`);
+    assert.ok(!!t.later !== !!t.return, `${w} / ${name}: later or return, not both`);
+    const src = t.src.split(" ");
+    assert.ok(src.length >= 2 && new Set(src).size === src.length && src.every((k) => KEYS.has(k)), `${w} / ${name}: 2+ known sources`);
+    if (t.later) { later++; assert.match(t.later, /^[^.]{3,40}$/); assert.doesNotMatch(t.later, /now/i); }
+    else ret++;
+  }
+  assert.equal(later, 19);
+  assert.equal(ret, 49);
+  // The two the user asked about.
+  assert.equal(needs["Wonderland"]["Rabbit Hole Defeat Heartless 2 Chest"].when.later, "the trial");
+  assert.equal(needs["Wonderland"]["Rabbit Hole Defeat Heartless 3 Chest"].when.return, true);
+  assert.equal(needs["Wonderland"]["Rabbit Hole Defeat Heartless 1 Chest"], undefined);
+  for (const h of ["Left Red", "Right Red", "Right Blue"]) assert.equal(needs["Wonderland"][`Queen's Castle Hedge ${h} Chest`].when.later, "the trial");
+  const src = readFileSync(path.join(ROOT, "companion/app.js"), "utf8");
+  assert.match(src, /const whenShort = \(w\) => \(w\.return \? "Later visit" : "After " \+ w\.later\)/);
+  // The blanket line stays only for chests nothing is known about.
+  assert.match(src, /const unsure = rows\.some\(\(c\) => !c\.got && !c\.lock && !whenOf\(c\)\)/);
+  assert.doesNotMatch(src, /"Now"|>Now</);
+});
+
 test("the chest sheet takes needs from the walkthroughs, never the randomizer logic", () => {
   const src = readFileSync(path.join(ROOT, "companion/app.js"), "utf8");
   assert.match(src, /const SHOW = \{ chestNeeds: true, roomLocks: false,/);

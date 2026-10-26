@@ -54,6 +54,8 @@ Setup's pictures and the steps below were made with **GameNative 1.3.0** on an *
    - starting the game once, after which setup ticks itself off.
 3. **Open it with the game.** On Cocoon Shell, set **KH1 Companion** as Kingdom Hearts' companion app: launching the game from Cocoon then opens the companion on the bottom screen too. Without Cocoon, start the game and tap the **KH1 Companion** icon. Either way, the companion closes by itself when the game does.
 
+**Updating:** when there's a new release, Settings shows **Update available** with an **Update** button; tap it, then **Update** in Android's installer. The first time, Android asks you to turn on **Allow from this source** first.
+
 **Optional: start straight into the game.** Out of the box, GameNative opens the collection's menu and you pick KH1 there; quitting KH1 drops you back in that menu, and the companion closes within a minute. For a seamless KH1 experience, point GameNative straight at KH1: in GameNative open the game → ⚙ → **Edit container** → **General** → **Executable Path** → `KINGDOM HEARTS FINAL MIX.exe` → save. Setup's step 6 shows each screen. To go back, pick `KINGDOM HEARTS HD 1.5+2.5 Launcher.exe` the same way.
 
 <p align="center"><img src="android/app/src/main/assets/guide/exe-list.png" width="640" alt="GameNative's Executable Path list with KINGDOM HEARTS FINAL MIX.exe highlighted"></p>
@@ -223,7 +225,7 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 
 ### Releasing
 
-Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELEASE_NOTES.md` (it becomes the release page), and push a `v*` tag. CI builds a release APK signed with the project key from the repo secrets (`KH1C_KEYSTORE_B64`, `KH1C_KEYSTORE_PASSWORD`, `KH1C_KEY_ALIAS`, `KH1C_KEY_PASSWORD`). Tags with a `-` (e.g. `v0.9.0-beta.2`) are pre-releases; the plan is to stay pre-release until a full playthrough.
+Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELEASE_NOTES.md` (it becomes the release page), and push a `v*` tag. CI builds a release APK signed with the project key from the repo secrets (`KH1C_KEYSTORE_B64`, `KH1C_KEYSTORE_PASSWORD`, `KH1C_KEY_ALIAS`, `KH1C_KEY_PASSWORD`). The in-app updater (`Updater.kt`) reads the releases list, pre-releases included, and installs the newest `KH1-Companion-<tag>.apk` whose tag sorts above the installed `versionName`, so keep that asset name. Tags with a `-` (e.g. `v0.9.0-beta.2`) are pre-releases; the plan is to stay pre-release until a full playthrough.
 
 **Naming:** a new beta number (`v0.9.0-beta.6`) for new features or anything that changes setup; a light revision (`v0.9.0-beta.6.1`, `.2`, ...) for fixes only, which install over the last one with nothing to redo. Either way `versionCode` goes up by one. Release notes stay short: what changed, how to update, and a link to this page. The key lives outside the repo (`C:\Users\lasco\dev-tools\keys\`); keep a backup, since a different key can't update existing installs.
 

@@ -128,6 +128,7 @@ class CompanionService : Service() {
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
                     lastPushed = null // re-send current state to the fresh page
+                    showUpdateNote()
                 }
             }
         }
@@ -153,6 +154,9 @@ class CompanionService : Service() {
         windowManager = wm
         webView = view
         running = true
+
+        // At most once a day, a minute in so it stays clear of the game loading; one request, off the main thread.
+        handler.postDelayed({ Updater.checkIfDue(this) { if (running) showUpdateNote() } }, UPDATE_CHECK_DELAY_MS)
 
         val prefs = Prefs(this)
         if (prefs.devUrl.isNotEmpty()) {
@@ -210,6 +214,16 @@ class CompanionService : Service() {
         )
     }
 
+    /** A newer release: one line in the close sheet (seen only when it's opened) and the notification. */
+    private fun showUpdateNote() {
+        val r = Updater.available(this) ?: return
+        val line = JSONObject.quote("Update available: ${Updater.short(r.tag)}. Tap Settings to install it.")
+        webView?.evaluateJavascript("(function(){var c=document.querySelector('#closeSheet .card');" +
+            "if(!c||document.getElementById('updNote'))return;var p=document.createElement('p');p.id='updNote';" +
+            "p.textContent=$line;c.insertBefore(p,c.querySelector('.confirm-row'));})()", null)
+        getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification())
+    }
+
     private fun notification(): Notification {
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(
@@ -225,7 +239,12 @@ class CompanionService : Service() {
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("KH1 companion is on the bottom screen")
-            .setContentText(if (prefs.devUrl.isNotEmpty()) "Dev: ${prefs.devUrl}" else "Closes when the game does, or tap Close")
+            .setContentText(when {
+                prefs.devUrl.isNotEmpty() -> "Dev: ${prefs.devUrl}"
+                Updater.available(this) != null -> "Update available: tap Settings"
+                else -> "Closes when the game does, or tap Close"
+            })
+            .setOnlyAlertOnce(true)
             .setContentIntent(settings)
             .addAction(Notification.Action.Builder(null, "Close", close).build())
             .addAction(Notification.Action.Builder(null, "Settings", settings).build())
@@ -250,6 +269,7 @@ class CompanionService : Service() {
         private const val FRESH_MS = 6_000L
         private const val QUIET_MS = 60_000L
         private const val QUIET_INTRO_MS = 5 * 60_000L
+        private const val UPDATE_CHECK_DELAY_MS = 60_000L
         const val ACTION_STOP = "com.kh1companion.STOP"
 
         fun stop(context: Context) {

@@ -43,6 +43,22 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("filesDeleted", false)
         set(v) = sp.edit().putBoolean("filesDeleted", v).apply()
 
+    /** Newest release the last update check found (tag and APK link), and when it ran. */
+    var updateTag: String
+        get() = sp.getString("updateTag", "") ?: ""
+        set(v) = sp.edit().putString("updateTag", v).apply()
+    var updateUrl: String
+        get() = sp.getString("updateUrl", "") ?: ""
+        set(v) = sp.edit().putString("updateUrl", v).apply()
+    var updateCheckedAt: Long
+        get() = sp.getLong("updateCheckedAt", 0)
+        set(v) = sp.edit().putLong("updateCheckedAt", v).apply()
+
+    /** An update was handed to the installer: reopen Settings once it's in. */
+    var updating: Boolean
+        get() = sp.getBoolean("updating", false)
+        set(v) = sp.edit().putBoolean("updating", v).commit().let {}
+
     companion object {
         fun defaultStatePath(): String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

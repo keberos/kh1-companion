@@ -28,6 +28,7 @@ import java.io.File
 class MainActivity : Activity() {
     private lateinit var prefs: Prefs
     private lateinit var steps: LinearLayout
+    private lateinit var update: LinearLayout
     private lateinit var removal: LinearLayout
     private lateinit var statePath: EditText
     private lateinit var devUrl: EditText
@@ -47,6 +48,8 @@ class MainActivity : Activity() {
         col.addView(text("KH1 Companion", 22f, bold = true))
         col.addView(text("Shows your progress, a spoiler-free guide, maps and level-ups on the bottom screen while you play. " +
             "Version ${packageManager.getPackageInfo(packageName, 0).versionName}.", 15f))
+        update = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(update)
         steps = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(steps)
 
@@ -90,7 +93,45 @@ class MainActivity : Activity() {
         if (::steps.isInitialized) {
             Installer.deploy(this)
             refresh()
+            refreshUpdate()
+            Updater.checkForSettings(this) { if (!isDestroyed) refreshUpdate() }
         }
+    }
+
+    private var downloading = false
+
+    /** "Update available" and its button; nothing when up to date. */
+    private fun refreshUpdate() {
+        if (downloading) return
+        update.removeAllViews()
+        val r = Updater.available(this) ?: return
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, pad, 0, 0) }
+        box.addView(text("Update available: ${Updater.short(r.tag)}", 18f, bold = true))
+        val note = text("", 14f).apply { visibility = View.GONE }
+        box.addView(note)
+        box.addView(button("Update") {}.apply {
+            setOnClickListener { b ->
+                if (!packageManager.canRequestPackageInstalls()) {
+                    // Android asks once per app before it installs anything from it.
+                    note.text = "Android asks once: on the next screen, turn on Allow from this source, then go back and tap Update again."
+                    note.visibility = View.VISIBLE
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                    return@setOnClickListener
+                }
+                b.isEnabled = false
+                downloading = true
+                note.visibility = View.VISIBLE
+                Updater.install(this@MainActivity, r) { pct, error ->
+                    when {
+                        error != null -> { downloading = false; b.isEnabled = true; note.text = error }
+                        pct != null -> (b as Button).text = "Downloading… $pct%"
+                        else -> { downloading = false; b.isEnabled = true; (b as Button).text = "Update"
+                            note.text = "In Android's installer, tap Update. The companion reopens here once it's in." }
+                    }
+                }
+            }
+        })
+        update.addView(box)
     }
 
     /**

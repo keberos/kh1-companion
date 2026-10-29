@@ -170,6 +170,70 @@ local function self_uninstall(dir)
     return true
 end
 
+-- Save points you've saved at. A save can only be made at a save point, so the world and room of
+-- every save in KHFM_WW.png is proof of one. The file's folder is found once at startup; its entry
+-- table (69 KB) is re-read every few seconds and the slots only when the table changes, so a new
+-- save shows on the map within seconds. Read only. Format: tools/kh1save.py.
+local SAVE_HEADER, SAVE_ENTRY, SAVE_ENTRIES = 0x70, 0x158, 200
+local SAVE_DATA, SAVE_STRIDE, SAVE_XOR = 0x10D30, 0x16C40, 0xF0
+local SAVE_EVERY = 300  -- frames
+local save_file, save_table, save_read, saved_in = nil, nil, -SAVE_EVERY, ""
+
+local function find_save_file()
+    local base = (os.getenv("USERPROFILE") or "") .. "\\Documents\\My Games\\KINGDOM HEARTS HD 1.5+2.5 ReMIX\\"
+    for _, store in ipairs(game_version == 2 and {"Steam"} or {"Epic Games Store", "EGS"}) do
+        local ok, list = pcall(io.popen, 'dir /b /ad "' .. base .. store .. '" 2>nul')
+        if ok and list then
+            for id in list:lines() do
+                local path = base .. store .. "\\" .. id:gsub("%s+$", "") .. "\\KHFM_WW.png"
+                local f = io.open(path, "rb")
+                if f then f:close() list:close() return path end
+            end
+            list:close()
+        end
+    end
+    return nil
+end
+
+local function u32(str, at)
+    local a, b, c, d = str:byte(at + 1, at + 4)
+    return a + b * 0x100 + c * 0x10000 + d * 0x1000000
+end
+
+local function saved_in_json(now_frame)
+    if not save_file or now_frame - save_read < SAVE_EVERY then return saved_in end
+    save_read = now_frame
+    local f = io.open(save_file, "rb")
+    if not f then return saved_in end
+    f:seek("set", SAVE_HEADER)
+    local raw = f:read(SAVE_ENTRY * SAVE_ENTRIES)
+    if not raw or #raw ~= SAVE_ENTRY * SAVE_ENTRIES or raw == save_table then f:close() return saved_in end
+    save_table = raw
+    -- The first 0xF0 bytes are XORed with the 16 bytes at 0xE0, which XOR to zero themselves.
+    local key, head = {raw:byte(SAVE_XOR - 15, SAVE_XOR)}, {}
+    for i = 1, SAVE_XOR do head[i] = string.char(raw:byte(i) ~ key[(i - 1) % 16 + 1]) end
+    raw = table.concat(head) .. raw:sub(SAVE_XOR + 1)
+    local seen, rooms = {}, {}
+    for i = 0, SAVE_ENTRIES - 1 do
+        local e = i * SAVE_ENTRY
+        local name = raw:sub(e + 1, e + 0x40):match("^[^\0]*")
+        if name:match("^BISLPS%-25198%-%d+$") and u32(raw, e + 0x50) >= 0x2048 then
+            f:seek("set", SAVE_DATA + i * SAVE_STRIDE + 0x2040)
+            local wr = f:read(5)
+            if wr and #wr == 5 then
+                local w, r = wr:byte(1), wr:byte(5)
+                if not seen[w * 256 + r] then
+                    seen[w * 256 + r] = true
+                    rooms[#rooms + 1] = "[" .. w .. "," .. r .. "]"
+                end
+            end
+        end
+    end
+    f:close()
+    saved_in = ',"saved_in":[' .. table.concat(rooms, ",") .. "]"
+    return saved_in
+end
+
 -- Research aids, decided once at startup so normal play pays nothing per frame (no file checks):
 -- they run only if their file is there when the game starts.
 local research_dump, research_probe = false, false
@@ -206,6 +270,7 @@ function _OnInit()
     end
     research_dump = file_exists(out_dir .. "dump.flag")
     research_probe = file_exists(out_dir .. "probe.txt")
+    save_file = find_save_file()
     out_path = out_dir .. "state.json"
     tmp_path = out_dir .. "state.json.tmp"
     ConsolePrint("kh1companion: " .. (game_version == 2 and "Steam" or "EGS") .. " build, writing " .. out_path)
@@ -266,7 +331,7 @@ function _OnFrame()
     if frame % POLL_FRAMES ~= 0 then return end
 
     if research_dump then dump_on_flag() end
-    local body = snapshot()
+    local body = snapshot() .. saved_in_json(frame)
     if research_probe then body = body .. probe_json(frame) end
     local now = os.time()
     if body ~= last_payload or now - last_write >= HEARTBEAT_SECS then

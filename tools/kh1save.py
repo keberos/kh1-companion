@@ -10,7 +10,7 @@ Editor (KHSave.Archives/PcSaveArchive.cs, PcKh1Factory.cs; GPL-3.0, read for the
             +0x54 flag                 +0x58 padding (0x100)
           The first 0xF0 bytes of the entry table are XORed with the 16 bytes at table+0xE0
           (which XOR to zero themselves, so the key sits there in the clear).
-  0xA930  slot data, one slot every 0x16C40 bytes, each `length` bytes long
+  0x10D30 slot data, one slot every 0x16C40 bytes, each `length` bytes long
   ...     IDAT image (the save's preview picture) and IEND
 
 A KH1 slot (0x16C00 bytes) is the game's save block. Known offsets inside it (same source):

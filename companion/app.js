@@ -81,7 +81,10 @@
   let levelAll = false;  // Level tab: full table instead of the next few levels
   let waitHelp = false;  // waiting screen: troubleshooting shown
   let visitedRooms = store.get("visited", {});  // world -> map rooms this device has seen the player in
-  const hasSave = (world, n) => !!n.save;
+  // Save points: the map data's, plus every room the save file has a save from (the bridge's
+  // saved_in), since a save can only be made at a save point.
+  const hasSave = (world, n) => !!n.save || ((state && state.saved_in) || []).some(([w, r]) =>
+    L.worldName(w) === world && (n.rooms || []).includes(r));
   try { localStorage.removeItem("kh1c:savesSeen"); } catch { /* a live save-point flag was tried and marked wrong rooms */ }
   let allNames = store.get("allNames", false);  // show every room name, visited or not
   let toastsOn = store.get("toasts", false);     // pop-up notes for game events: opt-in, they can distract
@@ -404,7 +407,7 @@
       `<span class="grow"></span><span class="map-count">${icon("ico-chest", "")}<b>${sum.worlds[world].got} of ${sum.worlds[world].total}</b> chests opened</span>` +
       `<span class="grow"></span><button class="chip ${allNames ? "on" : ""}" id="allNames">${allNames ? "Hide names" : "Unhide names"}</button></div>` +
       `<div class="card mapcard">${mapSvg(world, n && n.id, goal && goal.where)}</div>` +
-      `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-chest", "")}chests left</span><span>${icon("ico-save", "")}save points found so far</span>` +
+      `<div class="legend"><span><i class="lg here"></i>you</span>${goal && goal.where ? '<span><i class="lg goal"></i>next step</span>' : ""}<span>${icon("ico-chest", "")}chests left</span><span>${icon("ico-save", "")}save points you've saved at</span>` +
       `<span>${icon("ico-paw", "")}puppies</span>${anyShut ? `<span>${icon("ico-lock", "")}can't go in yet</span>` : ""}` +
       (mapFocus && L.node(world, mapFocus) ? '<span><i class="lg focus"></i>the room you picked</span>' : "") +
       `</div>`;

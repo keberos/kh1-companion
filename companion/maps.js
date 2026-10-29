@@ -60,7 +60,7 @@ window.KH1_MAPS = {
 
   "Traverse Town": {
     nodes: [
-      { id: "Green Room", x: 0, y: 0, rooms: [0x05] },
+      { id: "Green Room", x: 0, y: 0, rooms: [0x05], save: true },
       { id: "Red Room", x: 1, y: 0, rooms: [0x06] },
       { id: "Gizmo Shop", x: 2, y: 0, rooms: [0x11] },
       { id: "Dalmatians' House", label: "Dalmatians", x: 3, y: 0, rooms: [0x0D, 0x0E, 0x0F, 0x10] },
@@ -94,7 +94,7 @@ window.KH1_MAPS = {
 
   "Wonderland": {
     nodes: [
-      { id: "Rabbit Hole", x: 0, y: 0, rooms: [0x00] },
+      { id: "Rabbit Hole", x: 0, y: 0, rooms: [0x00], save: true },
       { id: "Bizarre Room", x: 1, y: 0, rooms: [0x01, 0x02, 0x06, 0x07, 0x08] },
       { id: "Queen's Castle", x: 2, y: 0, rooms: [0x03], save: true },
       { id: "Tea Party Garden", label: "Tea Party", x: 1, y: 1, rooms: [0x09] },
@@ -114,7 +114,7 @@ window.KH1_MAPS = {
       { id: "Jungle: Tunnel", label: "Tunnel", x: 0, y: 1, rooms: [0x08] },
       { id: "Treetop", x: 1, y: 1, rooms: [0x07] },
       { id: "Jungle: Vines", label: "Vines", x: 3, y: 1, rooms: [0x03] },
-      { id: "Camp: Tent", label: "Tent", x: 0, y: 2, rooms: [0x0E] },
+      { id: "Camp: Tent", label: "Tent", x: 0, y: 2, rooms: [0x0E], save: true },
       { id: "Camp", x: 1, y: 2, rooms: [0x01, 0x0C] },
       { id: "Hippos' Lagoon", x: 2, y: 2, rooms: [0x05] },
       { id: "Cavern of Hearts", x: 3, y: 2, rooms: [0x0A], gate: { p: 1, at: 0x56 } },

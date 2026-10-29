@@ -1,5 +1,9 @@
 [
   {"world": 0, "room": 4, "from": "save slot (the Dive, before the final platform)"},
   {"world": 1, "room": 1, "from": "save slot (Destiny Islands)"},
-  {"world": 3, "room": 10, "from": "used in play on the Thor (Traverse Town Accessory Shop)"}
+  {"world": 3, "room": 10, "from": "used in play on the Thor (Traverse Town Accessory Shop)"},
+  {"world": 3, "room": 5, "from": "save slot on the Thor, 2026-10-28 (Traverse Town Green Room)"},
+  {"world": 4, "room": 0, "from": "save slot on the Thor, 2026-10-28 (Wonderland Rabbit Hole)"},
+  {"world": 4, "room": 3, "from": "save slot on the Thor, 2026-10-28 (Wonderland Queen's Castle)"},
+  {"world": 5, "room": 14, "from": "save slot on the Thor, 2026-10-28 (Deep Jungle Camp tent)"}
 ]

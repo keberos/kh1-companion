@@ -267,3 +267,67 @@ visit, which doesn't conflict: that is after the trial too.
 - Hollow Bastion Rising Falls White Trinity: KW and GG on the second visit; ES says it's available after the
   first fight with Riku, on the first visit. Lift Stop Library Node After High Tower Switch: GG on the second
   visit; FD on the first.
+
+## First visit, nothing needed
+
+`first` in `companion/chestneeds.js` (read 2026-10-28). It covers every chest that had no entry before this
+pass. These chests get the **Now** tag, and their sheet says "The walkthroughs get this one on the first visit,
+with nothing special." Each chest now carries exactly one tag:
+- **Now**: a `first` entry, or a confirmed need the player has.
+- **Later**: a need the player lacks, or a `when`.
+- **None** ("not sure"): no entry, or only a note.
+
+### Rule
+
+- 2+ walkthroughs get the chest on the first visit with no ability, spell or Trinity beyond what the story
+  hands you by then. None of them names a need, an event it waits on, or says it "can now be reached" later.
+- A guide that collects it on a later visit without saying why doesn't count against it. A guide that says
+  it couldn't be reached earlier, or reaches it a different way (Glide against a plain jump), does: the
+  chest stays unsure.
+- A single guide naming an event (e.g. Fandom's "Available after encountering Jafar in the Alley") is enough
+  to leave a chest unsure. One event with two sources became a `when`: Traverse Town Green Room Table, after
+  talking to Yuffie (FD; ES: "you need her advice to open the chest").
+- Some first-visit chests sit in rooms the story opens partway through a world, such as the Waterfall Cavern,
+  the Cave of Wonders and the End of the World. They still count: nothing beyond the story is needed.
+
+**Result: 103 first, 1 new later, 22 still unsure** (plus 17 chests with only a note, which also stay
+unsure). Across all 232 chests: 103 first-visit, 21 with a confirmed need and no timing (Now or Later,
+depending on what the player has), 69 with a timing, 39 unsure.
+
+### Sources per world
+
+| World | First-visit chests | Sources |
+|---|---|---|
+| Destiny Islands, Awakening | the one chest each | GG TR FD; ES SS |
+| Traverse Town | Accessory Shop; 2nd District Boots and Shoes Awning, Gizmo Shop Facade; Alleyway Balcony, Blue Room Awning, Corner; Green Room Clock Puzzle; Red Room | GG TR FD ES KW (2+ each) |
+| Wonderland | Lotus Forest Corner, Nut | GG FD ES (+TR) |
+| Olympus Coliseum | Coliseum Gates Left Behind Columns | TR FD ES KC |
+| Deep Jungle | all 13 left: Cliff, Hippo's Lagoon Center, Tent, Tree House Beneath and Rooftop, Tunnel, Vines, Vines 2, Waterfall Cavern ×4 | GG FD (+TR ES) |
+| Agrabah | 21: Plaza By Storage and Raised Terrace, Storage Behind Barrel, Main Street Right Palace Entrance and High Above Alley Entrance, Aladdin's House ×2, Cave of Wonders Entrance Left, Hall ×2, Bottomless Hall Across Chasm and Raised Platform, Treasure Room ×4, Dark Chamber ×4, Relic Chamber Stairs | GG FD (+TR ES) |
+| Monstro | Chamber 2 Ground, Platform; Chamber 3 Ground, Near Chamber 6 Entrance; Chamber 5 Low 1st, 2nd; Chamber 6 Low | GG TR FD (+KW) |
+| Atlantica | Ariel's Grotto ×3; Sunken Ship ×3 | GG TR FD |
+| Halloween Town | Under Jack's House Stairs, Bridge Under Bridge, Oogie's Manor Entrance Steps and Inside Entrance | GG TR FD |
+| Neverland | Galley | GG TR KW FD |
+| Hollow Bastion | 16: Rising Falls Water's Surface and Under Water 1st, Base Level ×2, Waterway ×3, Dungeon ×2, Entrance Hall Push the Statue, Library carousels ×3, Great Crest ×2, High Tower Above Sliding Blocks | GG TR FD |
+| End of the World | all 21 left: Final Dimension ×10, World Terminus ×10, Final Rest | GG TR KW FD |
+| 100 Acre Wood | Meadow Inside Log | TR LK FD |
+
+### Still unsure (no entry)
+
+- **Traverse Town 2nd District Rooftop**: Fandom says the ladder works only after the Guard Armor fight; TR says it was "fixed" by the second visit.
+- **Wonderland Rabbit Hole Defeat Heartless 1**: Fandom only. It says the chest is there only before the trial.
+- **Agrabah Alley** (after meeting Jafar there) and **Palace Gates Low** (after the Pot Centipede): Fandom names an event.
+- **Agrabah Bazaar Across Windows and High Corner**: TR says the Bazaar door is "now open" after a scene.
+- **Agrabah Plaza Top Corner**: TR says it "can now reach" it on a return visit.
+- **Agrabah Relic Chamber Jump from Stairs**: TR says it isn't reachable at first; GG and Fandom say you push a block down first.
+- **Agrabah Bottomless Hall Pillar**: GG makes a hard jump; TR glides.
+- **Atlantica Undersea Gorge Jammed**: TR says the way opens after the shark.
+- **Halloween Town Boneyard Tombstone Puzzle**: it waits on the story (the Mayor's puzzle).
+- **Halloween Town Guillotine Square High Tower**: TR jumps; Fandom uses High Jump; GG and ES come back with Glide.
+- **Monstro Chamber 3 Platform Near Chamber 6 Entrance, Chamber 5 Platform, Chamber 6 Other Platform and Raised Area**: GG, TR and Fandom use barrels or jumps; KW comes back "since you have abilities", and TR glides to the Chamber 5 one.
+- **Neverland Cabin**: Fandom only (after the Captain's Cabin fight).
+- **Hollow Bastion Base Level Platform Near Entrance**: GG glides; TR and Fandom jump. ES, KC and WP say Glide for the original game's chest here.
+- **Hollow Bastion Entrance Hall Left of Emblem Door**: Fandom: after the boss fight.
+- **Hollow Bastion Library Top of Bookshelf Turn the Carousel**: reached from the Glide chest beside it; GG jumps.
+- **Hollow Bastion Lift Stop Library Node After High Tower Switch**: GG and TR on the second visit; Fandom on the first.
+- **100 Acre Wood Bouncing Spot Right Tree Alcove**: KW glides; Fandom uses Roo's seesaw.

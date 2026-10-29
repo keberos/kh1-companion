@@ -118,6 +118,9 @@
   const needText = (lock) => (lock[0] === "story" ? "Opens later in the story" : showNeeds ? "Needs " + lock.join(" + ") : "Can't reach it yet");
   // When the walkthroughs get a chest (chestneeds.js `when`). Never "now", and never when a return visit opens up.
   const whenOf = (c) => (SHOW.chestNeeds && !c.got && ((NEEDS[c.w] || {})[c.n] || {}).when) || null;
+  // Now: a walkthrough-confirmed need the player has, or nothing needed on the first visit; never with a timing to wait on.
+  const nowOf = (c) => { const e = (NEEDS[c.w] || {})[c.n] || {};
+    return SHOW.chestNeeds && !c.got && !c.lock && !whenOf(c) && !!(e.need || e.first); };
   const whenShort = (w) => (w.return ? "Later visit" : "After " + w.later);
   const whenText = (w) => (w.return ? "The walkthroughs get this one on a later visit to this world."
     : `The walkthroughs say this one opens up after ${w.later}.`);
@@ -131,9 +134,10 @@
       c.lock ? needText(c.lock) : null, whenOf(c) ? whenShort(whenOf(c)) : null].filter(Boolean).join(" · ");
     // Tapping a chest opens its own sheet: exactly where it is, and from there the map.
     const tap = ` data-cw="${esc(c.w)}" data-ck="${esc(c.n)}"`;
-    // Now: 2+ walkthroughs name what it needs and the player has it. Later: the player lacks it.
+    // Now: 2+ walkthroughs name what it needs and the player has it, or get it on the first visit with nothing
+    // special. Later: the player lacks a need.
     // Anything else (nothing known, or a timing the companion can't check) gets no tag.
-    const st = c.got ? "" : c.lock ? "later" : ((NEEDS[c.w] || {})[c.n] || {}).need && !whenOf(c) ? "now" : "";
+    const st = c.got ? "" : c.lock ? "later" : nowOf(c) ? "now" : "";
     return `<li${tap} class="${c.got ? "got" : ""} ${opts.here ? "here" : ""} ${c.lock ? "locked" : ""}">${icon(c.got ? "ico-chest-open" : "ico-chest")}` +
       `<span class="grow"><span class="name">${known ? esc(c.n.replace(/ Chest$/, "")) : "Chest in a room you haven't been to"}</span>` +
       (sub ? `<div class="sub">${esc(sub)}</div>` : "") + `</span>` +
@@ -147,7 +151,7 @@
     rows = rows.slice().sort((a, b) => (a.got - b.got) || (!!a.lock - !!b.lock) || (isHere(b) - isHere(a)) || a.n.localeCompare(b.n));
     if (!rows.length) return `<div class="empty">${chests.length ? "Every chest here is open." : "No chests here."}</div>`;
     // Most chests' timing isn't known: say so once, rather than let an unmarked row read as "get it now".
-    const unsure = rows.some((c) => !c.got && !c.lock && !whenOf(c));
+    const unsure = rows.some((c) => !c.got && !c.lock && !whenOf(c) && !nowOf(c));
     return `<ul class="list">${rows.map((c) => chestRow(c, { here: isHere(c), showRoom: opts.showRoom !== false })).join("")}</ul>` +
       (unsure ? `<div class="sub later-note">Some chests only open up later in this world or on a return visit.</div>` : "");
   }
@@ -460,7 +464,8 @@
       (showContents && c.i ? `<div class="sub" style="margin-top:8px">Inside: ${esc(c.i)}</div>` : "") +
       (c.lock ? `<div class="sub" style="margin-top:6px">${icon("ico-lock", "chip-ico")}${esc(needText(c.lock))}</div>` : "") +
       (note ? `<div class="sub" style="margin-top:6px">${esc(note)}</div>` : "") +
-      (!c.got && !c.lock && !note ? `<div class="sub" style="margin-top:6px">The walkthroughs don't say what this one needs.${
+      (!c.got && ((NEEDS[world] || {})[name] || {}).first ? `<div class="sub" style="margin-top:6px">The walkthroughs get this one on the first visit, with nothing special.</div>`
+        : !c.got && !c.lock && !note ? `<div class="sub" style="margin-top:6px">The walkthroughs don't say what this one needs.${
         whenOf(c) ? "" : " Some chests only open up later in this world or on a return visit."}</div>` : "") +
       (whenOf(c) ? `<div class="sub" style="margin-top:6px">${esc(whenText(whenOf(c)))}</div>` : "") +
       `<div class="row" style="margin-top:10px">${nd ? `<button class="chip" id="chestOnMap">${icon("ico-chest", "chip-ico")}Show on map</button>` : ""}` +

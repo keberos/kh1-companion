@@ -554,7 +554,7 @@ test("chest timings come from 2+ walkthroughs, and the page never says \"now\"",
     if (t.later) { later++; assert.match(t.later, /^[^.]{3,40}$/); assert.doesNotMatch(t.later, /now/i); }
     else ret++;
   }
-  assert.equal(later, 19);
+  assert.equal(later, 20);
   assert.equal(ret, 49);
   // The two the user asked about.
   assert.equal(needs["Wonderland"]["Rabbit Hole Defeat Heartless 2 Chest"].when.later, "the trial");
@@ -563,12 +563,35 @@ test("chest timings come from 2+ walkthroughs, and the page never says \"now\"",
   for (const h of ["Left Red", "Right Red", "Right Blue"]) assert.equal(needs["Wonderland"][`Queen's Castle Hedge ${h} Chest`].when.later, "the trial");
   const src = readFileSync(path.join(ROOT, "companion/app.js"), "utf8");
   assert.match(src, /const whenShort = \(w\) => \(w\.return \? "Later visit" : "After " \+ w\.later\)/);
-  // The blanket line stays only for chests nothing is known about.
-  assert.match(src, /const unsure = rows\.some\(\(c\) => !c\.got && !c\.lock && !whenOf\(c\)\)/);
-  // "Now" only with positive evidence: a walkthrough-confirmed need the player has, and no timing to wait on.
-  assert.match(src, /const st = c\.got \? "" : c\.lock \? "later" : \(\(NEEDS\[c\.w\] \|\| \{\}\)\[c\.n\] \|\| \{\}\)\.need && !whenOf\(c\) \? "now" : "";/);
+  // "Now" only with positive evidence: a walkthrough-confirmed need the player has, or nothing needed on the
+  // first visit, and no timing to wait on.
+  assert.match(src, /const st = c\.got \? "" : c\.lock \? "later" : nowOf\(c\) \? "now" : "";/);
+  assert.match(src, /return SHOW\.chestNeeds && !c\.got && !c\.lock && !whenOf\(c\) && !!\(e\.need \|\| e\.first\); \};/);
+  assert.match(src, /const unsure = rows\.some\(\(c\) => !c\.got && !c\.lock && !whenOf\(c\) && !nowOf\(c\)\)/);
   // A later or uncertain chest is never tagged "Here".
   assert.doesNotMatch(src, /tag here">Here</);
+});
+
+test("first-visit chests: 2+ walkthroughs, no need or timing beside it, and every chest is decided", async () => {
+  globalThis.window = globalThis.window || {};
+  await import("../companion/chestneeds.js");
+  const needs = globalThis.window.KH1_CHEST_NEEDS;
+  const KEYS = new Set("KW ES KC WP SS CC EP LK IGN FD GG TR".split(" "));
+  let first = 0, unsure = 0;
+  for (const c of CHESTS) {
+    const e = (needs[c.w] || {})[c.n];
+    if (!e || (!e.need && !e.when && !e.first)) { unsure++; continue; }
+    if (!e.first) continue;
+    first++;
+    assert.ok(!e.need && !e.when && !e.note, `${c.w} / ${c.n}: first visit means nothing else is said about it`);
+    const src = e.first.src.split(" ");
+    assert.ok(src.length >= 2 && new Set(src).size === src.length && src.every((k) => KEYS.has(k)), `${c.w} / ${c.n}: 2+ known sources`);
+  }
+  assert.equal(first, 103);
+  assert.equal(unsure, 39);  // 22 the walkthroughs disagree on or don't cover, 17 with only a note
+  assert.equal(needs["Wonderland"]["Rabbit Hole Defeat Heartless 1 Chest"], undefined, "one guide only: stays unsure");
+  assert.ok(needs["Destiny Islands"]["Chest"].first);
+  assert.ok(needs["Halloween Town"]["Bridge Under Bridge"].first);
 });
 
 test("the chest sheet takes needs from the walkthroughs, never the randomizer logic", () => {

@@ -1,9 +1,10 @@
-**KH1 Companion 0.9.0-beta.8.2** is a light revision of beta.8.
+**KH1 Companion 0.9.0-beta.8.3** is a light revision of beta.8.
 
-Download **KH1-Companion-v0.9.0-beta.8.2.apk** below, or update from the app's Settings. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
+Download **KH1-Companion-v0.9.0-beta.8.3.apk** below, or update from the app's Settings. The [main page](https://github.com/keberos/kh1-companion#readme) covers setup, use and uninstalling.
 
 ### What's new
-- **Clearer Settings.** A close button that stays at the top, your version and whether it's up to date, a link to GitHub, and bigger buttons. Once setup is done, its steps fold away.
-- **Clearer chest counts.** Rooms say "no chests" or "all open" instead of "none left".
+- **Save points fill in as you go.** Save somewhere new and the map marks it within seconds. Saves you've already made count too.
+- **Every chest has a tag.** **Now** for chests you can get on your first visit, **Later** with the reason, or no tag where walkthroughs disagree.
+- New save points on the map in the Green Room, the Rabbit Hole and Deep Jungle's camp.
 
-**Updating from beta.8 or 8.1:** install over it. Nothing to redo.
+**Updating:** install over it, then restart the game once so save points start filling in.

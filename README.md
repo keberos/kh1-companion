@@ -25,7 +25,7 @@ Everything comes live from the save you have loaded, and only what the game's ow
       <ul>
         <li>EXP to your next level and what you learn next</li>
         <li>Chests in this room, and which rooms still have some</li>
-        <li><i>Now</i> or <i>Later</i> on chests the walkthroughs agree on</li>
+        <li>Every chest tagged <i>Now</i>, <i>Later</i> (with why), or left untagged where walkthroughs disagree</li>
         <li>Tap a chest to see exactly where it is</li>
       </ul></td>
     <td width="50%" valign="top"><img src="docs/screenshots/bosses.png" alt="Boss list"><br><b>Bosses</b>: tap the tile on Here
@@ -41,7 +41,7 @@ Everything comes live from the save you have loaded, and only what the game's ow
       <ul>
         <li>Every room, and where you are</li>
         <li>Chests left in each room</li>
-        <li>Save points found so far</li>
+        <li>Save points, including new ones as soon as you save there</li>
       </ul></td>
     <td valign="top"><img src="docs/screenshots/progress.png" alt="Progress tab"><br><b>Progress</b>: the whole game
       <ul>
@@ -207,6 +207,7 @@ All public, no game files needed. The vendored copies and their commits are in `
 - **Chest locations:** written for this project from the KH Wiki's KH1 walkthroughs (`companion/chesthints.js`); where a chest isn't clearly placed there, the hint says only what its Archipelago name says.
 - **What a chest needs:** cross-checked across eight walkthroughs (the KH Wiki, six GameFAQs guides, IGN) and kept only where two or more state it and none says otherwise: 55 chests (`companion/chestneeds.js`). Where guides disagree or only one says something, the chest's sheet shows a note instead, including when an ability only makes a chest easier. Sources and disagreements: [docs/chest-needs-sources.md](docs/chest-needs-sources.md).
 - **When a chest opens up:** the same eight plus the Kingdom Hearts Wiki on Fandom, GamerGuides and TrueTrophies (both Final Mix). Where two or more agree and none gets it sooner, the chest says *After* an event in that world (20 chests) or *Later visit* (49); where they agree it needs nothing on the first visit, it's tagged *Now* (103). The 39 they disagree on or don't cover get no tag. Same rules, same document.
+- **Save points:** the map's own list, plus every room your save file (`KHFM_WW.png`) has a save in, since the game only saves at save points. The file format is from Xeeynamo's [KingdomSaveEditor](https://github.com/Xeeynamo/KingdomSaveEditor) (read for the format only).
 - **Bosses:** the list, order and tips from the same walkthroughs, a tip kept only where two or more say it; a boss ticks only on save evidence (the Archipelago client's story thresholds, the Ansem's Report or reward it gives). Sources: [docs/bosses-sources.md](docs/bosses-sources.md).
 - **Level-ups:** the randomizer's battle-table docs (MIT). Ability descriptions are written for this project.
 - **Map layout and exits:** the [Kingdom Hearts Wiki](https://www.khwiki.com/) "Settings and Areas" section of each world.
@@ -261,12 +262,12 @@ cd android && JAVA_HOME=C:/Users/lasco/dev-tools/jdk17 ANDROID_HOME=C:/Users/las
 
 Bump `versionCode`/`versionName` in `android/app/build.gradle.kts`, update `RELEASE_NOTES.md` (it becomes the release page), and push a `v*` tag. CI builds a release APK signed with the project key from the repo secrets (`KH1C_KEYSTORE_B64`, `KH1C_KEYSTORE_PASSWORD`, `KH1C_KEY_ALIAS`, `KH1C_KEY_PASSWORD`). The in-app updater (`Updater.kt`) reads the releases list, pre-releases included, and installs the newest `KH1-Companion-<tag>.apk` whose tag sorts above the installed `versionName`, so keep that asset name. Tags with a `-` (e.g. `v0.9.0-beta.2`) are pre-releases; the plan is to stay pre-release until a full playthrough.
 
-**Naming:** a new beta number (`v0.9.0-beta.6`) for new features or anything that changes setup; a light revision (`v0.9.0-beta.6.1`, `.2`, ...) for fixes only, which install over the last one with nothing to redo. Either way `versionCode` goes up by one. Release notes stay short: what changed, how to update, and a link to this page. The key lives outside the repo (`C:\Users\lasco\dev-tools\keys\`); keep a backup, since a different key can't update existing installs.
+**Naming:** a new beta number (`v0.9.0-beta.6`) for new features or anything that changes setup; a light revision (`v0.9.0-beta.6.1`, `.2`, ...) for fixes and tweaks to existing features, which install over the last one with nothing to redo. Either way `versionCode` goes up by one. Release notes stay short: what changed, how to update, and a link to this page. The key lives outside the repo (`C:\Users\lasco\dev-tools\keys\`); keep a backup, since a different key can't update existing installs.
 
 ### Testing so far
 
-Played on an AYN Thor (Steam build, GameNative 1.3.0) from a new game through Destiny Islands and into Traverse Town.
+Played on an AYN Thor (Steam build, GameNative 1.3.0) from a new game through Destiny Islands, Traverse Town and Wonderland, into Deep Jungle.
 
-**High confidence (seen working in play):** install, setup and uninstall; opening and closing with the game from Cocoon; the room you're in; chests opened, per room and world; EXP and level-ups; the Dive's choice; Destiny Islands' items; no frame-rate cost (camera-spin test, companion open and closed).
+**High confidence (seen working in play):** install, setup and uninstall; opening and closing with the game from Cocoon; the room you're in; chests opened, per room and world; EXP and level-ups; the Dive's choice; Destiny Islands' items; learned spells and Trinities (Fire, Blizzard, Blue Trinity); save points from your saves; in-app updates; no frame-rate cost (camera-spin test, companion open and closed).
 
-**Not yet seen in play:** worlds after Traverse Town (maps, chest rooms and contents come from the KH Wiki and the randomizer's data); Trinities, shared abilities and learned spells, which decide whether a chest's "Needs" line shows; the Dalmatian count (assumes one save bit per puppy).
+**Not yet seen in play:** worlds after Deep Jungle (maps, chest rooms and contents come from the KH Wiki and the randomizer's data); shared abilities like High Jump and Glide, which decide some chests' *Now* or *Later*; the Dalmatian count (assumes one save bit per puppy).
